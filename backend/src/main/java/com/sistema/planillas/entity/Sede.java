@@ -42,9 +42,11 @@ public class Sede {
     @Column(length = 50)
     private String distrito;
 
+    @Builder.Default
     @Column(nullable = false)
     private Boolean activo = true;
 
+    @Builder.Default
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion = LocalDateTime.now();
 }

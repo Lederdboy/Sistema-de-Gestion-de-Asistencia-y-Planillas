@@ -1,15 +1,40 @@
-# Node / React
-frontend/node_modules/
-frontend/build/
-.env
+# Dependencias
+node_modules/
+**/node_modules/
 
-# Java / Spring Boot
+# Compilación y producción
+frontend/dist/
+frontend/build/
 backend/target/
 backend/*.jar
-.mvn/
 
-# IDEs
+# Variables de entorno y credenciales sensibles (NUNCA SUBIR A GITHUB)
+.env
+.env.local
+.env.*.local
+*.local.properties
+backend/src/main/resources/application-local.properties
+backend/src/main/resources/application-local.yml
+backend/src/main/resources/application-prod.properties
+
+# Maven
+.mvn/
+*.class
+
+# IDEs y Editores
 .idea/
 .vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
 *.swp
+*.swo
+
+# Sistema operativo
 *.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/

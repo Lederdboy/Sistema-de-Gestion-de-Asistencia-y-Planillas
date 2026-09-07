@@ -22,9 +22,11 @@ public class TipoAsistencia {
     @Column(nullable = false, length = 50)
     private String descripcion;
 
+    @Builder.Default
     @Column(name = "es_laborable", nullable = false)
     private Boolean esLaborable = true;
 
+    @Builder.Default
     @Column(name = "es_justificado", nullable = false)
     private Boolean esJustificado = true;
 

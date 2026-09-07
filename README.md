@@ -79,3 +79,28 @@ Todos los desarrolladores deben respetar las ramas y la política de integració
   git checkout -b feature/ui
   # Trabaja en /frontend
   # Push a origin feature/ui y apertura de PR hacia develop
+  ```
+
+---
+
+## 🔐 4. Configuración Segura de Base de Datos (Para Desarrolladores)
+
+Por motivos de seguridad, las credenciales reales del servidor de base de datos **no están incluidas en el repositorio**.
+
+Para conectar la aplicación con la base de datos SQL Server, sigue cualquiera de estas dos opciones:
+
+### Opción A: Archivo `application-local.properties` (Recomendada)
+1. Ve a la carpeta `backend/src/main/resources/`.
+2. Crea un archivo llamado `application-local.properties` (este archivo está ignorado por Git y nunca se subirá).
+3. Pega la configuración con las credenciales que te proporcionará el administrador:
+   ```properties
+   spring.datasource.url=jdbc:sqlserver://IP_DEL_SERVIDOR:1433;databaseName=SistemaPlanillasDB;encrypt=false;trustServerCertificate=true
+   spring.datasource.username=TU_USUARIO
+   spring.datasource.password=TU_PASSWORD
+   ```
+
+### Opción B: Variables de Entorno
+Puedes exportar las siguientes variables en tu sistema o IDE:
+* `SPRING_DATASOURCE_URL`
+* `SPRING_DATASOURCE_USERNAME`
+* `SPRING_DATASOURCE_PASSWORD`

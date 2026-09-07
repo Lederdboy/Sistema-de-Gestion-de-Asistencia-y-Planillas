@@ -18,7 +18,7 @@
     <description>Enterprise SaaS API REST para gestión de personal, tareo diario y planillas</description>
 
     <properties>
-        <java.version>11</java.version>
+        <java.version>17</java.version>
     </properties>
 
     <dependencies>

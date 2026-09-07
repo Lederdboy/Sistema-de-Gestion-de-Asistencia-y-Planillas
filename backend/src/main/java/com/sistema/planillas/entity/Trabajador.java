@@ -30,6 +30,7 @@ public class Trabajador {
     @JoinColumn(name = "sede_id", nullable = false)
     private Sede sede;
 
+    @Builder.Default
     @Column(name = "tipo_documento", nullable = false, length = 10)
     private String tipoDocumento = "DNI";
 
@@ -57,9 +58,11 @@ public class Trabajador {
     @Column(name = "sueldo_diario", nullable = false, precision = 12, scale = 2)
     private BigDecimal sueldoDiario;
 
+    @Builder.Default
     @Column(nullable = false)
     private Boolean activo = true;
 
+    @Builder.Default
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion = LocalDateTime.now();
 }

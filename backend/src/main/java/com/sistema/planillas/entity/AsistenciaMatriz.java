@@ -43,6 +43,7 @@ public class AsistenciaMatriz {
     @Column(name = "usuario_modificacion", length = 50)
     private String usuarioModificacion;
 
+    @Builder.Default
     @Column(name = "fecha_modificacion", nullable = false)
     private LocalDateTime fechaModificacion = LocalDateTime.now();
 }

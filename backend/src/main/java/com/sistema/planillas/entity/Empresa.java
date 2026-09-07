@@ -32,9 +32,11 @@ public class Empresa {
     @Column(length = 255)
     private String direccion;
 
+    @Builder.Default
     @Column(nullable = false)
     private Boolean activo = true;
 
+    @Builder.Default
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion = LocalDateTime.now();
 }

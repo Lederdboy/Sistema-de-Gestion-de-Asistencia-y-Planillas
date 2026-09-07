@@ -29,18 +29,23 @@ public class PlanillaResumen {
     @Column(nullable = false, length = 6)
     private String periodo; // YYYYMM (ej. 202609)
 
+    @Builder.Default
     @Column(name = "total_trabajadores", nullable = false)
     private Integer totalTrabajadores = 0;
 
+    @Builder.Default
     @Column(name = "total_calculados", nullable = false)
     private Integer totalCalculados = 0;
 
+    @Builder.Default
     @Column(name = "total_pendientes", nullable = false)
     private Integer totalPendientes = 0;
 
+    @Builder.Default
     @Column(name = "monto_total_neto", nullable = false, precision = 14, scale = 2)
     private BigDecimal montoTotalNeto = BigDecimal.ZERO;
 
+    @Builder.Default
     @Column(nullable = false, length = 20)
     private String estado = "EN_PROCESO"; // EN_PROCESO, CERRADO
 

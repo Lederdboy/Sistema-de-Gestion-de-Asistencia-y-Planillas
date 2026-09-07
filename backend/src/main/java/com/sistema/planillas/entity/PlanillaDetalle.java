@@ -29,33 +29,42 @@ public class PlanillaDetalle {
     @JoinColumn(name = "trabajador_id", nullable = false)
     private Trabajador trabajador;
 
+    @Builder.Default
     @Column(name = "dias_trabajados", nullable = false)
     private Integer diasTrabajados = 0;
 
+    @Builder.Default
     @Column(name = "dias_noches", nullable = false)
     private Integer diasNoches = 0;
 
+    @Builder.Default
     @Column(name = "dias_faltas", nullable = false)
     private Integer diasFaltas = 0;
 
+    @Builder.Default
     @Column(name = "dias_descanso", nullable = false)
     private Integer diasDescanso = 0;
 
+    @Builder.Default
     @Column(name = "dias_vacaciones", nullable = false)
     private Integer diasVacaciones = 0;
 
     @Column(name = "sueldo_basico", nullable = false, precision = 12, scale = 2)
     private BigDecimal sueldoBasico;
 
+    @Builder.Default
     @Column(name = "total_ingresos", nullable = false, precision = 12, scale = 2)
     private BigDecimal totalIngresos = BigDecimal.ZERO;
 
+    @Builder.Default
     @Column(name = "total_descuentos", nullable = false, precision = 12, scale = 2)
     private BigDecimal totalDescuentos = BigDecimal.ZERO;
 
+    @Builder.Default
     @Column(name = "neto_pagar", nullable = false, precision = 12, scale = 2)
     private BigDecimal netoPagar = BigDecimal.ZERO;
 
+    @Builder.Default
     @Column(nullable = false)
     private Boolean calculado = false;
 }
