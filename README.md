@@ -83,7 +83,7 @@ Todos los desarrolladores deben respetar las ramas y la política de integració
 
 ---
 
-## 🔐 4. Configuración Segura de Base de Datos (Para Desarrolladores)
+##  4. Configuración Segura de Base de Datos (Para Desarrolladores)
 
 Por motivos de seguridad, las credenciales reales del servidor de base de datos **no están incluidas en el repositorio**.
 
@@ -103,4 +103,4 @@ Para conectar la aplicación con la base de datos SQL Server, sigue cualquiera d
 Puedes exportar las siguientes variables en tu sistema o IDE:
 * `SPRING_DATASOURCE_URL`
 * `SPRING_DATASOURCE_USERNAME`
-* `SPRING_DATASOURCE_PASSWORD`
+* `SPRING_DATASOURCE_PASSWORD`
