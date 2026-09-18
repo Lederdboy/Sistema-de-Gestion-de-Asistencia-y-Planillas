@@ -192,22 +192,22 @@ export default function ReportesView({ workers, selectedBoleta, onCloseBoleta, s
               </div>
             </div>
 
-            {/* CUERPO DE LA BOLETA FORMATO PLAME/SUNAT */}
-            <div className="mt-4 border-2 border-slate-300 rounded-lg p-4 text-xs text-slate-800 space-y-3 bg-white">
+            {/* CUERPO DE LA BOLETA FORMATO PLAME/SUNAT - IMPRESIÓN OFICIAL */}
+            <div className="mt-4 border-2 border-slate-800 rounded-lg p-4 text-xs text-slate-900 space-y-3 bg-white">
               
               {/* Cabecera con información PLAME */}
-              <div className="border-b-2 border-slate-300 pb-3">
+              <div className="border-b-2 border-slate-800 pb-3">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-3">
                     <img src="/logo.png" alt="Logo" className="h-10 w-auto object-contain" />
                     <div>
                       <h4 className="font-extrabold text-sm text-slate-900">MINERA ANDINA S.A.</h4>
-                      <p className="text-[10px] text-slate-500 font-mono">R.U.C. 20489123891</p>
-                      <p className="text-[10px] text-slate-500">Av. Las Camelias 450, San Isidro, Lima</p>
+                      <p className="text-[10px] text-slate-600 font-mono">R.U.C. 20489123891</p>
+                      <p className="text-[10px] text-slate-600">Av. Las Camelias 450, San Isidro, Lima</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="bg-slate-100 border border-slate-300 px-3 py-1 rounded">
+                    <div className="border-2 border-slate-800 px-3 py-1 rounded">
                       <p className="font-bold text-slate-900 text-[10px]">BOLETA DE PAGO</p>
                       <p className="text-[9px] text-slate-600">Formato PLAME</p>
                     </div>
@@ -215,105 +215,105 @@ export default function ReportesView({ workers, selectedBoleta, onCloseBoleta, s
                 </div>
                 
                 {/* Información de la boleta */}
-                <div className="grid grid-cols-4 gap-2 bg-slate-50 p-2 rounded border border-slate-200 text-[10px]">
+                <div className="grid grid-cols-4 gap-2 bg-slate-100 p-2 rounded border border-slate-400 text-[10px]">
                   <div>
-                    <span className="text-slate-400 block font-bold text-[9px]">N° BOLETA</span>
+                    <span className="text-slate-500 block font-bold text-[9px]">N° BOLETA</span>
                     <span className="font-mono font-bold text-slate-900">B-2025-0001</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block font-bold text-[9px]">FECHA EMISIÓN</span>
+                    <span className="text-slate-500 block font-bold text-[9px]">FECHA EMISIÓN</span>
                     <span className="font-mono font-semibold">15/07/2025</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block font-bold text-[9px]">PERIODO</span>
+                    <span className="text-slate-500 block font-bold text-[9px]">PERIODO</span>
                     <span className="font-mono font-semibold">JULIO 2025</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block font-bold text-[9px]">TIPO TRABAJADOR</span>
+                    <span className="text-slate-500 block font-bold text-[9px]">TIPO TRABAJADOR</span>
                     <span className="font-semibold">EMPLEADO</span>
                   </div>
                 </div>
               </div>
 
               {/* Datos del Trabajador - Formato PLAME */}
-              <div className="bg-slate-50 p-3 rounded border border-slate-200">
+              <div className="bg-slate-100 p-3 rounded border border-slate-400">
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[10px]">
                   <div>
-                    <span className="text-slate-400 block font-bold text-[9px]">APELLIDOS Y NOMBRES</span>
+                    <span className="text-slate-500 block font-bold text-[9px]">APELLIDOS Y NOMBRES</span>
                     <span className="font-bold text-slate-900">{activeWorkerForBoleta.nombre}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block font-bold text-[9px]">DNI / CE</span>
+                    <span className="text-slate-500 block font-bold text-[9px]">DNI / CE</span>
                     <span className="font-mono font-semibold">{activeWorkerForBoleta.dni}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block font-bold text-[9px]">CARGO / PUESTO</span>
+                    <span className="text-slate-500 block font-bold text-[9px]">CARGO / PUESTO</span>
                     <span className="font-medium">{activeWorkerForBoleta.cargo}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block font-bold text-[9px]">RÉGIMEN LABORAL</span>
+                    <span className="text-slate-500 block font-bold text-[9px]">RÉGIMEN LABORAL</span>
                     <span className="font-semibold">D.L. 728</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block font-bold text-[9px]">RÉGIMEN PENSIONARIO</span>
-                    <span className="font-semibold text-blue-700">{activeWorkerForBoleta.afp.toUpperCase()}</span>
+                    <span className="text-slate-500 block font-bold text-[9px]">RÉGIMEN PENSIONARIO</span>
+                    <span className="font-semibold text-slate-900">{activeWorkerForBoleta.afp.toUpperCase()}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block font-bold text-[9px]">CUSP</span>
+                    <span className="text-slate-500 block font-bold text-[9px]">CUSP</span>
                     <span className="font-mono font-semibold">19123456789012</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block font-bold text-[9px]">SITUACIÓN</span>
-                    <span className="font-semibold text-emerald-700">ACTIVO</span>
+                    <span className="text-slate-500 block font-bold text-[9px]">SITUACIÓN</span>
+                    <span className="font-semibold text-slate-900">ACTIVO</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block font-bold text-[9px]">FECHA INGRESO</span>
+                    <span className="text-slate-500 block font-bold text-[9px]">FECHA INGRESO</span>
                     <span className="font-mono font-semibold">15/03/2018</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block font-bold text-[9px]">SUELDO BÁSICO</span>
+                    <span className="text-slate-500 block font-bold text-[9px]">SUELDO BÁSICO</span>
                     <span className="font-mono font-semibold">S/ {activeWorkerForBoleta.sueldoBase?.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
 
               {/* Información de Tiempo Laborado */}
-              <div className="bg-blue-50 p-2 rounded border border-blue-200">
+              <div className="bg-slate-200 p-2 rounded border border-slate-400">
                 <div className="grid grid-cols-4 gap-2 text-[10px]">
                   <div>
-                    <span className="text-blue-400 block font-bold text-[9px]">DÍAS PERIODO</span>
-                    <span className="font-mono font-bold text-blue-900">30</span>
+                    <span className="text-slate-600 block font-bold text-[9px]">DÍAS PERIODO</span>
+                    <span className="font-mono font-bold text-slate-900">30</span>
                   </div>
                   <div>
-                    <span className="text-blue-400 block font-bold text-[9px]">DÍAS LABORADOS</span>
-                    <span className="font-mono font-bold text-blue-900">{activeWorkerForBoleta.diasTrabajados}</span>
+                    <span className="text-slate-600 block font-bold text-[9px]">DÍAS LABORADOS</span>
+                    <span className="font-mono font-bold text-slate-900">{activeWorkerForBoleta.diasTrabajados}</span>
                   </div>
                   <div>
-                    <span className="text-blue-400 block font-bold text-[9px]">DÍAS DESCANSO</span>
-                    <span className="font-mono font-bold text-blue-900">{activeWorkerForBoleta.diasDescanso}</span>
+                    <span className="text-slate-600 block font-bold text-[9px]">DÍAS DESCANSO</span>
+                    <span className="font-mono font-bold text-slate-900">{activeWorkerForBoleta.diasDescanso}</span>
                   </div>
                   <div>
-                    <span className="text-blue-400 block font-bold text-[9px]">DÍAS FALTA</span>
-                    <span className="font-mono font-bold text-blue-900">{activeWorkerForBoleta.diasFalta || 0}</span>
+                    <span className="text-slate-600 block font-bold text-[9px]">DÍAS FALTA</span>
+                    <span className="font-mono font-bold text-slate-900">{activeWorkerForBoleta.diasFalta || 0}</span>
                   </div>
                 </div>
               </div>
 
               {/* Tabla de Ingresos con Códigos Tributarios */}
-              <div className="border border-slate-300 rounded overflow-hidden">
-                <div className="bg-slate-200 px-3 py-1.5 font-bold text-[10px] text-slate-800 border-b border-slate-300">
+              <div className="border-2 border-slate-800 rounded overflow-hidden">
+                <div className="bg-slate-300 px-3 py-1.5 font-bold text-[10px] text-slate-900 border-b-2 border-slate-800">
                   INGRESOS DEL TRABAJADOR (Códigos Tributarios SUNAT)
                 </div>
                 <div className="p-2">
                   <table className="w-full text-[10px]">
-                    <thead className="bg-slate-50">
+                    <thead className="bg-slate-200 border-b border-slate-400">
                       <tr>
-                        <th className="text-left font-bold text-slate-600 py-1 px-2">CÓDIGO</th>
-                        <th className="text-left font-bold text-slate-600 py-1 px-2">CONCEPTO</th>
-                        <th className="text-right font-bold text-slate-600 py-1 px-2">IMPORTE</th>
+                        <th className="text-left font-bold text-slate-900 py-1 px-2">CÓDIGO</th>
+                        <th className="text-left font-bold text-slate-900 py-1 px-2">CONCEPTO</th>
+                        <th className="text-right font-bold text-slate-900 py-1 px-2">IMPORTE</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-300">
                       <tr>
                         <td className="font-mono py-1 px-2">0101</td>
                         <td className="py-1 px-2">Remuneración Básica</td>
@@ -333,7 +333,7 @@ export default function ReportesView({ workers, selectedBoleta, onCloseBoleta, s
                           <td className="font-mono text-right py-1 px-2">S/ {activeWorkerForBoleta.sobretasaNocturna?.toFixed(2)}</td>
                         </tr>
                       )}
-                      <tr className="bg-slate-100 font-bold">
+                      <tr className="bg-slate-300 font-bold border-t-2 border-slate-800">
                         <td className="py-1 px-2"></td>
                         <td className="py-1 px-2">TOTAL INGRESOS</td>
                         <td className="font-mono text-right py-1 px-2">S/ {activeWorkerForBoleta.totalBruto?.toFixed(2)}</td>
@@ -344,40 +344,40 @@ export default function ReportesView({ workers, selectedBoleta, onCloseBoleta, s
               </div>
 
               {/* Tabla de Descuentos con Códigos Tributarios */}
-              <div className="border border-slate-300 rounded overflow-hidden">
-                <div className="bg-rose-100 px-3 py-1.5 font-bold text-[10px] text-rose-800 border-b border-rose-300">
+              <div className="border-2 border-slate-800 rounded overflow-hidden">
+                <div className="bg-slate-300 px-3 py-1.5 font-bold text-[10px] text-slate-900 border-b-2 border-slate-800">
                   DESCUENTOS DEL TRABAJADOR (Códigos Tributarios SUNAT)
                 </div>
                 <div className="p-2">
                   <table className="w-full text-[10px]">
-                    <thead className="bg-rose-50">
+                    <thead className="bg-slate-200 border-b border-slate-400">
                       <tr>
-                        <th className="text-left font-bold text-rose-600 py-1 px-2">CÓDIGO</th>
-                        <th className="text-left font-bold text-rose-600 py-1 px-2">CONCEPTO</th>
-                        <th className="text-right font-bold text-rose-600 py-1 px-2">IMPORTE</th>
+                        <th className="text-left font-bold text-slate-900 py-1 px-2">CÓDIGO</th>
+                        <th className="text-left font-bold text-slate-900 py-1 px-2">CONCEPTO</th>
+                        <th className="text-right font-bold text-slate-900 py-1 px-2">IMPORTE</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-rose-100">
+                    <tbody className="divide-y divide-slate-300">
                       <tr>
                         <td className="font-mono py-1 px-2">0501</td>
                         <td className="py-1 px-2">Aporte Obligatorio {activeWorkerForBoleta.afp.toUpperCase()}</td>
-                        <td className="font-mono text-right py-1 px-2 text-rose-700">-S/ {activeWorkerForBoleta.descuentoPension?.toFixed(2)}</td>
+                        <td className="font-mono text-right py-1 px-2">-S/ {activeWorkerForBoleta.descuentoPension?.toFixed(2)}</td>
                       </tr>
                       {activeWorkerForBoleta.descuentoFaltas > 0 && (
                         <tr>
                           <td className="font-mono py-1 px-2">0601</td>
                           <td className="py-1 px-2">Faltas No Justificadas ({activeWorkerForBoleta.diasFalta} días)</td>
-                          <td className="font-mono text-right py-1 px-2 text-rose-700">-S/ {activeWorkerForBoleta.descuentoFaltas?.toFixed(2)}</td>
+                          <td className="font-mono text-right py-1 px-2">-S/ {activeWorkerForBoleta.descuentoFaltas?.toFixed(2)}</td>
                         </tr>
                       )}
                       {activeWorkerForBoleta.renta5ta > 0 && (
                         <tr>
                           <td className="font-mono py-1 px-2">0701</td>
                           <td className="py-1 px-2">Retención Renta 5ta Categoría (Ley 29972)</td>
-                          <td className="font-mono text-right py-1 px-2 text-rose-700">-S/ {activeWorkerForBoleta.renta5ta?.toFixed(2)}</td>
+                          <td className="font-mono text-right py-1 px-2">-S/ {activeWorkerForBoleta.renta5ta?.toFixed(2)}</td>
                         </tr>
                       )}
-                      <tr className="bg-rose-100 font-bold text-rose-800">
+                      <tr className="bg-slate-300 font-bold border-t-2 border-slate-800">
                         <td className="py-1 px-2"></td>
                         <td className="py-1 px-2">TOTAL DESCUENTOS</td>
                         <td className="font-mono text-right py-1 px-2">-S/ {activeWorkerForBoleta.totalDescuentos?.toFixed(2)}</td>
@@ -388,7 +388,7 @@ export default function ReportesView({ workers, selectedBoleta, onCloseBoleta, s
               </div>
 
               {/* Total Neto a Pagar */}
-              <div className="p-3 bg-blue-600 border-2 border-blue-700 rounded flex items-center justify-between font-bold text-white">
+              <div className="p-3 bg-slate-900 border-2 border-slate-800 rounded flex items-center justify-between font-bold text-white">
                 <span className="text-xs uppercase tracking-wider">NETO A RECIBIR:</span>
                 <span className="text-lg font-black font-mono">
                   S/ {activeWorkerForBoleta.netoPagar?.toFixed(2)}
@@ -396,8 +396,8 @@ export default function ReportesView({ workers, selectedBoleta, onCloseBoleta, s
               </div>
 
               {/* Aportaciones del Empleador */}
-              <div className="bg-emerald-50 border border-emerald-200 rounded p-2">
-                <div className="font-bold text-emerald-800 text-[10px] mb-2">APORTACIONES DEL EMPLEADOR</div>
+              <div className="bg-slate-200 border-2 border-slate-400 rounded p-2">
+                <div className="font-bold text-slate-900 text-[10px] mb-2">APORTACIONES DEL EMPLEADOR</div>
                 <div className="grid grid-cols-2 gap-2 text-[10px]">
                   <div className="flex justify-between">
                     <span>EsSalud (Ley 26790 - 9%)</span>
@@ -411,8 +411,8 @@ export default function ReportesView({ workers, selectedBoleta, onCloseBoleta, s
               </div>
 
               {/* Referencias Normativas */}
-              <div className="bg-slate-100 border border-slate-300 rounded p-2 text-[9px] text-slate-600">
-                <div className="font-bold text-slate-800 mb-1">REFERENCIAS NORMATIVAS:</div>
+              <div className="bg-slate-200 border-2 border-slate-400 rounded p-2 text-[9px] text-slate-700">
+                <div className="font-bold text-slate-900 mb-1">REFERENCIAS NORMATIVAS:</div>
                 <div className="grid grid-cols-2 gap-1">
                   <div>• D.L. 728 - Ley de Productividad y Competitividad Laboral</div>
                   <div>• Ley 26790 - Modernización de la Seguridad Social</div>
@@ -422,22 +422,22 @@ export default function ReportesView({ workers, selectedBoleta, onCloseBoleta, s
               </div>
 
               {/* Firmas y Pie de Página */}
-              <div className="pt-4 border-t border-slate-300">
-                <div className="grid grid-cols-2 gap-4 text-center text-[10px] text-slate-600">
-                  <div className="border-t-2 border-slate-400 pt-2">
+              <div className="pt-4 border-t-2 border-slate-800">
+                <div className="grid grid-cols-2 gap-4 text-center text-[10px] text-slate-900">
+                  <div className="border-t-2 border-slate-800 pt-2">
                     <p className="font-bold text-slate-900">EMPLEADOR</p>
                     <p className="text-[9px]">Minera Andina S.A.</p>
                     <p className="text-[9px] font-mono">RUC 20489123891</p>
-                    <p className="text-[9px] text-slate-400 mt-1">Firma Digital / Electrónica</p>
+                    <p className="text-[9px] text-slate-600 mt-1">Firma Digital / Electrónica</p>
                   </div>
-                  <div className="border-t-2 border-slate-400 pt-2">
+                  <div className="border-t-2 border-slate-800 pt-2">
                     <p className="font-bold text-slate-900">TRABAJADOR</p>
                     <p className="text-[9px]">{activeWorkerForBoleta.nombre}</p>
                     <p className="text-[9px] font-mono">DNI {activeWorkerForBoleta.dni}</p>
-                    <p className="text-[9px] text-slate-400 mt-1">Conforme con lo recibido</p>
+                    <p className="text-[9px] text-slate-600 mt-1">Conforme con lo recibido</p>
                   </div>
                 </div>
-                <div className="text-center mt-3 text-[9px] text-slate-400">
+                <div className="text-center mt-3 text-[9px] text-slate-600">
                   <p>Documento generado según normativa SUNAT PLAME · Validez digital · Código de verificación: BP-2025-0001-VER</p>
                 </div>
               </div>
