@@ -12,6 +12,7 @@ import VacacionesView from './components/views/VacacionesView'
 import PlanillaView from './components/views/PlanillaView'
 import ReportesView from './components/views/ReportesView'
 import ConfigView from './components/views/ConfigView'
+import PerfilView from './components/views/PerfilView'
 
 import { INITIAL_WORKERS } from './data/mockData'
 import { getTrabajadores, getSedes } from './services/api'
@@ -30,7 +31,7 @@ export default function App() {
   // Estado del panel lateral (abierto por defecto con nombres)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
 
-  // Estado de navegación activa ('dashboard' | 'personal' | 'tareo' | 'planilla' | 'reportes' | 'config')
+  // Estado de navegación activa ('dashboard' | 'personal' | 'tareo' | 'planilla' | 'reportes' | 'config' | 'perfil')
   const [activeNav, setActiveNav] = useState('dashboard')
 
   // Datos globales de colaboradores y tareo (conectados a SistemaPlanillasDB)
@@ -254,6 +255,10 @@ export default function App() {
 
           {activeNav === 'config' && (
             <ConfigView showToast={showToast} />
+          )}
+
+          {activeNav === 'perfil' && (
+            <PerfilView user={user} showToast={showToast} />
           )}
         </div>
       </main>
