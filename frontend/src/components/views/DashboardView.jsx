@@ -84,43 +84,45 @@ export default function DashboardView({ onNavigate, workers = [] }) {
 
   return (
     <div className="space-y-4">
-      {/* ─── Cabecera del Dashboard (Conectado a Base de Datos) ───────────── */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold border border-emerald-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
-              Conectado a SistemaPlanillasDB
-            </span>
-            <span className="text-xs text-slate-400">•</span>
-            <span className="text-xs text-slate-600 font-semibold">
-              Periodo: Setiembre 2026 (Tareo al día 07)
-            </span>
+      {/* ─── Cabecera Principal con Gradiente Azul Noche / Slate Oscuro ───── */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white rounded-2xl p-6 shadow-lg border border-slate-800">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold border border-emerald-500/30 backdrop-blur-xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                Conectado a SistemaPlanillasDB
+              </span>
+              <span className="text-xs text-slate-400">•</span>
+              <span className="text-xs text-blue-200 font-medium bg-blue-900/50 px-2.5 py-0.5 rounded-md border border-blue-700/50">
+                Periodo: Setiembre 2026 (Tareo al día 07)
+              </span>
+            </div>
+            <h1 className="text-2xl font-extrabold tracking-tight text-white">
+              Dashboard Ejecutivo de Asistencia y Planillas
+            </h1>
+            <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
+              Sincronización en vivo de personal, tareo diario registrado hasta hoy y costos de nómina por sede.
+            </p>
           </div>
-          <h1 className="text-base font-bold text-slate-900 tracking-tight">
-            Dashboard Ejecutivo de Planillas
-          </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Sincronización en vivo de personal, tareo diario registrado hasta hoy y costos de nómina por sede.
-          </p>
-        </div>
 
-        {/* Acciones Rápidas */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={() => onNavigate('tareo')}
-            className="h-9 px-3.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
-          >
-            <CalendarDays size={14} className="text-blue-600" />
-            <span>Ver Tareo al Día</span>
-          </button>
-          <button
-            onClick={() => onNavigate('planilla')}
-            className="h-9 px-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs shadow-blue-500/20"
-          >
-            <FileSpreadsheet size={14} />
-            <span>Calcular Planilla</span>
-          </button>
+          {/* Acciones Rápidas */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <button
+              onClick={() => onNavigate('tareo')}
+              className="h-10 px-4 bg-slate-800/80 hover:bg-slate-700 text-slate-100 border border-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02]"
+            >
+              <CalendarDays size={16} className="text-blue-400" />
+              <span>Ver Tareo al Día</span>
+            </button>
+            <button
+              onClick={() => onNavigate('planilla')}
+              className="h-10 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-md shadow-blue-600/30 hover:scale-[1.02]"
+            >
+              <FileSpreadsheet size={16} />
+              <span>Calcular Planilla</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -191,7 +193,7 @@ export default function DashboardView({ onNavigate, workers = [] }) {
 
       {/* ─── Grilla Central: Distribución por Sede y Sistema Previsional ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        
+
         {/* Costos por Sede Real */}
         <div className="lg:col-span-2 space-y-4">
           <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">

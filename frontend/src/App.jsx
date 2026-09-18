@@ -173,7 +173,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 overflow-x-hidden">
+    <div className="min-h-screen bg-slate-200/80 font-sans text-slate-900 overflow-x-hidden">
       {/* Barra Lateral Izquierda (Abierta con nombres por defecto, logo limpio sin caja) */}
       <Sidebar
         active={activeNav}
