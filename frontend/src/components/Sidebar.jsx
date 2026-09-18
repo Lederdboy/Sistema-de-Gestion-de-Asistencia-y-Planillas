@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   BarChart3,
   Users,
@@ -33,6 +33,18 @@ export default function Sidebar({
   isOpen = true,
   onToggle,
 }) {
+  const [profileImage, setProfileImage] = useState(null)
+
+  // Cargar imagen de perfil desde localStorage
+  useEffect(() => {
+    if (user?.email) {
+      const savedImage = localStorage.getItem(`profile_image_${user.email}`)
+      if (savedImage) {
+        setProfileImage(savedImage)
+      }
+    }
+  }, [user?.email])
+
   return (
     <aside
       className={`fixed left-0 top-0 h-screen bg-white border-r border-slate-200/90 flex flex-col justify-between z-30 select-none transition-all duration-300 ease-in-out shadow-xs ${isOpen ? 'w-64' : 'w-16'
@@ -186,9 +198,17 @@ export default function Sidebar({
             <button
               onClick={() => setActive('perfil')}
               title="Ver perfil"
-              className="w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-2xs hover:bg-slate-800 transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-2xs hover:bg-slate-800 transition-colors cursor-pointer overflow-hidden"
             >
-              {user?.avatarText || 'AD'}
+              {profileImage ? (
+                <img
+                  src={profileImage}
+                  alt="Perfil"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                user?.avatarText || 'AD'
+              )}
             </button>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-slate-800 truncate leading-tight">
@@ -212,9 +232,17 @@ export default function Sidebar({
             <button
               onClick={() => setActive('perfil')}
               title="Ver perfil"
-              className="w-9 h-9 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shadow-xs hover:bg-slate-800 transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shadow-xs hover:bg-slate-800 transition-colors cursor-pointer overflow-hidden"
             >
-              {user?.avatarText || 'AD'}
+              {profileImage ? (
+                <img
+                  src={profileImage}
+                  alt="Perfil"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                user?.avatarText || 'AD'
+              )}
             </button>
             <button
               onClick={onLogout}
