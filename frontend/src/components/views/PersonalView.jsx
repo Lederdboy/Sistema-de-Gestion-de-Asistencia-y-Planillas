@@ -127,7 +127,7 @@ export default function PersonalView({ workers, onAddWorker, showToast }) {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por DNI, apellidos, nombres o cargo..."
+            placeholder="Buscar persona por DNI, apellidos, nombres o cargo..."
             className="w-full h-9 pl-9 pr-3 text-xs border border-slate-200 rounded-md bg-slate-50/50 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
@@ -314,7 +314,7 @@ export default function PersonalView({ workers, onAddWorker, showToast }) {
                   required
                   value={form.nombre}
                   onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-                  placeholder="Ej: Pérez Gómez, María Lucía"
+                  placeholder="Ej: Pedro Castillo, Taylor Swift"
                   className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
