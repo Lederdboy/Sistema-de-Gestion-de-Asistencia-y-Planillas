@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   User,
   Mail,
@@ -10,10 +10,15 @@ import {
   Edit,
   Save,
   Camera,
+  Upload,
+  X,
 } from 'lucide-react'
 
 export default function PerfilView({ user, showToast }) {
   const [isEditing, setIsEditing] = useState(false)
+  const [profileImage, setProfileImage] = useState(null)
+  const fileInputRef = useRef(null)
+  
   const [profileData, setProfileData] = useState({
     nombre: user?.name || 'Carlos Mendoza',
     email: user?.email || 'carlos.mendoza@minera-andina.com',
@@ -24,6 +29,51 @@ export default function PerfilView({ user, showToast }) {
     fechaIngreso: '15/03/2018',
     avatarText: user?.avatarText || 'CM',
   })
+
+  // Cargar imagen de perfil desde localStorage al montar el componente
+  useEffect(() => {
+    const savedImage = localStorage.getItem(`profile_image_${user?.email}`)
+    if (savedImage) {
+      setProfileImage(savedImage)
+    }
+  }, [user?.email])
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Validar que sea una imagen
+      if (!file.type.startsWith('image/')) {
+        showToast('Por favor selecciona un archivo de imagen válido.', 'error')
+        return
+      }
+      
+      // Validar tamaño (máximo 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        showToast('La imagen no debe exceder 2MB.', 'error')
+        return
+      }
+
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const imageDataUrl = event.target.result
+        setProfileImage(imageDataUrl)
+        // Guardar en localStorage
+        localStorage.setItem(`profile_image_${user?.email}`, imageDataUrl)
+        showToast('Imagen de perfil actualizada.', 'success')
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleRemoveImage = () => {
+    setProfileImage(null)
+    localStorage.removeItem(`profile_image_${user?.email}`)
+    showToast('Imagen de perfil eliminada.', 'info')
+  }
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click()
+  }
 
   const handleSave = (e) => {
     e.preventDefault()
@@ -95,17 +145,61 @@ export default function PerfilView({ user, showToast }) {
             {/* Avatar */}
             <div className="flex flex-col items-center p-4 border border-slate-200 rounded-lg bg-slate-50/50">
               <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-slate-900 text-white font-bold text-3xl flex items-center justify-center shadow-lg">
-                  {profileData.avatarText}
-                </div>
+                {profileImage ? (
+                  <div className="w-24 h-24 rounded-full overflow-hidden shadow-lg border-2 border-slate-200">
+                    <img
+                      src={profileImage}
+                      alt="Perfil"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-slate-900 text-white font-bold text-3xl flex items-center justify-center shadow-lg">
+                    {profileData.avatarText}
+                  </div>
+                )}
+                
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                
                 {isEditing && (
-                  <button className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-md transition-colors cursor-pointer">
-                    <Camera size={14} />
-                  </button>
+                  <div className="absolute bottom-0 right-0 flex gap-1">
+                    <button
+                      onClick={triggerFileInput}
+                      title="Cambiar imagen"
+                      className="w-8 h-8 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-md transition-colors cursor-pointer"
+                    >
+                      <Camera size={14} />
+                    </button>
+                    {profileImage && (
+                      <button
+                        onClick={handleRemoveImage}
+                        title="Eliminar imagen"
+                        className="w-8 h-8 bg-rose-600 hover:bg-rose-700 text-white rounded-full flex items-center justify-center shadow-md transition-colors cursor-pointer"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
               <h3 className="mt-3 text-sm font-bold text-slate-900">{profileData.nombre}</h3>
               <p className="text-xs text-slate-500">{profileData.cargo}</p>
+              
+              {!isEditing && !profileImage && (
+                <button
+                  onClick={triggerFileInput}
+                  className="mt-2 text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  <Upload size={10} />
+                  <span>Agregar foto</span>
+                </button>
+              )}
             </div>
 
             {/* Información de Contacto */}
