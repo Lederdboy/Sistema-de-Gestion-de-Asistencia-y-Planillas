@@ -12,6 +12,7 @@ import {
   ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
+  User,
 } from 'lucide-react'
 
 export const NAV_ITEMS = [
@@ -21,6 +22,7 @@ export const NAV_ITEMS = [
   { id: 'vacaciones', label: 'Vacaciones', shortLabel: 'Vacaciones', icon: Palmtree },
   { id: 'planilla', label: 'Planilla', shortLabel: 'Planilla', icon: FileSpreadsheet },
   { id: 'reportes', label: 'Reportes', shortLabel: 'Reportes', icon: Printer },
+  { id: 'perfil', label: 'Mi Perfil', shortLabel: 'Perfil', icon: User },
 ]
 
 export default function Sidebar({
@@ -181,9 +183,13 @@ export default function Sidebar({
         {isOpen ? (
           /* Modo Expandido */
           <div className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl bg-slate-50/70 border border-slate-100">
-            <div className="w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-2xs">
+            <button
+              onClick={() => setActive('perfil')}
+              title="Ver perfil"
+              className="w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-2xs hover:bg-slate-800 transition-colors cursor-pointer"
+            >
               {user?.avatarText || 'AD'}
-            </div>
+            </button>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-slate-800 truncate leading-tight">
                 {user?.name || 'Administrador'}
@@ -203,12 +209,13 @@ export default function Sidebar({
         ) : (
           /* Modo Colapsado: Avatar centrado impecable y botón logout */
           <div className="flex flex-col items-center gap-1.5 pt-1">
-            <div
-              className="w-9 h-9 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shadow-xs cursor-default"
-              title={user?.name || 'Administrador'}
+            <button
+              onClick={() => setActive('perfil')}
+              title="Ver perfil"
+              className="w-9 h-9 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shadow-xs hover:bg-slate-800 transition-colors cursor-pointer"
             >
               {user?.avatarText || 'AD'}
-            </div>
+            </button>
             <button
               onClick={onLogout}
               title="Cerrar Sesión"
