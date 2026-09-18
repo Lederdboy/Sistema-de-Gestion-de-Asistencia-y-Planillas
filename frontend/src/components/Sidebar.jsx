@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   BarChart3,
   Users,
@@ -12,15 +12,17 @@ import {
   ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
+  User,
 } from 'lucide-react'
 
 export const NAV_ITEMS = [
-  { id: 'dashboard',  label: 'Dashboard',       shortLabel: 'Dashboard',   icon: BarChart3 },
-  { id: 'personal',   label: 'Personal',        shortLabel: 'Personal',    icon: Users },
-  { id: 'tareo',      label: 'Tareo Diario',    shortLabel: 'Tareo',       icon: CalendarDays },
-  { id: 'vacaciones', label: 'Vacaciones',      shortLabel: 'Vacaciones',  icon: Palmtree },
-  { id: 'planilla',   label: 'Planilla',        shortLabel: 'Planilla',    icon: FileSpreadsheet },
-  { id: 'reportes',   label: 'Reportes',        shortLabel: 'Reportes',    icon: Printer },
+  { id: 'dashboard', label: 'Dashboard', shortLabel: 'Dashboard', icon: BarChart3 },
+  { id: 'personal', label: 'Personal', shortLabel: 'Personal', icon: Users },
+  { id: 'tareo', label: 'Tareo Diario', shortLabel: 'Tareo', icon: CalendarDays },
+  { id: 'vacaciones', label: 'Vacaciones', shortLabel: 'Vacaciones', icon: Palmtree },
+  { id: 'planilla', label: 'Planilla', shortLabel: 'Planilla', icon: FileSpreadsheet },
+  { id: 'reportes', label: 'Reportes', shortLabel: 'Reportes', icon: Printer },
+  { id: 'perfil', label: 'Mi Perfil', shortLabel: 'Perfil', icon: User },
 ]
 
 export default function Sidebar({
@@ -31,11 +33,22 @@ export default function Sidebar({
   isOpen = true,
   onToggle,
 }) {
+  const [profileImage, setProfileImage] = useState(null)
+
+  // Cargar imagen de perfil desde localStorage
+  useEffect(() => {
+    if (user?.email) {
+      const savedImage = localStorage.getItem(`profile_image_${user.email}`)
+      if (savedImage) {
+        setProfileImage(savedImage)
+      }
+    }
+  }, [user?.email])
+
   return (
     <aside
-      className={`fixed left-0 top-0 h-screen bg-white border-r border-slate-200/90 flex flex-col justify-between z-30 select-none transition-all duration-300 ease-in-out shadow-xs ${
-        isOpen ? 'w-64' : 'w-16'
-      }`}
+      className={`fixed left-0 top-0 h-screen bg-white border-r border-slate-200/90 flex flex-col justify-between z-30 select-none transition-all duration-300 ease-in-out shadow-xs ${isOpen ? 'w-64' : 'w-16'
+        }`}
     >
       {/* ─── Cabecera: Logo Limpio (Sin Cuadro) + Toggle Interno ────────── */}
       <div>
@@ -109,20 +122,25 @@ export default function Sidebar({
                   title={!isOpen ? label : undefined}
                   className={`group relative w-full flex items-center rounded-xl transition-all duration-200 ease-out cursor-pointer ${
                     isOpen
-                      ? 'gap-3 px-3.5 py-2.5 text-xs font-semibold'
+                      ? 'gap-3 px-3.5 py-2.5 text-xs'
                       : 'w-11 h-11 mx-auto justify-center'
                   } ${
                     isActive
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 scale-[1.01]'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium'
+                      ? 'bg-blue-50/80 text-blue-700 font-bold border border-blue-100/80'
+                      : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 font-medium'
                   }`}
                 >
+                  {/* Indicador vertical a la izquierda si está activo */}
+                  {isActive && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 rounded-r-full bg-blue-600 shadow-xs shadow-blue-600/50" />
+                  )}
+
                   <Icon
                     size={19}
-                    className={`flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${
-                      isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700'
+                    className={`flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+                      isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-700'
                     }`}
-                    strokeWidth={isActive ? 2.2 : 1.9}
+                    strokeWidth={isActive ? 2.3 : 1.9}
                   />
 
                   {isOpen && (
@@ -148,21 +166,18 @@ export default function Sidebar({
         <button
           onClick={() => setActive('config')}
           title={!isOpen ? 'Configuración del Sistema' : undefined}
-          className={`group relative w-full flex items-center rounded-xl transition-all duration-200 ease-out cursor-pointer ${
-            isOpen
+          className={`group relative w-full flex items-center rounded-xl transition-all duration-200 ease-out cursor-pointer ${isOpen
               ? 'gap-3 px-3.5 py-2.5 text-xs font-semibold'
               : 'w-11 h-11 mx-auto justify-center'
-          } ${
-            active === 'config'
+            } ${active === 'config'
               ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
               : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium'
-          }`}
+            }`}
         >
           <Settings
             size={19}
-            className={`flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${
-              active === 'config' ? 'text-white' : 'text-slate-400 group-hover:text-slate-700'
-            }`}
+            className={`flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${active === 'config' ? 'text-white' : 'text-slate-400 group-hover:text-slate-700'
+              }`}
           />
           {isOpen && <span className="truncate">Configuración</span>}
 
@@ -180,9 +195,21 @@ export default function Sidebar({
         {isOpen ? (
           /* Modo Expandido */
           <div className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl bg-slate-50/70 border border-slate-100">
-            <div className="w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-2xs">
-              {user?.avatarText || 'AD'}
-            </div>
+            <button
+              onClick={() => setActive('perfil')}
+              title="Ver perfil"
+              className="w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-2xs hover:bg-slate-800 transition-colors cursor-pointer overflow-hidden"
+            >
+              {profileImage ? (
+                <img
+                  src={profileImage}
+                  alt="Perfil"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                user?.avatarText || 'AD'
+              )}
+            </button>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-slate-800 truncate leading-tight">
                 {user?.name || 'Administrador'}
@@ -202,12 +229,21 @@ export default function Sidebar({
         ) : (
           /* Modo Colapsado: Avatar centrado impecable y botón logout */
           <div className="flex flex-col items-center gap-1.5 pt-1">
-            <div
-              className="w-9 h-9 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shadow-xs cursor-default"
-              title={user?.name || 'Administrador'}
+            <button
+              onClick={() => setActive('perfil')}
+              title="Ver perfil"
+              className="w-9 h-9 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shadow-xs hover:bg-slate-800 transition-colors cursor-pointer overflow-hidden"
             >
-              {user?.avatarText || 'AD'}
-            </div>
+              {profileImage ? (
+                <img
+                  src={profileImage}
+                  alt="Perfil"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                user?.avatarText || 'AD'
+              )}
+            </button>
             <button
               onClick={onLogout}
               title="Cerrar Sesión"

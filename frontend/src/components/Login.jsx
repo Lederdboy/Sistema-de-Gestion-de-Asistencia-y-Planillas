@@ -31,7 +31,8 @@ export default function Login({ onLogin }) {
       setLoading(false)
       const user = {
         name: email.includes('admin') ? 'Carlos Mendoza (Admin)' : 'Patricia Vargas (RRHH)',
-        email,
+        email: email.includes('admin') ? 'carlos.mendoza@minera-andina.com' : 'patricia.vargas@minera-andina.com',
+        originalEmail: email,
         role: email.includes('admin') ? 'Administrador General' : 'Especialista de Planillas',
         avatarText: email.includes('admin') ? 'CM' : 'PV',
       }
