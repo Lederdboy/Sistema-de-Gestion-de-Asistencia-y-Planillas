@@ -6,6 +6,7 @@ import {
   EyeOff,
   ArrowRight,
   ShieldCheck,
+  Check,
 } from 'lucide-react'
 
 export default function Login({ onLogin }) {
