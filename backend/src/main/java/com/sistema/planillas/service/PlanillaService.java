@@ -111,12 +111,23 @@ public class PlanillaService {
             int diasDescanso = row != null ? row.getTotalDescansos() : 0;
             int diasVacaciones = row != null ? row.getTotalVacaciones() : 0;
 
-            // Motor de liquidación: Cálculo de ingresos y descuentos por faltas
+            // Motor de liquidación laboral (Ley Peruana): Ingresos, Descuentos de Faltas, AFP/ONP y EsSalud
             BigDecimal sueldoDiario = t.getSueldoDiario() != null ? t.getSueldoDiario() : t.getSueldoBasico().divide(BigDecimal.valueOf(30), 2, RoundingMode.HALF_UP);
-            BigDecimal descuentoFaltas = sueldoDiario.multiply(BigDecimal.valueOf(diasFaltas));
+            BigDecimal descuentoFaltas = sueldoDiario.multiply(BigDecimal.valueOf(diasFaltas)).setScale(2, RoundingMode.HALF_UP);
+
+            BigDecimal remuneracionComputable = t.getSueldoBasico().subtract(descuentoFaltas);
+            if (remuneracionComputable.compareTo(BigDecimal.ZERO) < 0) {
+                remuneracionComputable = BigDecimal.ZERO;
+            }
+
+            // Tasa promedio de retención de pensión (ONP / AFP ~ 13%)
+            BigDecimal descuentoPension = remuneracionComputable.multiply(new BigDecimal("0.13")).setScale(2, RoundingMode.HALF_UP);
+
+            // Aporte empleador a la seguridad social (EsSalud 9%)
+            BigDecimal aporteEssalud = remuneracionComputable.multiply(new BigDecimal("0.09")).setScale(2, RoundingMode.HALF_UP);
 
             BigDecimal totalIngresos = t.getSueldoBasico();
-            BigDecimal totalDescuentos = descuentoFaltas;
+            BigDecimal totalDescuentos = descuentoFaltas.add(descuentoPension);
             BigDecimal netoPagar = totalIngresos.subtract(totalDescuentos);
             if (netoPagar.compareTo(BigDecimal.ZERO) < 0) {
                 netoPagar = BigDecimal.ZERO;
@@ -131,6 +142,10 @@ public class PlanillaService {
                     .diasDescanso(diasDescanso)
                     .diasVacaciones(diasVacaciones)
                     .sueldoBasico(t.getSueldoBasico())
+                    .asignacionFamiliar(BigDecimal.ZERO)
+                    .descuentoFaltas(descuentoFaltas)
+                    .descuentoPension(descuentoPension)
+                    .aporteEssalud(aporteEssalud)
                     .totalIngresos(totalIngresos)
                     .totalDescuentos(totalDescuentos)
                     .netoPagar(netoPagar)

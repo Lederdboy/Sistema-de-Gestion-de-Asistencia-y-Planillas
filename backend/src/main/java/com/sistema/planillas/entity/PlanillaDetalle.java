@@ -53,6 +53,22 @@ public class PlanillaDetalle {
     private BigDecimal sueldoBasico;
 
     @Builder.Default
+    @Column(name = "asignacion_familiar", nullable = false, precision = 12, scale = 2)
+    private BigDecimal asignacionFamiliar = BigDecimal.ZERO;
+
+    @Builder.Default
+    @Column(name = "descuento_faltas", nullable = false, precision = 12, scale = 2)
+    private BigDecimal descuentoFaltas = BigDecimal.ZERO;
+
+    @Builder.Default
+    @Column(name = "descuento_pension", nullable = false, precision = 12, scale = 2)
+    private BigDecimal descuentoPension = BigDecimal.ZERO;
+
+    @Builder.Default
+    @Column(name = "aporte_essalud", nullable = false, precision = 12, scale = 2)
+    private BigDecimal aporteEssalud = BigDecimal.ZERO;
+
+    @Builder.Default
     @Column(name = "total_ingresos", nullable = false, precision = 12, scale = 2)
     private BigDecimal totalIngresos = BigDecimal.ZERO;
 
