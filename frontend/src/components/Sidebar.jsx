@@ -8,19 +8,17 @@ import {
   Printer,
   Settings,
   LogOut,
-  ChevronLeft,
-  ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react'
 
 export const NAV_ITEMS = [
-  { id: 'dashboard',  label: 'Dashboard',       shortLabel: 'Dashboard',   icon: BarChart3 },
-  { id: 'personal',   label: 'Personal',        shortLabel: 'Personal',    icon: Users },
-  { id: 'tareo',      label: 'Tareo Diario',    shortLabel: 'Tareo',       icon: CalendarDays },
-  { id: 'vacaciones', label: 'Vacaciones',      shortLabel: 'Vacaciones',  icon: Palmtree },
-  { id: 'planilla',   label: 'Planilla',        shortLabel: 'Planilla',    icon: FileSpreadsheet },
-  { id: 'reportes',   label: 'Reportes',        shortLabel: 'Reportes',    icon: Printer },
+  { id: 'dashboard', label: 'Dashboard', shortLabel: 'Dashboard', icon: BarChart3 },
+  { id: 'personal', label: 'Personal', shortLabel: 'Personal', icon: Users },
+  { id: 'tareo', label: 'Tareo Diario', shortLabel: 'Tareo', icon: CalendarDays },
+  { id: 'vacaciones', label: 'Vacaciones', shortLabel: 'Vacaciones', icon: Palmtree },
+  { id: 'planilla', label: 'Planilla', shortLabel: 'Planilla', icon: FileSpreadsheet },
+  { id: 'reportes', label: 'Reportes', shortLabel: 'Reportes', icon: Printer },
 ]
 
 export default function Sidebar({
@@ -33,24 +31,25 @@ export default function Sidebar({
 }) {
   return (
     <aside
-      className={`fixed left-0 top-0 h-screen bg-white border-r border-slate-200/90 flex flex-col justify-between z-30 select-none transition-all duration-300 ease-in-out shadow-xs ${
+      className={`fixed left-0 top-0 h-screen bg-white/95 backdrop-blur-sm border-r border-slate-200/80 flex flex-col z-30 select-none transition-all duration-300 ease-in-out shadow-[0_8px_30px_rgba(15,23,42,0.06)] ${
         isOpen ? 'w-64' : 'w-16'
       }`}
     >
-      {/* ─── Cabecera: Logo Limpio (Sin Cuadro) + Toggle Interno ────────── */}
-      <div>
+      <div className="flex flex-col h-full">
         {isOpen ? (
-          /* Cabecera Expandida */
-          <div className="flex items-center justify-between h-16 px-4 border-b border-slate-100">
+          <div className="flex items-center justify-between h-16 px-4 border-b border-slate-100 bg-white/80">
             <div
               onClick={() => setActive('dashboard')}
               className="flex items-center gap-2.5 cursor-pointer group min-w-0"
             >
-              <img
-                src="/logo.png"
-                alt="Logo"
-                className="h-8 w-auto object-contain transition-transform group-hover:scale-105"
-              />
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 shadow-sm shadow-blue-500/20">
+                <img
+                  src="/logo.png"
+                  alt="Logo"
+                  className="h-5 w-auto object-contain drop-shadow-sm"
+                />
+              </div>
+
               <div className="flex flex-col min-w-0">
                 <span className="font-bold text-sm text-slate-900 tracking-tight leading-tight truncate">
                   Planilla Enterprise
@@ -61,7 +60,6 @@ export default function Sidebar({
               </div>
             </div>
 
-            {/* Botón de colapso DENTRO del panel */}
             <button
               onClick={onToggle}
               title="Contraer menú lateral"
@@ -71,16 +69,17 @@ export default function Sidebar({
             </button>
           </div>
         ) : (
-          /* Cabecera Colapsada: Logo y Botón de Abrir DENTRO */
-          <div className="flex flex-col items-center py-3 border-b border-slate-100 gap-2">
-            <img
-              src="/logo.png"
-              alt="Logo"
-              onClick={() => setActive('dashboard')}
-              className="h-8 w-auto object-contain cursor-pointer transition-transform hover:scale-105"
-              title="Planilla Enterprise"
-            />
-            {/* Botón de abrir DENTRO del panel */}
+          <div className="flex flex-col items-center py-3 border-b border-slate-100 bg-white/80 gap-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 shadow-sm shadow-blue-500/20 cursor-pointer">
+              <img
+                src="/logo.png"
+                alt="Logo"
+                onClick={() => setActive('dashboard')}
+                className="h-5 w-auto object-contain drop-shadow-sm"
+                title="Planilla Enterprise"
+              />
+            </div>
+
             <button
               onClick={onToggle}
               title="Expandir menú lateral"
@@ -91,17 +90,22 @@ export default function Sidebar({
           </div>
         )}
 
-        {/* ─── Navegación Principal con Animación Moderna ────────────────── */}
-        <div className="p-2.5">
+        <div className="px-2.5 pt-3 pb-2 flex-1">
           {isOpen && (
-            <p className="px-3 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              Módulos
-            </p>
+            <div className="mb-3 px-2 flex items-center justify-between">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.16em]">
+                Módulos
+              </p>
+              <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">
+                {NAV_ITEMS.length}
+              </span>
+            </div>
           )}
 
           <nav className="space-y-1.5">
             {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
               const isActive = active === id
+
               return (
                 <button
                   key={id}
@@ -113,25 +117,30 @@ export default function Sidebar({
                       : 'w-11 h-11 mx-auto justify-center'
                   } ${
                     isActive
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 scale-[1.01]'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md shadow-blue-500/20 ring-1 ring-blue-400/20'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
-                  <Icon
-                    size={19}
-                    className={`flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${
-                      isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700'
+                  <div
+                    className={`flex h-8 w-8 items-center justify-center rounded-lg ${
+                      isActive ? 'bg-white/10' : 'bg-slate-100 group-hover:bg-slate-200'
                     }`}
-                    strokeWidth={isActive ? 2.2 : 1.9}
-                  />
+                  >
+                    <Icon
+                      size={18}
+                      className={`flex-shrink-0 transition-transform duration-200 ${
+                        isActive ? 'text-white' : 'text-slate-500 group-hover:text-slate-700'
+                      }`}
+                      strokeWidth={isActive ? 2.2 : 1.9}
+                    />
+                  </div>
 
                   {isOpen && (
-                    <span className="truncate tracking-tight">{label}</span>
+                    <span className="flex-1 truncate tracking-tight text-left">{label}</span>
                   )}
 
-                  {/* Tooltip moderno en modo colapsado */}
                   {!isOpen && (
-                    <div className="absolute left-14 bg-slate-900 text-white text-[11px] font-semibold py-1.5 px-2.5 rounded-lg shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
+                    <div className="absolute left-14 bg-slate-900 text-white text-[11px] font-semibold py-1.5 px-2.5 rounded-lg shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200">
                       {label}
                     </div>
                   )}
@@ -140,83 +149,92 @@ export default function Sidebar({
             })}
           </nav>
         </div>
-      </div>
 
-      {/* ─── Sección Inferior: Configuración y Usuario Limpio ───────────── */}
-      <div className="p-2.5 border-t border-slate-100 space-y-2">
-        {/* Configuración */}
-        <button
-          onClick={() => setActive('config')}
-          title={!isOpen ? 'Configuración del Sistema' : undefined}
-          className={`group relative w-full flex items-center rounded-xl transition-all duration-200 ease-out cursor-pointer ${
-            isOpen
-              ? 'gap-3 px-3.5 py-2.5 text-xs font-semibold'
-              : 'w-11 h-11 mx-auto justify-center'
-          } ${
-            active === 'config'
-              ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
-              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium'
-          }`}
-        >
-          <Settings
-            size={19}
-            className={`flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${
-              active === 'config' ? 'text-white' : 'text-slate-400 group-hover:text-slate-700'
+        <div className="p-2.5 border-t border-slate-100 bg-slate-50/60">
+          <button
+            type="button"
+            onClick={() => setActive('config')}
+            title={!isOpen ? 'Configuración del Sistema' : undefined}
+            className={`group relative w-full flex items-center rounded-xl transition-all duration-200 ease-out cursor-pointer ${
+              isOpen
+                ? 'gap-3 px-3.5 py-2.5 text-xs font-semibold'
+                : 'w-11 h-11 mx-auto justify-center'
+            } ${
+              active === 'config'
+                ? 'bg-slate-900 text-white shadow-md shadow-slate-300/40'
+                : 'text-slate-600 hover:bg-white hover:text-slate-900'
             }`}
-          />
-          {isOpen && <span className="truncate">Configuración</span>}
+          >
+            <div
+              className={`flex h-8 w-8 items-center justify-center rounded-lg ${
+                active === 'config' ? 'bg-white/10' : 'bg-slate-100 group-hover:bg-slate-200'
+              }`}
+            >
+              <Settings
+                size={18}
+                className={`flex-shrink-0 ${
+                  active === 'config' ? 'text-white' : 'text-slate-500 group-hover:text-slate-700'
+                }`}
+              />
+            </div>
 
-          {!isOpen && (
-            <div className="absolute left-14 bg-slate-900 text-white text-[11px] font-semibold py-1.5 px-2.5 rounded-lg shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
-              Configuración
+            {isOpen && <span className="truncate">Configuración</span>}
+
+            {!isOpen && (
+              <div className="absolute left-14 bg-slate-900 text-white text-[11px] font-semibold py-1.5 px-2.5 rounded-lg shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200">
+                Configuración
+              </div>
+            )}
+          </button>
+
+          <div className="h-px bg-slate-200/80 my-2.5 mx-1" />
+
+          {isOpen ? (
+            <div className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+              <div className="relative flex-shrink-0">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-800 to-slate-600 text-white font-bold text-[11px] flex items-center justify-center shadow-sm">
+                  {user?.avatarText || 'AD'}
+                </div>
+                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500" />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-slate-800 truncate leading-tight">
+                  {user?.name || 'Administrador'}
+                </p>
+                <p className="text-[10px] text-slate-400 truncate leading-none mt-0.5">
+                  {user?.role || 'RRHH'}
+                </p>
+              </div>
+
+              <button
+                onClick={onLogout}
+                title="Cerrar Sesión"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+              >
+                <LogOut size={15} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-1.5 pt-1">
+              <div
+                className="relative w-9 h-9 rounded-full bg-gradient-to-br from-slate-800 to-slate-600 text-white font-bold text-[11px] flex items-center justify-center shadow-sm"
+                title={user?.name || 'Administrador'}
+              >
+                {user?.avatarText || 'AD'}
+                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500" />
+              </div>
+
+              <button
+                onClick={onLogout}
+                title="Cerrar Sesión"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+              >
+                <LogOut size={14} />
+              </button>
             </div>
           )}
-        </button>
-
-        {/* Separador sutil */}
-        <div className="h-px bg-slate-100 my-1 mx-2" />
-
-        {/* Tarjeta de Usuario Limpia (Sin desbordes ni flechas raras) */}
-        {isOpen ? (
-          /* Modo Expandido */
-          <div className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl bg-slate-50/70 border border-slate-100">
-            <div className="w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-2xs">
-              {user?.avatarText || 'AD'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-800 truncate leading-tight">
-                {user?.name || 'Administrador'}
-              </p>
-              <p className="text-[10px] text-slate-400 truncate leading-none mt-0.5">
-                {user?.role || 'RRHH'}
-              </p>
-            </div>
-            <button
-              onClick={onLogout}
-              title="Cerrar Sesión"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-            >
-              <LogOut size={15} />
-            </button>
-          </div>
-        ) : (
-          /* Modo Colapsado: Avatar centrado impecable y botón logout */
-          <div className="flex flex-col items-center gap-1.5 pt-1">
-            <div
-              className="w-9 h-9 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shadow-xs cursor-default"
-              title={user?.name || 'Administrador'}
-            >
-              {user?.avatarText || 'AD'}
-            </div>
-            <button
-              onClick={onLogout}
-              title="Cerrar Sesión"
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-            >
-              <LogOut size={14} />
-            </button>
-          </div>
-        )}
+        </div>
       </div>
     </aside>
   )
