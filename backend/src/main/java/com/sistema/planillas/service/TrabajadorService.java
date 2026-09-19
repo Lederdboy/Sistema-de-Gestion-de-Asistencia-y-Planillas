@@ -44,6 +44,13 @@ public class TrabajadorService {
 
     @Transactional(rollbackFor = Exception.class)
     public TrabajadorDTO crearTrabajador(CrearTrabajadorRequest request) {
+        validarDocumento(request.getTipoDocumento(), request.getNumeroDocumento());
+
+        if (trabajadorRepository.existsByEmpresaIdAndNumeroDocumento(request.getEmpresaId(), request.getNumeroDocumento())) {
+            throw new BusinessException("Ya existe un trabajador registrado con el número de documento " 
+                    + request.getNumeroDocumento() + " en esta empresa.");
+        }
+
         Empresa empresa = empresaRepository.findById(request.getEmpresaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + request.getEmpresaId()));
 
@@ -83,6 +90,12 @@ public class TrabajadorService {
         Trabajador trabajador = trabajadorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado con ID: " + id));
 
+        validarDocumento(request.getTipoDocumento(), request.getNumeroDocumento());
+
+        if (trabajadorRepository.existsByEmpresaIdAndNumeroDocumentoAndIdNot(trabajador.getEmpresa().getId(), request.getNumeroDocumento(), id)) {
+            throw new BusinessException("El número de documento " + request.getNumeroDocumento() + " ya está registrado por otro trabajador en esta empresa.");
+        }
+
         Sede sede = sedeRepository.findById(request.getSedeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Sede no encontrada con ID: " + request.getSedeId()));
 
@@ -110,6 +123,14 @@ public class TrabajadorService {
 
         Trabajador actualizado = trabajadorRepository.save(trabajador);
         return mapToDTO(actualizado);
+    }
+
+    private void validarDocumento(String tipoDocumento, String numeroDocumento) {
+        if ("DNI".equalsIgnoreCase(tipoDocumento)) {
+            if (numeroDocumento == null || !numeroDocumento.matches("^[0-9]{8}$")) {
+                throw new BusinessException("Para tipo de documento DNI se requieren exactamente 8 dígitos numéricos.");
+            }
+        }
     }
 
     @Transactional(rollbackFor = Exception.class)
