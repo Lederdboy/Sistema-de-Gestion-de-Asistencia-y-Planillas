@@ -48,25 +48,29 @@ const AttBadge = ({ code, onClick }) => {
 
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
 const KpiCard = ({ icon: Icon, label, value, sub, iconBg, loading }) => (
-  <div className="bg-white border border-slate-200 rounded-lg p-4 flex items-center gap-4 shadow-xs">
+  <div className="rounded-[24px] border border-slate-200 bg-white/90 p-4 shadow-[0_18px_40px_rgba(15,23,42,0.04)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_22px_52px_rgba(14,165,233,0.08)]">
     {loading ? (
       <>
-        <div className="w-11 h-11 rounded-full bg-slate-200 animate-pulse flex-shrink-0" />
-        <div className="flex-1 space-y-2">
-          <div className="h-3 w-24 bg-slate-200 animate-pulse rounded" />
-          <div className="h-6 w-16 bg-slate-200 animate-pulse rounded" />
-          <div className="h-3 w-32 bg-slate-200 animate-pulse rounded" />
+        <div className="flex items-center gap-4">
+          <div className="h-11 w-11 animate-pulse rounded-2xl bg-slate-200" />
+          <div className="flex-1 space-y-2">
+            <div className="h-3 w-24 rounded-full bg-slate-200 animate-pulse" />
+            <div className="h-6 w-16 rounded-full bg-slate-200 animate-pulse" />
+            <div className="h-3 w-32 rounded-full bg-slate-200 animate-pulse" />
+          </div>
         </div>
       </>
     ) : (
       <>
-        <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${iconBg}`}>
-          <Icon size={20} />
-        </div>
-        <div>
-          <p className="text-xs text-slate-500 font-medium">{label}</p>
-          <p className="text-2xl font-bold text-slate-900 leading-tight">{value}</p>
-          <p className="text-xs text-slate-400">{sub}</p>
+        <div className="flex items-center gap-4">
+          <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl ${iconBg}`}>
+            <Icon size={20} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-slate-500">{label}</p>
+            <p className="mt-1 text-2xl font-bold leading-tight text-slate-900">{value}</p>
+            <p className="mt-1 text-xs text-slate-400">{sub}</p>
+          </div>
         </div>
       </>
     )}
@@ -189,60 +193,55 @@ export default function TareoView({
   ]
 
   return (
-    <div className="space-y-4">
-      {/* KPI Cards Superiores */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="space-y-5">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
         {kpis.map((k, i) => (
           <KpiCard key={i} {...k} loading={loading} />
         ))}
       </div>
 
-      {/* Panel Principal de Tareo */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 space-y-3.5 shadow-xs">
-        
-        {/* Header del panel y Acciones */}
-        <div className="flex items-center justify-between flex-wrap gap-2">
+      <div className="rounded-[28px] border border-slate-200 bg-white/80 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.05)] backdrop-blur-xl sm:p-5">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-slate-900">Matriz de Tareo Diario</h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">Tareo</p>
+            <h2 className="mt-1 text-lg font-bold text-slate-900 sm:text-xl">Matriz de tareo diario</h2>
+            <p className="mt-1 text-xs text-slate-500">
               Periodo {filters.periodo} · {filteredWorkers.length} colaboradores · Asistencia registrada hasta hoy (07 set. 2026)
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={handleExportExcel}
-              className="h-9 px-3 text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-md flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3.5 py-2 text-[11px] font-semibold text-white shadow-[0_12px_25px_rgba(16,185,129,0.2)] transition-all hover:bg-emerald-700"
             >
               <Download size={13} />
-              <span>Exportar Excel</span>
+              Exportar Excel
             </button>
 
             <button
               onClick={() => setShowCalculateModal(true)}
-              className="h-9 px-3 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-3.5 py-2 text-[11px] font-semibold text-white shadow-[0_12px_25px_rgba(14,165,233,0.22)] transition-all hover:bg-sky-700"
             >
               <Calculator size={13} />
-              <span>Calcular Planilla</span>
+              Calcular Planilla
             </button>
 
             <button
               onClick={() => setShowCloseModal(true)}
-              className="h-9 px-3 text-xs font-medium bg-red-700 hover:bg-red-800 text-white rounded-md flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-xl bg-rose-700 px-3.5 py-2 text-[11px] font-semibold text-white shadow-[0_12px_25px_rgba(244,63,94,0.2)] transition-all hover:bg-rose-800"
             >
               <Lock size={13} />
-              <span>Cerrar Planilla</span>
+              Cerrar Planilla
             </button>
           </div>
         </div>
 
-        {/* Barra de Filtros */}
-        <div className="flex flex-wrap items-center gap-2 pt-1">
-          {/* Empresa */}
-          <div className="relative">
-            <Building2 size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+        <div className="mt-4 flex flex-wrap items-center gap-2 rounded-[22px] border border-slate-200 bg-slate-50/70 p-3">
+          <div className="relative min-w-[170px] flex-1">
+            <Building2 size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <select
-              className="h-9 pl-7 pr-4 text-xs border border-slate-200 rounded-md bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-700 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
               value={filters.empresa}
               onChange={(e) => setFilters((f) => ({ ...f, empresa: e.target.value }))}
             >
@@ -255,11 +254,10 @@ export default function TareoView({
             </select>
           </div>
 
-          {/* Sede */}
-          <div className="relative">
-            <MapPin size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <div className="relative min-w-[170px] flex-1">
+            <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <select
-              className="h-9 pl-7 pr-4 text-xs border border-slate-200 rounded-md bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-700 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
               value={filters.sede}
               onChange={(e) => setFilters((f) => ({ ...f, sede: e.target.value }))}
             >
@@ -272,9 +270,8 @@ export default function TareoView({
             </select>
           </div>
 
-          {/* Periodo */}
           <select
-            className="h-9 px-3 text-xs border border-slate-200 rounded-md bg-white text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
             value={filters.periodo}
             onChange={(e) => setFilters((f) => ({ ...f, periodo: e.target.value }))}
           >
@@ -285,132 +282,123 @@ export default function TareoView({
             ))}
           </select>
 
-          {/* Búsqueda por DNI o nombre */}
-          <div className="relative flex-1 min-w-[200px] max-w-xs">
-            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <div className="relative min-w-[220px] flex-1">
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               placeholder="Buscar DNI o nombre..."
-              className="h-9 pl-7 pr-3 text-xs border border-slate-200 rounded-md w-full focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-slate-400"
+              className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
               value={filters.search}
               onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
             />
           </div>
         </div>
 
-        {/* Leyenda de Asistencias */}
-        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100">
-          <span className="text-[11px] text-slate-400 font-medium mr-1">Leyenda:</span>
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+          <span className="mr-1 text-[11px] font-medium text-slate-400">Leyenda:</span>
           {Object.entries(BADGE_CONFIG).map(([code, { label, cls, desc }]) => (
             <span
               key={code}
-              className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium border ${cls}`}
+              className={`inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-xs font-medium ${cls}`}
             >
               <span className="font-bold">{label}</span>
               <span className="font-normal opacity-85">{desc}</span>
             </span>
           ))}
-          <span className="text-[11px] text-slate-400 italic ml-auto hidden sm:inline">
+          <span className="ml-auto hidden text-[11px] italic text-slate-400 sm:inline">
             * Haz clic en cualquier celda para editar el estado
           </span>
         </div>
 
-        {/* Matriz de Asistencia (Scroll Horizontal) */}
-        <div className="overflow-x-auto border border-slate-200 rounded-lg shadow-2xs">
-          <table className="text-xs border-collapse min-w-max w-full">
-            <thead>
-              <tr className="bg-slate-50 text-slate-700 select-none">
-                <th className="sticky left-0 bg-slate-50 z-20 text-left px-3 py-2 font-semibold border-b border-r border-slate-200 min-w-[190px]">
-                  Colaborador
-                </th>
-                <th className="px-2 py-2 font-semibold border-b border-r border-slate-200 min-w-[85px] text-center">
-                  DNI
-                </th>
-                {dayNums.map((d) => {
-                  const weekend = isWeekend(year, month, d)
-                  const isToday = d === 7 && month === 9 && year === 2026
-                  return (
+        <div className="mt-4 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-[0_12px_24px_rgba(15,23,42,0.03)]">
+          <div className="overflow-x-auto">
+            <table className="min-w-max w-full border-collapse text-xs">
+              <thead>
+                <tr className="select-none bg-slate-100 text-slate-700">
+                  <th className="sticky left-0 z-20 min-w-[190px] border-b border-r border-slate-200 bg-slate-100 px-3 py-2.5 text-left font-semibold">
+                    Colaborador
+                  </th>
+                  <th className="min-w-[85px] border-b border-r border-slate-200 px-2 py-2.5 text-center font-semibold">
+                    DNI
+                  </th>
+                  {dayNums.map((d) => {
+                    const weekend = isWeekend(year, month, d)
+                    const isToday = d === 7 && month === 9 && year === 2026
+                    return (
+                      <th
+                        key={d}
+                        className={`w-8 border-b border-slate-200 py-1.5 text-center font-semibold ${
+                          isToday
+                            ? 'bg-sky-600 text-white ring-2 ring-sky-500 ring-inset'
+                            : weekend
+                            ? 'bg-rose-50 text-rose-600'
+                            : 'text-slate-600'
+                        }`}
+                        title={isToday ? 'Día de Hoy (07 de Setiembre de 2026)' : undefined}
+                      >
+                        <span className="block leading-none">{d}</span>
+                        {isToday && <span className="mt-0.5 block text-[7px] font-bold uppercase tracking-tighter text-sky-100">Hoy</span>}
+                      </th>
+                    )
+                  })}
+                  {['D', 'N', 'F', 'DL', 'V'].map((k) => (
                     <th
-                      key={d}
-                      className={`w-8 py-1.5 font-semibold border-b border-slate-200 text-center ${
-                        isToday
-                          ? 'bg-blue-600 text-white font-extrabold ring-2 ring-blue-500'
-                          : weekend
-                          ? 'text-rose-500 bg-rose-50/70'
-                          : 'text-slate-600'
-                      }`}
-                      title={isToday ? 'Día de Hoy (07 de Setiembre de 2026)' : undefined}
+                      key={k}
+                      className={`w-9 border-b border-l border-slate-200 py-2 text-center font-bold ${BADGE_CONFIG[k]?.cls}`}
                     >
-                      <span className="block leading-none">{d}</span>
-                      {isToday && <span className="block text-[7px] font-bold uppercase tracking-tighter text-blue-100 mt-0.5">Hoy</span>}
+                      {k}
                     </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredWorkers.map((w, idx) => {
+                  const s = summary(w.tareo)
+                  return (
+                    <tr
+                      key={w.id}
+                      className={`transition-colors hover:bg-sky-50/50 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}`}
+                    >
+                      <td className="sticky left-0 z-10 whitespace-nowrap border-r border-slate-100 bg-inherit px-3 py-1.5 font-medium text-slate-800 shadow-[1px_0_0_0_#e2e8f0]">
+                        <div className="flex items-center gap-2">
+                          <span className="h-2 w-2 rounded-full bg-sky-600" />
+                          <span>{w.nombre}</span>
+                        </div>
+                      </td>
+                      <td className="border-r border-slate-100 px-2 py-1.5 text-center font-mono text-slate-500">
+                        {w.dni}
+                      </td>
+
+                      {dayNums.map((d) => {
+                        const weekend = isWeekend(year, month, d)
+                        const isToday = d === 7 && month === 9 && year === 2026
+                        const code = w.tareo ? w.tareo[d - 1] : null
+                        return (
+                          <td
+                            key={d}
+                            className={`border-slate-100 py-1 text-center ${
+                              isToday ? 'bg-sky-50/80' : weekend ? 'bg-rose-50/20' : ''
+                            }`}
+                          >
+                            <AttBadge code={code} onClick={() => handleCellClick(w.id, d - 1, code)} />
+                          </td>
+                        )
+                      })}
+
+                      {['D', 'N', 'F', 'DL', 'V'].map((k) => (
+                        <td key={k} className="border-l border-slate-100 py-1.5 text-center font-bold text-slate-700">
+                          {s[k] || 0}
+                        </td>
+                      ))}
+                    </tr>
                   )
                 })}
-                {['D', 'N', 'F', 'DL', 'V'].map((k) => (
-                  <th
-                    key={k}
-                    className={`w-9 py-2 font-bold border-b border-l border-slate-200 text-center ${BADGE_CONFIG[k]?.cls}`}
-                  >
-                    {k}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredWorkers.map((w, idx) => {
-                const s = summary(w.tareo)
-                return (
-                  <tr
-                    key={w.id}
-                    className={`hover:bg-blue-50/30 transition-colors ${
-                      idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'
-                    }`}
-                  >
-                    <td className="sticky left-0 bg-inherit z-10 px-3 py-1.5 font-medium text-slate-800 border-r border-slate-100 whitespace-nowrap shadow-[1px_0_0_0_#f1f5f9]">
-                      <div className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-                        <span>{w.nombre}</span>
-                      </div>
-                    </td>
-                    <td className="px-2 py-1.5 text-slate-500 border-r border-slate-100 font-mono text-center">
-                      {w.dni}
-                    </td>
-
-                    {dayNums.map((d) => {
-                      const weekend = isWeekend(year, month, d)
-                      const isToday = d === 7 && month === 9 && year === 2026
-                      const code = w.tareo ? w.tareo[d - 1] : null
-                      return (
-                        <td
-                          key={d}
-                          className={`py-1 text-center border-slate-100 ${
-                            isToday ? 'bg-blue-50/80 font-bold' : weekend ? 'bg-rose-50/30' : ''
-                          }`}
-                        >
-                          <AttBadge
-                            code={code}
-                            onClick={() => handleCellClick(w.id, d - 1, code)}
-                          />
-                        </td>
-                      )
-                    })}
-
-                    {['D', 'N', 'F', 'DL', 'V'].map((k) => (
-                      <td
-                        key={k}
-                        className="py-1.5 text-center border-l border-slate-100 font-bold text-slate-700"
-                      >
-                        {s[k] || 0}
-                      </td>
-                    ))}
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
         </div>
-
       </div>
+
 
       {/* Modal Rápido de Cambio de Estado en Celda */}
       {selectedCell && (
