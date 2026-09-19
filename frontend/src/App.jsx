@@ -194,7 +194,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#e0f2fe_0%,_#f8fafc_30%,_#e2e8f0_100%)] font-sans text-slate-900 overflow-x-hidden">
-      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(14,116,144,0.05),rgba(15,23,42,0.02))] pointer-events-none" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(14,116,144,0.05),rgba(15,23,42,0.02))]" />
+      <div className="pointer-events-none absolute left-0 top-0 h-80 w-80 rounded-full bg-sky-200/30 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 right-0 h-96 w-96 rounded-full bg-indigo-200/20 blur-3xl" />
 
       {isMobile && isSidebarOpen && (
         <button
@@ -230,11 +232,11 @@ export default function App() {
 
       {/* Contenido Principal a Ancho Completo (Sin espacio blanco sobrante a los costados) */}
       <main
-        className={`relative transition-all duration-300 pt-20 px-3 sm:px-5 lg:px-6 pb-8 min-h-screen ${
-          isMobile ? 'ml-0' : isSidebarOpen ? 'lg:ml-64' : 'lg:ml-16'
-        }`}
+        className={`relative min-h-screen pt-20 pb-8 transition-all duration-300 ${
+          isMobile ? 'ml-0 px-3 sm:px-5' : 'px-3 sm:px-5 lg:px-6'
+        } ${isMobile ? '' : isSidebarOpen ? 'lg:ml-64' : 'lg:ml-16'}`}
       >
-        <div className="w-full max-w-[1700px]">
+        <div className="mx-auto w-full max-w-[1700px]">
           {activeNav === 'dashboard' && (
             <DashboardView onNavigate={setActiveNav} workers={workers} />
           )}
