@@ -46,177 +46,171 @@ export default function PlanillaView({ workers, onViewBoleta, showToast }) {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header y Acciones */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-            <FileSpreadsheet size={20} />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-slate-900">
-                Planilla Mensual de Remuneraciones
-              </h2>
-              <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                  status === 'Aprobada'
-                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                    : 'bg-amber-100 text-amber-800 border border-amber-300'
-                }`}
-              >
-                {status}
-              </span>
+    <div className="space-y-5">
+      <div className="rounded-[28px] border border-slate-200/80 bg-white/85 p-4 shadow-[0_18px_35px_rgba(15,23,42,0.06)] backdrop-blur-xl sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-sky-700 shadow-inner shadow-sky-200/80">
+              <FileSpreadsheet size={20} />
             </div>
-            <p className="text-xs text-slate-500">
-              Periodo {periodo} · {planillas.length} colaboradores procesados bajo legislación peruana
-            </p>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
+                  Planilla mensual de remuneraciones
+                </h2>
+                <span
+                  className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold ${
+                    status === 'Aprobada'
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                      : 'border-amber-200 bg-amber-50 text-amber-700'
+                  }`}
+                >
+                  {status}
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-slate-500">
+                Periodo {periodo} · {planillas.length} colaboradores procesados bajo legislación peruana
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleExportBank}
-            className="h-9 px-3 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-md flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
-          >
-            <Download size={13} />
-            <span>TXT Bancos (Telecrédito)</span>
-          </button>
-
-          {status !== 'Aprobada' ? (
+          <div className="flex flex-wrap items-center gap-2">
             <button
-              onClick={handleApprove}
-              className="h-9 px-3 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+              onClick={handleExportBank}
+              className="inline-flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-600 px-3.5 py-2.5 text-xs font-semibold text-white shadow-[0_12px_25px_rgba(16,185,129,0.25)] transition-all hover:bg-emerald-700"
             >
-              <CheckCircle2 size={13} />
-              <span>Aprobar y Emitir</span>
+              <Download size={13} />
+              TXT Bancos
             </button>
-          ) : (
-            <span className="h-9 px-3 text-xs font-semibold bg-slate-100 text-slate-600 rounded-md flex items-center gap-1.5 border border-slate-200">
-              <Lock size={12} />
-              <span>Planilla Cerrada</span>
-            </span>
-          )}
+
+            {status !== 'Aprobada' ? (
+              <button
+                onClick={handleApprove}
+                className="inline-flex items-center gap-2 rounded-2xl bg-sky-600 px-3.5 py-2.5 text-xs font-semibold text-white shadow-[0_12px_25px_rgba(14,165,233,0.28)] transition-all hover:bg-sky-700"
+              >
+                <CheckCircle2 size={13} />
+                Aprobar y emitir
+              </button>
+            ) : (
+              <span className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-xs font-semibold text-slate-600">
+                <Lock size={12} />
+                Planilla cerrada
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* KPI Cards de Resumen Monetario */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-xs">
-          <p className="text-[11px] text-slate-400 font-semibold uppercase">Total Rem. Bruta</p>
-          <p className="text-xl font-extrabold text-slate-900 mt-1">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-[24px] border border-slate-200 bg-white/85 p-3.5 shadow-[0_16px_36px_rgba(15,23,42,0.05)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Total remuneración bruta</p>
+          <p className="mt-2 text-2xl font-black text-slate-900">
             S/ {totalBrutoGeneral.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
           </p>
-          <p className="text-[10px] text-slate-500 mt-0.5">Básico + Asig. Fam. + Horas extras</p>
+          <p className="mt-1 text-[10px] text-slate-500">Básico + asig. familiar + horas extras</p>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-xs">
-          <p className="text-[11px] text-slate-400 font-semibold uppercase">Total Descuentos Ley</p>
-          <p className="text-xl font-extrabold text-rose-600 mt-1">
+        <div className="rounded-[24px] border border-rose-200 bg-rose-50/70 p-3.5 shadow-[0_16px_36px_rgba(244,63,94,0.06)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-rose-600">Total descuentos ley</p>
+          <p className="mt-2 text-2xl font-black text-rose-700">
             - S/ {totalDescuentosGeneral.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
           </p>
-          <p className="text-[10px] text-slate-500 mt-0.5">AFP, ONP, Faltas y 5ta Cat.</p>
+          <p className="mt-1 text-[10px] text-rose-600">AFP, ONP, faltas y 5ta categoría</p>
         </div>
 
-        <div className="bg-white border border-blue-200 bg-blue-50/20 rounded-lg p-3.5 shadow-xs">
-          <p className="text-[11px] text-blue-700 font-semibold uppercase">Total Neto a Pagar</p>
-          <p className="text-xl font-black text-blue-900 mt-1">
+        <div className="rounded-[24px] border border-sky-200 bg-sky-50/80 p-3.5 shadow-[0_16px_36px_rgba(14,165,233,0.08)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-sky-700">Total neto a pagar</p>
+          <p className="mt-2 text-2xl font-black text-sky-900">
             S/ {totalNetoGeneral.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
           </p>
-          <p className="text-[10px] text-blue-600 mt-0.5">Dispersión bancaria colaboradores</p>
+          <p className="mt-1 text-[10px] text-sky-700">Dispersión bancaria colaboradores</p>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-xs">
-          <p className="text-[11px] text-slate-400 font-semibold uppercase">Aportes Empleador</p>
-          <p className="text-xl font-extrabold text-emerald-700 mt-1">
+        <div className="rounded-[24px] border border-emerald-200 bg-emerald-50/80 p-3.5 shadow-[0_16px_36px_rgba(16,185,129,0.08)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-700">Aportes empleador</p>
+          <p className="mt-2 text-2xl font-black text-emerald-900">
             S/ {totalEsSaludGeneral.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
           </p>
-          <p className="text-[10px] text-slate-500 mt-0.5">EsSalud (9%) a declarar en PLAME</p>
+          <p className="mt-1 text-[10px] text-emerald-700">EsSalud (9%) declarados en PLAME</p>
         </div>
       </div>
 
-      {/* Buscador */}
-      <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-xs flex items-center justify-between gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por DNI o nombre en la planilla..."
-            className="w-full h-8 pl-8 pr-3 text-xs border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
+      <div className="rounded-[24px] border border-slate-200 bg-white/85 p-3 shadow-[0_18px_35px_rgba(15,23,42,0.04)]">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative w-full max-w-md">
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por DNI o nombre..."
+              className="h-10 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs text-slate-700 outline-none transition focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
+            />
+          </div>
 
-        <div className="text-xs text-slate-500">
-          Mostrando <span className="font-bold text-slate-800">{filtered.length}</span> de {planillas.length}
+          <div className="text-xs font-medium text-slate-500">
+            Mostrando <span className="font-bold text-slate-800">{filtered.length}</span> de {planillas.length}
+          </div>
         </div>
       </div>
 
-      {/* Tabla Detallada de Planilla */}
-      <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
+      <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white/85 shadow-[0_20px_40px_rgba(15,23,42,0.04)]">
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left border-collapse min-w-[950px]">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[10px]">
+          <table className="min-w-[980px] w-full border-collapse text-left text-xs">
+            <thead className="border-b border-slate-200 bg-slate-50/90 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-600">
               <tr>
-                <th className="px-3 py-2.5">Colaborador</th>
-                <th className="px-2 py-2.5 text-center">DNI</th>
-                <th className="px-2 py-2.5 text-center">Días Trab.</th>
-                <th className="px-2 py-2.5 text-right">Básico</th>
-                <th className="px-2 py-2.5 text-right">Asig. Fam.</th>
-                <th className="px-2 py-2.5 text-right">Sobretasa</th>
-                <th className="px-2 py-2.5 text-right font-bold text-slate-800 bg-slate-100/60">Total Bruto</th>
-                <th className="px-2 py-2.5 text-center">Pensión</th>
-                <th className="px-2 py-2.5 text-right text-rose-600">Desc. AFP/ONP</th>
-                <th className="px-2 py-2.5 text-right text-rose-600">Desc. Faltas</th>
-                <th className="px-2 py-2.5 text-right text-rose-600 font-bold bg-rose-50/50">Total Desc.</th>
-                <th className="px-3 py-2.5 text-right font-extrabold text-blue-900 bg-blue-50/80">Neto a Pagar</th>
-                <th className="px-2 py-2.5 text-right text-emerald-700">EsSalud 9%</th>
-                <th className="px-2 py-2.5 text-center">Boleta</th>
+                <th className="px-3 py-3">Colaborador</th>
+                <th className="px-2 py-3 text-center">DNI</th>
+                <th className="px-2 py-3 text-center">Días Trab.</th>
+                <th className="px-2 py-3 text-right">Básico</th>
+                <th className="px-2 py-3 text-right">Asig. Fam.</th>
+                <th className="px-2 py-3 text-right">Sobretasa</th>
+                <th className="bg-slate-100 px-2 py-3 text-right font-bold text-slate-800">Total Bruto</th>
+                <th className="px-2 py-3 text-center">Pensión</th>
+                <th className="px-2 py-3 text-right text-rose-600">Desc. AFP/ONP</th>
+                <th className="px-2 py-3 text-right text-rose-600">Desc. Faltas</th>
+                <th className="bg-rose-50 px-2 py-3 text-right font-bold text-rose-700">Total Desc.</th>
+                <th className="bg-sky-50 px-3 py-3 text-right font-extrabold text-sky-900">Neto a Pagar</th>
+                <th className="px-2 py-3 text-right text-emerald-700">EsSalud 9%</th>
+                <th className="px-2 py-3 text-center">Boleta</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filtered.map((row) => (
-                <tr key={row.trabajadorId} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="px-3 py-2">
-                    <p className="font-semibold text-slate-900">{row.nombre}</p>
-                    <p className="text-[10px] text-slate-400">{row.cargo}</p>
+                <tr key={row.trabajadorId} className="transition-colors hover:bg-slate-50/80">
+                  <td className="px-3 py-2.5">
+                    <p className="font-bold text-slate-900">{row.nombre}</p>
+                    <p className="text-[10px] text-slate-500">{row.cargo}</p>
                   </td>
-                  <td className="px-2 py-2 text-center font-mono text-slate-600">{row.dni}</td>
-                  <td className="px-2 py-2 text-center font-semibold text-slate-700">
+                  <td className="px-2 py-2.5 text-center font-mono text-slate-600">{row.dni}</td>
+                  <td className="px-2 py-2.5 text-center font-semibold text-slate-700">
                     {row.diasTrabajados + row.diasDescanso + row.diasVacaciones}
                   </td>
-                  <td className="px-2 py-2 text-right font-mono">S/ {row.basicoProporcional.toFixed(2)}</td>
-                  <td className="px-2 py-2 text-right font-mono">S/ {row.asigFamiliar.toFixed(2)}</td>
-                  <td className="px-2 py-2 text-right font-mono">S/ {row.sobretasaNocturna.toFixed(2)}</td>
-                  <td className="px-2 py-2 text-right font-mono font-bold text-slate-900 bg-slate-50/70">
+                  <td className="px-2 py-2.5 text-right font-mono">S/ {row.basicoProporcional.toFixed(2)}</td>
+                  <td className="px-2 py-2.5 text-right font-mono">S/ {row.asigFamiliar.toFixed(2)}</td>
+                  <td className="px-2 py-2.5 text-right font-mono">S/ {row.sobretasaNocturna.toFixed(2)}</td>
+                  <td className="bg-slate-50 px-2 py-2.5 text-right font-mono font-bold text-slate-900">
                     S/ {row.totalBruto.toFixed(2)}
                   </td>
-                  <td className="px-2 py-2 text-center">
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700">
+                  <td className="px-2 py-2.5 text-center">
+                    <span className="inline-flex rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700">
                       {row.afp}
                     </span>
                   </td>
-                  <td className="px-2 py-2 text-right font-mono text-rose-600">
-                    -S/ {row.descuentoPension.toFixed(2)}
-                  </td>
-                  <td className="px-2 py-2 text-right font-mono text-rose-600">
-                    -S/ {row.descuentoFaltas.toFixed(2)}
-                  </td>
-                  <td className="px-2 py-2 text-right font-mono font-bold text-rose-700 bg-rose-50/40">
+                  <td className="px-2 py-2.5 text-right font-mono text-rose-600">-S/ {row.descuentoPension.toFixed(2)}</td>
+                  <td className="px-2 py-2.5 text-right font-mono text-rose-600">-S/ {row.descuentoFaltas.toFixed(2)}</td>
+                  <td className="bg-rose-50 px-2 py-2.5 text-right font-mono font-bold text-rose-700">
                     -S/ {row.totalDescuentos.toFixed(2)}
                   </td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-blue-900 bg-blue-50/60 text-sm">
+                  <td className="bg-sky-50 px-3 py-2.5 text-right font-mono font-black text-sky-900">
                     S/ {row.netoPagar.toFixed(2)}
                   </td>
-                  <td className="px-2 py-2 text-right font-mono text-emerald-700">
-                    S/ {row.aporteEsSalud.toFixed(2)}
-                  </td>
-                  <td className="px-2 py-2 text-center">
+                  <td className="px-2 py-2.5 text-right font-mono text-emerald-700">S/ {row.aporteEsSalud.toFixed(2)}</td>
+                  <td className="px-2 py-2.5 text-center">
                     <button
                       onClick={() => onViewBoleta(row)}
-                      title="Ver Boleta de Pago Oficial"
-                      className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors cursor-pointer"
+                      title="Ver boleta de pago oficial"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-sky-700 transition-colors hover:bg-sky-100 hover:text-sky-800"
                     >
                       <Eye size={15} />
                     </button>
@@ -224,26 +218,16 @@ export default function PlanillaView({ workers, onViewBoleta, showToast }) {
                 </tr>
               ))}
             </tbody>
-            <tfoot className="bg-slate-100/80 font-bold border-t border-slate-200 text-slate-800">
+            <tfoot className="border-t border-slate-200 bg-slate-100/90 font-bold text-slate-800">
               <tr>
-                <td colSpan={6} className="px-3 py-2.5 text-right uppercase text-[11px]">
-                  Totales del Periodo:
+                <td colSpan={6} className="px-3 py-2.5 text-right text-[11px] uppercase">
+                  Totales del periodo:
                 </td>
-                <td className="px-2 py-2.5 text-right font-mono">
-                  S/ {totalBrutoGeneral.toFixed(2)}
-                </td>
-                <td colSpan={3} className="px-2 py-2.5 text-right font-mono text-rose-700">
-                  -S/ {totalDescuentosGeneral.toFixed(2)}
-                </td>
-                <td className="px-2 py-2.5 text-right font-mono text-rose-700">
-                  -S/ {totalDescuentosGeneral.toFixed(2)}
-                </td>
-                <td className="px-3 py-2.5 text-right font-mono text-blue-900 text-sm font-extrabold bg-blue-100/50">
-                  S/ {totalNetoGeneral.toFixed(2)}
-                </td>
-                <td className="px-2 py-2.5 text-right font-mono text-emerald-800">
-                  S/ {totalEsSaludGeneral.toFixed(2)}
-                </td>
+                <td className="px-2 py-2.5 text-right font-mono">S/ {totalBrutoGeneral.toFixed(2)}</td>
+                <td colSpan={3} className="px-2 py-2.5 text-right font-mono text-rose-700">-S/ {totalDescuentosGeneral.toFixed(2)}</td>
+                <td className="bg-rose-100 px-2 py-2.5 text-right font-mono text-rose-700">-S/ {totalDescuentosGeneral.toFixed(2)}</td>
+                <td className="bg-sky-100 px-3 py-2.5 text-right font-mono text-sky-900">S/ {totalNetoGeneral.toFixed(2)}</td>
+                <td className="px-2 py-2.5 text-right font-mono text-emerald-800">S/ {totalEsSaludGeneral.toFixed(2)}</td>
                 <td />
               </tr>
             </tfoot>

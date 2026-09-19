@@ -12,11 +12,14 @@ import VacacionesView from './components/views/VacacionesView'
 import PlanillaView from './components/views/PlanillaView'
 import ReportesView from './components/views/ReportesView'
 import ConfigView from './components/views/ConfigView'
+import PerfilView from './components/views/PerfilView'
 
 import { INITIAL_WORKERS } from './data/mockData'
 import { getTrabajadores, getSedes } from './services/api'
 
 export default function App() {
+  const [isMobile, setIsMobile] = useState(false)
+
   // Estado de Autenticación
   const [user, setUser] = useState(() => {
     try {
@@ -30,7 +33,24 @@ export default function App() {
   // Estado del panel lateral (abierto por defecto con nombres)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
 
-  // Estado de navegación activa ('dashboard' | 'personal' | 'tareo' | 'planilla' | 'reportes' | 'config')
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 1024
+      setIsMobile(mobile)
+      if (mobile) {
+        setIsSidebarOpen(false)
+      } else {
+        setIsSidebarOpen(true)
+      }
+    }
+
+    handleResize()
+    window.addEventListener('resize', handleResize)
+
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // Estado de navegación activa ('dashboard' | 'personal' | 'tareo' | 'planilla' | 'reportes' | 'config' | 'perfil')
   const [activeNav, setActiveNav] = useState('dashboard')
 
   // Datos globales de colaboradores y tareo (conectados a SistemaPlanillasDB)
@@ -173,7 +193,20 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 overflow-x-hidden">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#e0f2fe_0%,_#f8fafc_30%,_#e2e8f0_100%)] font-sans text-slate-900 overflow-x-hidden">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(14,116,144,0.05),rgba(15,23,42,0.02))]" />
+      <div className="pointer-events-none absolute left-0 top-0 h-80 w-80 rounded-full bg-sky-200/30 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 right-0 h-96 w-96 rounded-full bg-indigo-200/20 blur-3xl" />
+
+      {isMobile && isSidebarOpen && (
+        <button
+          type="button"
+          aria-label="Cerrar menú"
+          onClick={() => setIsSidebarOpen(false)}
+          className="fixed inset-0 z-30 bg-slate-950/30 backdrop-blur-[1px]"
+        />
+      )}
+
       {/* Barra Lateral Izquierda (Abierta con nombres por defecto, logo limpio sin caja) */}
       <Sidebar
         active={activeNav}
@@ -181,6 +214,7 @@ export default function App() {
         user={user}
         onLogout={handleLogout}
         isOpen={isSidebarOpen}
+        isMobile={isMobile}
         onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
       />
 
@@ -192,16 +226,17 @@ export default function App() {
         refreshing={refreshing}
         user={user}
         isSidebarOpen={isSidebarOpen}
+        isMobile={isMobile}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
 
       {/* Contenido Principal a Ancho Completo (Sin espacio blanco sobrante a los costados) */}
       <main
-        className={`transition-all duration-300 ${
-          isSidebarOpen ? 'ml-64' : 'ml-16'
-        } pt-20 px-6 pb-8 w-auto min-h-screen`}
+        className={`relative min-h-screen pt-20 pb-8 transition-all duration-300 ${
+          isMobile ? 'ml-0 px-3 sm:px-5' : 'px-3 sm:px-5 lg:px-6'
+        } ${isMobile ? '' : isSidebarOpen ? 'lg:ml-64' : 'lg:ml-16'}`}
       >
-        <div className="w-full">
+        <div className="mx-auto w-full max-w-[1700px]">
           {activeNav === 'dashboard' && (
             <DashboardView onNavigate={setActiveNav} workers={workers} />
           )}
@@ -254,6 +289,10 @@ export default function App() {
 
           {activeNav === 'config' && (
             <ConfigView showToast={showToast} />
+          )}
+
+          {activeNav === 'perfil' && (
+            <PerfilView user={user} showToast={showToast} />
           )}
         </div>
       </main>

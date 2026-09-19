@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   BarChart3,
   Users,
@@ -10,6 +10,7 @@ import {
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
+  User,
 } from 'lucide-react'
 
 export const NAV_ITEMS = [
@@ -27,8 +28,21 @@ export default function Sidebar({
   user,
   onLogout,
   isOpen = true,
+  isMobile = false,
   onToggle,
 }) {
+  const [profileImage, setProfileImage] = useState(null)
+
+  // Cargar imagen de perfil desde localStorage
+  useEffect(() => {
+    if (user?.email) {
+      const savedImage = localStorage.getItem(`profile_image_${user.email}`)
+      if (savedImage) {
+        setProfileImage(savedImage)
+      }
+    }
+  }, [user?.email])
+
   return (
     <aside
       className={`fixed left-0 top-0 h-screen bg-white/95 backdrop-blur-sm border-r border-slate-200/80 flex flex-col z-30 select-none transition-all duration-300 ease-in-out shadow-[0_8px_30px_rgba(15,23,42,0.06)] ${
@@ -83,7 +97,7 @@ export default function Sidebar({
             <button
               onClick={onToggle}
               title="Expandir menú lateral"
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all cursor-pointer"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-sky-600 hover:bg-sky-50 transition-all cursor-pointer"
             >
               <PanelLeftOpen size={16} />
             </button>
@@ -113,7 +127,7 @@ export default function Sidebar({
                   title={!isOpen ? label : undefined}
                   className={`group relative w-full flex items-center rounded-xl transition-all duration-200 ease-out cursor-pointer ${
                     isOpen
-                      ? 'gap-3 px-3.5 py-2.5 text-xs font-semibold'
+                      ? 'gap-3 px-3.5 py-2.5 text-xs'
                       : 'w-11 h-11 mx-auto justify-center'
                   } ${
                     isActive

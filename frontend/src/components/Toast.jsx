@@ -18,7 +18,7 @@ export default function Toast({ toast, onClose }) {
 
   return (
     <div className="fixed bottom-5 right-5 z-50 animate-in fade-in slide-in-from-bottom-3 duration-200">
-      <div className={`flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg backdrop-blur-sm text-xs font-medium max-w-md ${borderColors[toast.type || 'info']}`}>
+      <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl border shadow-[0_18px_38px_rgba(15,23,42,0.12)] backdrop-blur-xl text-xs font-medium max-w-md ${borderColors[toast.type || 'info']}`}>
         {icons[toast.type || 'info']}
         <span className="flex-1">{toast.message}</span>
         <button
