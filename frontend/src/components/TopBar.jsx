@@ -40,7 +40,7 @@ export default function TopBar({
 
   return (
     <header
-      className={`fixed top-0 right-0 h-16 bg-white/80 backdrop-blur-xl border-b border-slate-200/80 flex items-center justify-between px-4 sm:px-6 z-20 transition-all duration-300 ${
+      className={`fixed top-0 right-0 h-16 bg-white/85 backdrop-blur-xl border-b border-blue-100/90 flex items-center justify-between px-4 sm:px-6 z-20 transition-all duration-300 shadow-[0_8px_25px_rgba(37,99,235,0.04)] ${
         isMobile ? 'left-0' : isSidebarOpen ? 'left-64' : 'left-16'
       }`}
     >
@@ -49,7 +49,7 @@ export default function TopBar({
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:border-sky-200 hover:text-sky-700"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-blue-100 bg-white text-slate-600 shadow-sm transition-colors hover:border-blue-200 hover:text-blue-700"
             aria-label="Abrir menú"
           >
             <PanelLeft size={16} />
@@ -57,11 +57,11 @@ export default function TopBar({
         )}
 
         <nav className="flex items-center gap-2 text-xs min-w-0">
-          <span className="font-semibold text-slate-400 hover:text-slate-600 transition-colors">
+          <span className="font-semibold text-slate-400 hover:text-blue-700 transition-colors">
             Planillas
           </span>
           <ChevronRight size={13} className="text-slate-300" />
-          <span className="font-semibold text-slate-500 bg-slate-100/80 px-2.5 py-1 rounded-full border border-slate-200">
+          <span className="font-semibold text-slate-500 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">
             {section}
           </span>
           <ChevronRight size={13} className="text-slate-300" />
@@ -72,8 +72,8 @@ export default function TopBar({
       </div>
 
       <div className="flex items-center gap-2.5 sm:gap-3">
-        <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-sky-50 border border-sky-100 text-xs font-semibold text-sky-700">
-          <Calendar size={13} className="text-sky-600" />
+        <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-xs font-semibold text-blue-700">
+          <Calendar size={13} className="text-blue-600" />
           <span>Periodo: 2026-09</span>
         </div>
 
@@ -84,11 +84,11 @@ export default function TopBar({
         <button
           onClick={onRefresh}
           disabled={refreshing}
-          className="flex items-center gap-2 text-xs font-semibold text-slate-700 hover:text-sky-700 border border-slate-200 bg-white/90 rounded-full px-3 py-1.5 shadow-sm transition-all hover:border-sky-200 hover:shadow-md cursor-pointer disabled:opacity-50"
+          className="flex items-center gap-2 text-xs font-semibold text-slate-700 hover:text-blue-700 border border-slate-200 bg-white/90 rounded-full px-3 py-1.5 shadow-sm transition-all hover:border-blue-200 hover:shadow-[0_8px_18px_rgba(37,99,235,0.08)]"
         >
           <RefreshCw
             size={13}
-            className={`text-slate-400 ${refreshing ? 'animate-spin text-sky-600' : ''}`}
+            className={`text-slate-400 ${refreshing ? 'animate-spin text-blue-600' : ''}`}
           />
           <span className="hidden md:inline">Actualizar</span>
         </button>

@@ -19,17 +19,14 @@ export default function DashboardView({ onNavigate, workers = [] }) {
   const totalActivos = workers.filter((w) => w.estado === 'Activo').length
   const totalVacaciones = workers.filter((w) => w.estado === 'Vacaciones').length
 
-  // Costo total estimado basado en la planilla real
   const totalSueldosBase = workers.reduce((acc, w) => acc + (Number(w.sueldoBase) || 0), 0)
   const asignacionesFamiliares = workers.filter(w => w.asigFamiliar).length * 102.50
   const costoTotalEstimado = totalSueldosBase + asignacionesFamiliares
 
-  // Cálculo dinámico de avance de tareo hasta el día de hoy (Día 7 de Setiembre)
   const diaHoy = 7
   const totalDiasMes = 30
   const pctAvanceMes = ((diaHoy / totalDiasMes) * 100).toFixed(1)
 
-  // Cálculo dinámico de inasistencias reales hasta hoy
   let totalMarcacionesHastaHoy = 0
   let totalFaltasRegistradas = 0
   const trabajadoresConFalta = []
@@ -51,7 +48,6 @@ export default function DashboardView({ onNavigate, workers = [] }) {
     ? ((totalFaltasRegistradas / totalMarcacionesHastaHoy) * 100).toFixed(1)
     : '0.0'
 
-  // Agrupación dinámica por Sede Operativa
   const sedesStats = SEDES.map(sede => {
     const workersInSede = workers.filter(w => String(w.sedeId) === String(sede.id))
     const totalSueldoSede = workersInSede.reduce((acc, w) => acc + (Number(w.sueldoBase) || 0), 0)
@@ -65,7 +61,6 @@ export default function DashboardView({ onNavigate, workers = [] }) {
     }
   }).filter(s => s.count > 0)
 
-  // Distribución dinámica por Sistema de Pensión
   const afpCounts = {
     integra: workers.filter(w => w.afp === 'integra').length,
     prima: workers.filter(w => w.afp === 'prima').length,
@@ -75,26 +70,25 @@ export default function DashboardView({ onNavigate, workers = [] }) {
   }
 
   const afpDisplay = [
-    { key: 'integra', nombre: 'AFP Integra', count: afpCounts.integra, color: 'border-blue-100 bg-blue-50/50 text-blue-800' },
-    { key: 'prima', nombre: 'AFP Prima', count: afpCounts.prima, color: 'border-purple-100 bg-purple-50/50 text-purple-800' },
-    { key: 'profuturo', nombre: 'AFP Profuturo', count: afpCounts.profuturo, color: 'border-indigo-100 bg-indigo-50/50 text-indigo-800' },
-    { key: 'habitat', nombre: 'AFP Hábitat', count: afpCounts.habitat, color: 'border-teal-100 bg-teal-50/50 text-teal-800' },
-    { key: 'onp', nombre: 'ONP (19990)', count: afpCounts.onp, color: 'border-slate-200 bg-slate-50 text-slate-800' },
+    { key: 'integra', nombre: 'AFP Integra', count: afpCounts.integra, color: 'border-blue-100 bg-blue-50 text-blue-800' },
+    { key: 'prima', nombre: 'AFP Prima', count: afpCounts.prima, color: 'border-violet-100 bg-violet-50 text-violet-800' },
+    { key: 'profuturo', nombre: 'AFP Profuturo', count: afpCounts.profuturo, color: 'border-indigo-100 bg-indigo-50 text-indigo-800' },
+    { key: 'habitat', nombre: 'AFP Hábitat', count: afpCounts.habitat, color: 'border-sky-100 bg-sky-50 text-sky-800' },
+    { key: 'onp', nombre: 'ONP (19990)', count: afpCounts.onp, color: 'border-slate-200 bg-slate-100 text-slate-800' },
   ]
 
   return (
     <div className="space-y-4">
-      {/* ─── Cabecera Principal con Gradiente Azul Noche / Slate Oscuro ───── */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white rounded-2xl p-6 shadow-lg border border-slate-800">
+      <div className="relative overflow-hidden bg-gradient-to-r from-slate-950 via-blue-900 to-indigo-900 text-white rounded-2xl p-6 shadow-[0_22px_45px_rgba(30,64,175,0.18)] border border-blue-700/30">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold border border-emerald-500/30 backdrop-blur-xs">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-200 text-xs font-semibold border border-emerald-400/30 backdrop-blur-xs">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 Conectado a SistemaPlanillasDB
               </span>
-              <span className="text-xs text-slate-400">•</span>
-              <span className="text-xs text-blue-200 font-medium bg-blue-900/50 px-2.5 py-0.5 rounded-md border border-blue-700/50">
+              <span className="text-xs text-slate-300">•</span>
+              <span className="text-xs text-blue-100 font-medium bg-blue-500/10 px-2.5 py-0.5 rounded-md border border-blue-400/30">
                 Periodo: Setiembre 2026 (Tareo al día 07)
               </span>
             </div>
@@ -106,18 +100,17 @@ export default function DashboardView({ onNavigate, workers = [] }) {
             </p>
           </div>
 
-          {/* Acciones Rápidas */}
           <div className="flex items-center gap-3 flex-wrap">
             <button
               onClick={() => onNavigate('tareo')}
-              className="h-10 px-4 bg-slate-800/80 hover:bg-slate-700 text-slate-100 border border-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02]"
+              className="h-10 px-4 bg-white/8 hover:bg-white/12 text-slate-100 border border-white/15 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-[0_10px_22px_rgba(15,23,42,0.1)]"
             >
-              <CalendarDays size={16} className="text-blue-400" />
+              <CalendarDays size={16} className="text-blue-200" />
               <span>Ver Tareo al Día</span>
             </button>
             <button
               onClick={() => onNavigate('planilla')}
-              className="h-10 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-md shadow-blue-600/30 hover:scale-[1.02]"
+              className="h-10 px-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-400 hover:to-indigo-400 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-[0_14px_28px_rgba(37,99,235,0.26)]"
             >
               <FileSpreadsheet size={16} />
               <span>Calcular Planilla</span>
@@ -126,10 +119,8 @@ export default function DashboardView({ onNavigate, workers = [] }) {
         </div>
       </div>
 
-      {/* ─── Tarjetas de Indicadores Clave (Calculados en Tiempo Real) ───── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {/* KPI 1: Costo Total Real */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-[0_10px_20px_rgba(15,23,42,0.04)]">
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-500 font-medium">Costo Total Nómina</span>
             <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
@@ -145,8 +136,7 @@ export default function DashboardView({ onNavigate, workers = [] }) {
           </p>
         </div>
 
-        {/* KPI 2: Total Colaboradores en Base de Datos */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-[0_10px_20px_rgba(15,23,42,0.04)]">
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-500 font-medium">Personal Registrado</span>
             <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
@@ -159,8 +149,7 @@ export default function DashboardView({ onNavigate, workers = [] }) {
           </p>
         </div>
 
-        {/* KPI 3: Avance de Tareo hasta Hoy */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-[0_10px_20px_rgba(15,23,42,0.04)]">
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-500 font-medium">Tareo hasta Hoy</span>
             <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
@@ -176,8 +165,7 @@ export default function DashboardView({ onNavigate, workers = [] }) {
           </div>
         </div>
 
-        {/* KPI 4: Ausentismo Real Registrado */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-[0_10px_20px_rgba(15,23,42,0.04)]">
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-500 font-medium">Tasa de Ausentismo</span>
             <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
@@ -191,12 +179,9 @@ export default function DashboardView({ onNavigate, workers = [] }) {
         </div>
       </div>
 
-      {/* ─── Grilla Central: Distribución por Sede y Sistema Previsional ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-
-        {/* Costos por Sede Real */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-[0_10px_20px_rgba(15,23,42,0.04)]">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Building2 size={16} className="text-blue-600" />
@@ -219,7 +204,7 @@ export default function DashboardView({ onNavigate, workers = [] }) {
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
                     <div
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                      className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all duration-500"
                       style={{ width: `${Math.max(5, item.pct)}%` }}
                     />
                   </div>
@@ -228,8 +213,7 @@ export default function DashboardView({ onNavigate, workers = [] }) {
             </div>
           </div>
 
-          {/* Distribución Previsional Real (AFP / ONP) */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-[0_10px_20px_rgba(15,23,42,0.04)]">
             <div className="flex items-center justify-between mb-3.5">
               <div className="flex items-center gap-2">
                 <PieChart size={16} className="text-indigo-600" />
@@ -255,10 +239,8 @@ export default function DashboardView({ onNavigate, workers = [] }) {
           </div>
         </div>
 
-        {/* Columna Derecha: Alertas de RRHH y Accesos Directos */}
         <div className="space-y-4">
-          {/* Alertas del Periodo */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-[0_10px_20px_rgba(15,23,42,0.04)]">
             <div className="flex items-center gap-2 mb-3.5 text-slate-800">
               <ShieldAlert size={16} className="text-rose-600" />
               <h3 className="text-xs font-bold uppercase tracking-wider">Incidencias y Alertas</h3>
@@ -267,7 +249,7 @@ export default function DashboardView({ onNavigate, workers = [] }) {
             <div className="space-y-2.5">
               {trabajadoresConFalta.length > 0 ? (
                 trabajadoresConFalta.map((t, idx) => (
-                  <div key={idx} className="p-3 rounded-lg bg-rose-50/70 border border-rose-200/70 text-xs text-rose-800">
+                  <div key={idx} className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-800">
                     <p className="font-bold flex items-center gap-1.5">
                       <AlertCircle size={13} className="text-rose-600 flex-shrink-0" />
                       Inasistencia Registrada
@@ -278,7 +260,7 @@ export default function DashboardView({ onNavigate, workers = [] }) {
                   </div>
                 ))
               ) : (
-                <div className="p-3 rounded-lg bg-emerald-50/70 border border-emerald-200/70 text-xs text-emerald-800">
+                <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-800">
                   <p className="font-bold flex items-center gap-1.5">
                     <CheckCircle2 size={13} className="text-emerald-600 flex-shrink-0" />
                     Sin Faltas Críticas
@@ -289,7 +271,7 @@ export default function DashboardView({ onNavigate, workers = [] }) {
                 </div>
               )}
 
-              <div className="p-3 rounded-lg bg-blue-50/70 border border-blue-200/70 text-xs text-blue-800">
+              <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-800">
                 <p className="font-bold flex items-center gap-1.5">
                   <CheckCircle2 size={13} className="text-blue-600 flex-shrink-0" />
                   Tareo al Día ({diaHoy} de Setiembre)
@@ -301,15 +283,14 @@ export default function DashboardView({ onNavigate, workers = [] }) {
             </div>
           </div>
 
-          {/* Accesos de Gestión */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-[0_10px_20px_rgba(15,23,42,0.04)]">
             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">
               Módulos del Sistema
             </h3>
             <div className="space-y-1.5">
               <button
                 onClick={() => onNavigate('personal')}
-                className="w-full text-left p-2.5 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 flex items-center justify-between text-xs font-semibold text-slate-700 transition-all cursor-pointer"
+                className="w-full text-left p-2.5 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 flex items-center justify-between text-xs font-semibold text-slate-700"
               >
                 <div className="flex items-center gap-2.5">
                   <Users size={15} className="text-blue-600" />
@@ -320,7 +301,7 @@ export default function DashboardView({ onNavigate, workers = [] }) {
 
               <button
                 onClick={() => onNavigate('tareo')}
-                className="w-full text-left p-2.5 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 flex items-center justify-between text-xs font-semibold text-slate-700 transition-all cursor-pointer"
+                className="w-full text-left p-2.5 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 flex items-center justify-between text-xs font-semibold text-slate-700"
               >
                 <div className="flex items-center gap-2.5">
                   <CalendarDays size={15} className="text-blue-600" />
@@ -331,7 +312,7 @@ export default function DashboardView({ onNavigate, workers = [] }) {
 
               <button
                 onClick={() => onNavigate('planilla')}
-                className="w-full text-left p-2.5 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 flex items-center justify-between text-xs font-semibold text-slate-700 transition-all cursor-pointer"
+                className="w-full text-left p-2.5 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 flex items-center justify-between text-xs font-semibold text-slate-700"
               >
                 <div className="flex items-center gap-2.5">
                   <FileSpreadsheet size={15} className="text-blue-600" />
@@ -341,9 +322,7 @@ export default function DashboardView({ onNavigate, workers = [] }) {
               </button>
             </div>
           </div>
-
         </div>
-
       </div>
     </div>
   )

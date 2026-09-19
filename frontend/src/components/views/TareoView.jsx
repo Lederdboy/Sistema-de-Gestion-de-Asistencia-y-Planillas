@@ -22,7 +22,6 @@ const isWeekend = (y, m, d) => {
   return day === 0 || day === 6
 }
 
-// ─── Badge de asistencia ──────────────────────────────────────────────────────
 const AttBadge = ({ code, onClick }) => {
   const cfg = BADGE_CONFIG[code]
   if (!cfg) {
@@ -46,9 +45,8 @@ const AttBadge = ({ code, onClick }) => {
   )
 }
 
-// ─── KPI Card ─────────────────────────────────────────────────────────────────
 const KpiCard = ({ icon: Icon, label, value, sub, iconBg, loading }) => (
-  <div className="rounded-[24px] border border-slate-200 bg-white/90 p-4 shadow-[0_18px_40px_rgba(15,23,42,0.04)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_22px_52px_rgba(14,165,233,0.08)]">
+  <div className="rounded-[24px] border border-slate-200 bg-white/90 p-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_35px_rgba(37,99,235,0.08)]">
     {loading ? (
       <>
         <div className="flex items-center gap-4">
@@ -91,8 +89,7 @@ export default function TareoView({
     search: '',
   })
 
-  // Modal selector de estado de celda
-  const [selectedCell, setSelectedCell] = useState(null) // { workerId, day, currentCode }
+  const [selectedCell, setSelectedCell] = useState(null)
   const [showCalculateModal, setShowCalculateModal] = useState(false)
   const [showCloseModal, setShowCloseModal] = useState(false)
   const [calculating, setCalculating] = useState(false)
@@ -101,7 +98,6 @@ export default function TareoView({
   const daysInMonth = getDaysInMonth(year, month)
   const dayNums = Array.from({ length: daysInMonth }, (_, i) => i + 1)
 
-  // Filtrado de trabajadores
   const filteredWorkers = workers.filter((w) => {
     const matchEmpresa = !filters.empresa || w.empresaId === filters.empresa
     const matchSede = !filters.sede || w.sedeId === filters.sede
@@ -121,7 +117,6 @@ export default function TareoView({
     M: tareo.filter((c) => c === 'M').length,
   })
 
-  // Manejar cambio de estado en celda
   const handleCellClick = (workerId, dayIndex, currentCode) => {
     setSelectedCell({ workerId, dayIndex, currentCode })
   }
@@ -133,7 +128,6 @@ export default function TareoView({
     showToast(`Asistencia actualizada para el día ${selectedCell.dayIndex + 1}`, 'success')
   }
 
-  // Exportar Excel
   const handleExportExcel = () => {
     showToast('Generando reporte en formato Excel (.xlsx)...', 'info')
     setTimeout(() => {
@@ -141,7 +135,6 @@ export default function TareoView({
     }, 1000)
   }
 
-  // Calcular Planilla
   const handleExecuteCalculation = () => {
     setCalculating(true)
     setTimeout(() => {
@@ -152,7 +145,6 @@ export default function TareoView({
     }, 1200)
   }
 
-  // Cerrar Planilla
   const handleClosePeriod = () => {
     setShowCloseModal(false)
     showToast('El periodo ' + filters.periodo + ' ha sido cerrado y bloqueado.', 'info')
@@ -203,7 +195,7 @@ export default function TareoView({
       <div className="rounded-[28px] border border-slate-200 bg-white/80 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.05)] backdrop-blur-xl sm:p-5">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">Tareo</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-700">Tareo</p>
             <h2 className="mt-1 text-lg font-bold text-slate-900 sm:text-xl">Matriz de tareo diario</h2>
             <p className="mt-1 text-xs text-slate-500">
               Periodo {filters.periodo} · {filteredWorkers.length} colaboradores · Asistencia registrada hasta hoy (07 set. 2026)
@@ -213,7 +205,7 @@ export default function TareoView({
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={handleExportExcel}
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3.5 py-2 text-[11px] font-semibold text-white shadow-[0_12px_25px_rgba(16,185,129,0.2)] transition-all hover:bg-emerald-700"
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3.5 py-2 text-[11px] font-semibold text-white shadow-[0_12px_25px_rgba(16,185,129,0.2)] transition-all hover:bg-emerald-500"
             >
               <Download size={13} />
               Exportar Excel
@@ -221,7 +213,7 @@ export default function TareoView({
 
             <button
               onClick={() => setShowCalculateModal(true)}
-              className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-3.5 py-2 text-[11px] font-semibold text-white shadow-[0_12px_25px_rgba(14,165,233,0.22)] transition-all hover:bg-sky-700"
+              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-3.5 py-2 text-[11px] font-semibold text-white shadow-[0_12px_25px_rgba(37,99,235,0.22)] transition-all hover:bg-blue-500"
             >
               <Calculator size={13} />
               Calcular Planilla
@@ -229,7 +221,7 @@ export default function TareoView({
 
             <button
               onClick={() => setShowCloseModal(true)}
-              className="inline-flex items-center gap-2 rounded-xl bg-rose-700 px-3.5 py-2 text-[11px] font-semibold text-white shadow-[0_12px_25px_rgba(244,63,94,0.2)] transition-all hover:bg-rose-800"
+              className="inline-flex items-center gap-2 rounded-xl bg-rose-700 px-3.5 py-2 text-[11px] font-semibold text-white shadow-[0_12px_25px_rgba(244,63,94,0.2)] transition-all hover:bg-rose-600"
             >
               <Lock size={13} />
               Cerrar Planilla
@@ -241,7 +233,7 @@ export default function TareoView({
           <div className="relative min-w-[170px] flex-1">
             <Building2 size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <select
-              className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-700 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+              className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-700 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
               value={filters.empresa}
               onChange={(e) => setFilters((f) => ({ ...f, empresa: e.target.value }))}
             >
@@ -257,7 +249,7 @@ export default function TareoView({
           <div className="relative min-w-[170px] flex-1">
             <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <select
-              className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-700 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+              className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-700 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
               value={filters.sede}
               onChange={(e) => setFilters((f) => ({ ...f, sede: e.target.value }))}
             >
@@ -271,7 +263,7 @@ export default function TareoView({
           </div>
 
           <select
-            className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+            className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
             value={filters.periodo}
             onChange={(e) => setFilters((f) => ({ ...f, periodo: e.target.value }))}
           >
@@ -287,7 +279,7 @@ export default function TareoView({
             <input
               type="text"
               placeholder="Buscar DNI o nombre..."
-              className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+              className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
               value={filters.search}
               onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
             />
@@ -329,7 +321,7 @@ export default function TareoView({
                         key={d}
                         className={`w-8 border-b border-slate-200 py-1.5 text-center font-semibold ${
                           isToday
-                            ? 'bg-sky-600 text-white ring-2 ring-sky-500 ring-inset'
+                            ? 'bg-blue-600 text-white ring-2 ring-blue-500 ring-inset'
                             : weekend
                             ? 'bg-rose-50 text-rose-600'
                             : 'text-slate-600'
@@ -337,7 +329,7 @@ export default function TareoView({
                         title={isToday ? 'Día de Hoy (07 de Setiembre de 2026)' : undefined}
                       >
                         <span className="block leading-none">{d}</span>
-                        {isToday && <span className="mt-0.5 block text-[7px] font-bold uppercase tracking-tighter text-sky-100">Hoy</span>}
+                        {isToday && <span className="mt-0.5 block text-[7px] font-bold uppercase tracking-tighter text-blue-100">Hoy</span>}
                       </th>
                     )
                   })}
@@ -357,11 +349,11 @@ export default function TareoView({
                   return (
                     <tr
                       key={w.id}
-                      className={`transition-colors hover:bg-sky-50/50 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}`}
+                      className={`transition-colors hover:bg-blue-50/40 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}`}
                     >
                       <td className="sticky left-0 z-10 whitespace-nowrap border-r border-slate-100 bg-inherit px-3 py-1.5 font-medium text-slate-800 shadow-[1px_0_0_0_#e2e8f0]">
                         <div className="flex items-center gap-2">
-                          <span className="h-2 w-2 rounded-full bg-sky-600" />
+                          <span className="h-2 w-2 rounded-full bg-blue-600" />
                           <span>{w.nombre}</span>
                         </div>
                       </td>
@@ -377,7 +369,7 @@ export default function TareoView({
                           <td
                             key={d}
                             className={`border-slate-100 py-1 text-center ${
-                              isToday ? 'bg-sky-50/80' : weekend ? 'bg-rose-50/20' : ''
+                              isToday ? 'bg-blue-50/80' : weekend ? 'bg-rose-50/20' : ''
                             }`}
                           >
                             <AttBadge code={code} onClick={() => handleCellClick(w.id, d - 1, code)} />
@@ -399,8 +391,6 @@ export default function TareoView({
         </div>
       </div>
 
-
-      {/* Modal Rápido de Cambio de Estado en Celda */}
       {selectedCell && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-5 border border-slate-200">
@@ -434,7 +424,6 @@ export default function TareoView({
         </div>
       )}
 
-      {/* Modal Calcular Planilla */}
       {showCalculateModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-200 space-y-4">
@@ -450,7 +439,7 @@ export default function TareoView({
               </div>
             </div>
 
-            <div className="bg-blue-50/70 border border-blue-200 rounded-lg p-3 text-xs text-blue-800 space-y-1">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800 space-y-1">
               <p className="font-semibold">Resumen de ejecución:</p>
               <p>• Días computados según tareo registrado.</p>
               <p>• Aplicación de tasas de EsSalud 9% y comisiones AFP actualizadas.</p>
@@ -486,7 +475,6 @@ export default function TareoView({
         </div>
       )}
 
-      {/* Modal Cerrar Planilla */}
       {showCloseModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-200 space-y-4">
@@ -525,7 +513,6 @@ export default function TareoView({
           </div>
         </div>
       )}
-
     </div>
   )
 }

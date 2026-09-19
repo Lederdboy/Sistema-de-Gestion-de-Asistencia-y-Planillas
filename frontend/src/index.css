@@ -4,18 +4,29 @@
 
 :root {
   color-scheme: light;
-  --bg-page: #f8fafc;
-  --bg-soft: #eef6ff;
-  --bg-panel: rgba(255, 255, 255, 0.78);
+  --bg-page: #f5f7ff;
+  --bg-soft: #edf4ff;
+  --bg-panel: rgba(255, 255, 255, 0.88);
   --surface-strong: #0f172a;
   --surface-muted: #e2e8f0;
-  --line: rgba(148, 163, 184, 0.35);
+  --line: rgba(148, 163, 184, 0.26);
   --text-primary: #0f172a;
   --text-secondary: #475569;
-  --blue: #0ea5e9;
-  --blue-deep: #0369a1;
-  --sky-soft: #e0f2fe;
-  --shadow-soft: 0 24px 80px rgba(15, 23, 42, 0.12);
+  --primary-50: #eef6ff;
+  --primary-100: #dbeafe;
+  --primary-500: #2563eb;
+  --primary-600: #1d4ed8;
+  --primary-700: #1e3a8a;
+  --accent-500: #7c3aed;
+  --accent-50: #f3e8ff;
+  --success-500: #16a34a;
+  --success-50: #ecfdf5;
+  --warning-500: #f59e0b;
+  --warning-50: #fff7ed;
+  --danger-500: #ef4444;
+  --danger-50: #fef2f2;
+  --shadow-soft: 0 18px 48px rgba(15, 23, 42, 0.10);
+  --shadow-card: 0 12px 30px rgba(37, 99, 235, 0.08);
 }
 
 html {
@@ -31,9 +42,9 @@ body {
   min-height: 100vh;
   font-family: 'Inter', 'Segoe UI', sans-serif;
   background:
-    radial-gradient(circle at top left, rgba(14, 165, 233, 0.12), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(99, 102, 241, 0.08), transparent 32%),
-    var(--bg-page);
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.10), transparent 26%),
+    radial-gradient(circle at bottom right, rgba(124, 58, 237, 0.08), transparent 30%),
+    linear-gradient(180deg, #f8fbff 0%, #f3f7ff 100%);
   color: var(--text-primary);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -51,14 +62,39 @@ textarea {
   font: inherit;
 }
 
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.18);
+  outline-offset: 2px;
+}
+
 ::selection {
-  background: rgba(14, 165, 233, 0.18);
+  background: rgba(37, 99, 235, 0.15);
   color: var(--text-primary);
 }
 
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(148, 163, 184, 0.12);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.35);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(37, 99, 235, 0.5);
+}
+
 .bg-dot-grid {
-  background-color: #f8fafc;
-  background-image: radial-gradient(rgba(15, 23, 42, 0.09) 1px, transparent 1px);
+  background-color: var(--bg-page);
+  background-image: radial-gradient(rgba(15, 23, 42, 0.08) 1px, transparent 1px);
   background-size: 18px 18px;
 }
 
@@ -70,7 +106,7 @@ textarea {
 }
 
 .soft-glow {
-  box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.08), 0 16px 40px rgba(14, 165, 233, 0.08);
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.08), 0 16px 40px rgba(37, 99, 235, 0.08);
 }
 
 .gradient-border {
@@ -83,10 +119,9 @@ textarea {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.28), rgba(148, 163, 184, 0.12), rgba(37, 99, 235, 0.2));
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.28), rgba(124, 58, 237, 0.18), rgba(148, 163, 184, 0.10));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
 }
-
