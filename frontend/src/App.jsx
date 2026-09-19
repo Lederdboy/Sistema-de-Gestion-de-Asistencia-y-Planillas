@@ -18,6 +18,8 @@ import { INITIAL_WORKERS } from './data/mockData'
 import { getTrabajadores, getSedes } from './services/api'
 
 export default function App() {
+  const [isMobile, setIsMobile] = useState(false)
+
   // Estado de Autenticación
   const [user, setUser] = useState(() => {
     try {
@@ -30,6 +32,23 @@ export default function App() {
 
   // Estado del panel lateral (abierto por defecto con nombres)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 1024
+      setIsMobile(mobile)
+      if (mobile) {
+        setIsSidebarOpen(false)
+      } else {
+        setIsSidebarOpen(true)
+      }
+    }
+
+    handleResize()
+    window.addEventListener('resize', handleResize)
+
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Estado de navegación activa ('dashboard' | 'personal' | 'tareo' | 'planilla' | 'reportes' | 'config' | 'perfil')
   const [activeNav, setActiveNav] = useState('dashboard')
@@ -174,7 +193,18 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-200/80 font-sans text-slate-900 overflow-x-hidden">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#e0f2fe_0%,_#f8fafc_30%,_#e2e8f0_100%)] font-sans text-slate-900 overflow-x-hidden">
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(14,116,144,0.05),rgba(15,23,42,0.02))] pointer-events-none" />
+
+      {isMobile && isSidebarOpen && (
+        <button
+          type="button"
+          aria-label="Cerrar menú"
+          onClick={() => setIsSidebarOpen(false)}
+          className="fixed inset-0 z-30 bg-slate-950/30 backdrop-blur-[1px]"
+        />
+      )}
+
       {/* Barra Lateral Izquierda (Abierta con nombres por defecto, logo limpio sin caja) */}
       <Sidebar
         active={activeNav}
@@ -182,6 +212,7 @@ export default function App() {
         user={user}
         onLogout={handleLogout}
         isOpen={isSidebarOpen}
+        isMobile={isMobile}
         onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
       />
 
@@ -193,16 +224,17 @@ export default function App() {
         refreshing={refreshing}
         user={user}
         isSidebarOpen={isSidebarOpen}
+        isMobile={isMobile}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
 
       {/* Contenido Principal a Ancho Completo (Sin espacio blanco sobrante a los costados) */}
       <main
-        className={`transition-all duration-300 ${
-          isSidebarOpen ? 'ml-64' : 'ml-16'
-        } pt-20 px-6 pb-8 w-auto min-h-screen`}
+        className={`relative transition-all duration-300 pt-20 px-3 sm:px-5 lg:px-6 pb-8 min-h-screen ${
+          isMobile ? 'ml-0' : isSidebarOpen ? 'lg:ml-64' : 'lg:ml-16'
+        }`}
       >
-        <div className="w-full">
+        <div className="w-full max-w-[1700px]">
           {activeNav === 'dashboard' && (
             <DashboardView onNavigate={setActiveNav} workers={workers} />
           )}
