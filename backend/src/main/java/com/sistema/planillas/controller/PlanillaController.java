@@ -35,4 +35,17 @@ public class PlanillaController {
         PlanillaResumenDTO resumen = planillaService.cerrarPlanilla(request);
         return ResponseEntity.ok(resumen);
     }
+
+    @GetMapping("/detalles")
+    public ResponseEntity<java.util.List<com.sistema.planillas.dto.PlanillaDetalleDTO>> obtenerDetalles(@RequestParam("periodo") String periodo) {
+        return ResponseEntity.ok(planillaService.listarDetallesPeriodo(periodo));
+    }
+
+    @GetMapping("/boleta/{trabajadorId}")
+    public ResponseEntity<com.sistema.planillas.dto.BoletaPagoDTO> obtenerBoleta(
+            @PathVariable Long trabajadorId,
+            @RequestParam("periodo") String periodo
+    ) {
+        return ResponseEntity.ok(planillaService.obtenerBoletaTrabajador(periodo, trabajadorId));
+    }
 }

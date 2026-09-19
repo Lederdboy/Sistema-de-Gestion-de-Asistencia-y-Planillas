@@ -199,4 +199,73 @@ public class PlanillaService {
                 .fechaCierre(resumen.getFechaCierre())
                 .build();
     }
+
+    @Transactional(readOnly = true)
+    public List<com.sistema.planillas.dto.PlanillaDetalleDTO> listarDetallesPeriodo(String periodo) {
+        List<PlanillaDetalle> detalles = planillaDetalleRepository.findByPlanillaResumenPeriodo(periodo);
+        return detalles.stream().map(d -> {
+            Trabajador t = d.getTrabajador();
+            return com.sistema.planillas.dto.PlanillaDetalleDTO.builder()
+                    .id(d.getId())
+                    .trabajadorId(t.getId())
+                    .numeroDocumento(t.getNumeroDocumento())
+                    .nombreCompleto(t.getNombres() + " " + t.getApellidoPaterno() + " " + t.getApellidoMaterno())
+                    .cargo(t.getCargo())
+                    .sede(t.getSede() != null ? t.getSede().getNombre() : "")
+                    .diasTrabajados(d.getDiasTrabajados())
+                    .diasNoches(d.getDiasNoches())
+                    .diasFaltas(d.getDiasFaltas())
+                    .diasDescanso(d.getDiasDescanso())
+                    .diasVacaciones(d.getDiasVacaciones())
+                    .sueldoBasico(d.getSueldoBasico())
+                    .asignacionFamiliar(d.getAsignacionFamiliar())
+                    .descuentoFaltas(d.getDescuentoFaltas())
+                    .descuentoPension(d.getDescuentoPension())
+                    .aporteEssalud(d.getAporteEssalud())
+                    .totalIngresos(d.getTotalIngresos())
+                    .totalDescuentos(d.getTotalDescuentos())
+                    .netoPagar(d.getNetoPagar())
+                    .calculado(d.getCalculado())
+                    .build();
+        }).collect(java.util.stream.Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public com.sistema.planillas.dto.BoletaPagoDTO obtenerBoletaTrabajador(String periodo, Long trabajadorId) {
+        PlanillaDetalle d = planillaDetalleRepository.findByPlanillaResumenPeriodoAndTrabajadorId(periodo, trabajadorId)
+                .orElseThrow(() -> new com.sistema.planillas.exception.ResourceNotFoundException(
+                        "No se encontró registro de planilla para el trabajador con ID " + trabajadorId + " en el periodo " + periodo));
+
+        Trabajador t = d.getTrabajador();
+        Empresa e = t.getEmpresa();
+
+        return com.sistema.planillas.dto.BoletaPagoDTO.builder()
+                .rucEmpresa(e != null ? e.getRuc() : "")
+                .razonSocialEmpresa(e != null ? e.getRazonSocial() : "")
+                .direccionEmpresa(e != null ? e.getDireccion() : "")
+                .periodo(periodo)
+                .estadoPlanilla(d.getPlanillaResumen().getEstado())
+                .trabajadorId(t.getId())
+                .tipoDocumento(t.getTipoDocumento())
+                .numeroDocumento(t.getNumeroDocumento())
+                .nombreCompleto(t.getNombres() + " " + t.getApellidoPaterno() + " " + t.getApellidoMaterno())
+                .cargo(t.getCargo())
+                .sede(t.getSede() != null ? t.getSede().getNombre() : "")
+                .fechaIngreso(t.getFechaIngreso())
+                .diasTrabajados(d.getDiasTrabajados())
+                .diasNoches(d.getDiasNoches())
+                .diasFaltas(d.getDiasFaltas())
+                .diasDescanso(d.getDiasDescanso())
+                .diasVacaciones(d.getDiasVacaciones())
+                .sueldoBasico(d.getSueldoBasico())
+                .asignacionFamiliar(d.getAsignacionFamiliar())
+                .totalIngresos(d.getTotalIngresos())
+                .descuentoFaltas(d.getDescuentoFaltas())
+                .descuentoPension(d.getDescuentoPension())
+                .totalDescuentos(d.getTotalDescuentos())
+                .aporteEssalud(d.getAporteEssalud())
+                .netoPagar(d.getNetoPagar())
+                .fechaEmision(LocalDateTime.now())
+                .build();
+    }
 }
