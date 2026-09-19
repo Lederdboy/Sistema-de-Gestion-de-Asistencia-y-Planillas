@@ -9,5 +9,7 @@ import java.util.List;
 @Repository
 public interface PlanillaDetalleRepository extends JpaRepository<PlanillaDetalle, Long> {
     List<PlanillaDetalle> findByPlanillaResumenId(Long planillaResumenId);
+    List<PlanillaDetalle> findByPlanillaResumenPeriodo(String periodo);
+    java.util.Optional<PlanillaDetalle> findByPlanillaResumenPeriodoAndTrabajadorId(String periodo, Long trabajadorId);
     void deleteByPlanillaResumenId(Long planillaResumenId);
 }

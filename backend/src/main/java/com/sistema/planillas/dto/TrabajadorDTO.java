@@ -26,5 +26,6 @@ public class TrabajadorDTO {
     private String cargo;
     private LocalDate fechaIngreso;
     private BigDecimal sueldoBasico;
+    private BigDecimal sueldoDiario;
     private Boolean activo;
 }

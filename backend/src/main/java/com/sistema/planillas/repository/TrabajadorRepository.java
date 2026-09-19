@@ -25,4 +25,8 @@ public interface TrabajadorRepository extends JpaRepository<Trabajador, Long> {
             @Param("search") String search,
             Pageable pageable
     );
+
+    boolean existsByEmpresaIdAndNumeroDocumento(Long empresaId, String numeroDocumento);
+
+    boolean existsByEmpresaIdAndNumeroDocumentoAndIdNot(Long empresaId, String numeroDocumento, Long id);
 }
