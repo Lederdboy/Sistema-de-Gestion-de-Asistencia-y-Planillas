@@ -26,6 +26,7 @@ export default function TopBar({
   refreshing,
   user,
   isSidebarOpen,
+  isMobile = false,
   onToggleSidebar,
 }) {
   const today = new Date().toLocaleDateString('es-PE', {
@@ -39,55 +40,59 @@ export default function TopBar({
 
   return (
     <header
-      className={`fixed top-0 right-0 h-16 bg-white/95 backdrop-blur-sm border-b border-slate-200/90 flex items-center justify-between px-6 z-20 transition-all duration-300 ${
-        isSidebarOpen ? 'left-64' : 'left-16'
+      className={`fixed top-0 right-0 h-16 bg-white/80 backdrop-blur-xl border-b border-slate-200/80 flex items-center justify-between px-4 sm:px-6 z-20 transition-all duration-300 ${
+        isMobile ? 'left-0' : isSidebarOpen ? 'left-64' : 'left-16'
       }`}
     >
-      {/* Lado Izquierdo: Breadcrumb Espacioso */}
-      <div className="flex items-center gap-3.5">
+      <div className="flex items-center gap-3.5 min-w-0">
+        {isMobile && (
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:border-sky-200 hover:text-sky-700"
+            aria-label="Abrir menú"
+          >
+            <PanelLeft size={16} />
+          </button>
+        )}
 
-        <nav className="flex items-center gap-2 text-xs">
+        <nav className="flex items-center gap-2 text-xs min-w-0">
           <span className="font-semibold text-slate-400 hover:text-slate-600 transition-colors">
             Planillas
           </span>
           <ChevronRight size={13} className="text-slate-300" />
-          <span className="font-semibold text-slate-500 bg-slate-100/80 px-2 py-0.5 rounded">
+          <span className="font-semibold text-slate-500 bg-slate-100/80 px-2.5 py-1 rounded-full border border-slate-200">
             {section}
           </span>
           <ChevronRight size={13} className="text-slate-300" />
-          <span className="font-bold text-slate-900 text-sm">
+          <span className="font-bold text-slate-900 text-sm truncate">
             {page}
           </span>
         </nav>
       </div>
 
-      {/* Lado Derecho: Controles Organizados y Métricas */}
-      <div className="flex items-center gap-3">
-        {/* Periodo de Trabajo */}
-        <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-50/70 border border-blue-100 text-xs font-semibold text-blue-700">
-          <Calendar size={13} className="text-blue-600" />
+      <div className="flex items-center gap-2.5 sm:gap-3">
+        <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-sky-50 border border-sky-100 text-xs font-semibold text-sky-700">
+          <Calendar size={13} className="text-sky-600" />
           <span>Periodo: 2026-09</span>
         </div>
 
-        {/* Fecha Actual */}
-        <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 border border-slate-200 text-xs font-medium text-slate-600 capitalize">
+        <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs font-medium text-slate-600 capitalize">
           <span>{today}</span>
         </div>
 
-        {/* Botón Actualizar */}
         <button
           onClick={onRefresh}
           disabled={refreshing}
-          className="flex items-center gap-2 text-xs font-semibold text-slate-700 hover:text-blue-600 hover:border-blue-300 bg-white border border-slate-200 rounded-lg px-3 py-1.5 transition-all shadow-2xs hover:shadow-xs cursor-pointer disabled:opacity-50"
+          className="flex items-center gap-2 text-xs font-semibold text-slate-700 hover:text-sky-700 border border-slate-200 bg-white/90 rounded-full px-3 py-1.5 shadow-sm transition-all hover:border-sky-200 hover:shadow-md cursor-pointer disabled:opacity-50"
         >
           <RefreshCw
             size={13}
-            className={`text-slate-400 ${refreshing ? 'animate-spin text-blue-600' : ''}`}
+            className={`text-slate-400 ${refreshing ? 'animate-spin text-sky-600' : ''}`}
           />
-          <span className="hidden md:inline">Actualizar Datos</span>
+          <span className="hidden md:inline">Actualizar</span>
         </button>
 
-        {/* Hora de Última Sincronización */}
         {lastUpdate && (
           <div className="hidden xl:flex items-center gap-1 text-[11px] text-slate-400 pl-1">
             <Clock size={12} />
