@@ -31,6 +31,7 @@ export default function Sidebar({
   user,
   onLogout,
   isOpen = true,
+  isMobile = false,
   onToggle,
 }) {
   const [profileImage, setProfileImage] = useState(null)
@@ -47,23 +48,30 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`fixed left-0 top-0 h-screen bg-white border-r border-slate-200/90 flex flex-col justify-between z-30 select-none transition-all duration-300 ease-in-out shadow-xs ${isOpen ? 'w-64' : 'w-16'
-        }`}
+      className={`fixed left-0 top-0 h-screen bg-white/80 backdrop-blur-xl border-r border-slate-200/80 flex flex-col justify-between z-40 select-none transition-all duration-300 ease-in-out shadow-[0_20px_50px_rgba(15,23,42,0.08)] ${
+        isMobile
+          ? isOpen
+            ? 'w-[84%] max-w-[280px] translate-x-0'
+            : '-translate-x-full w-[84%] max-w-[280px]'
+          : isOpen
+            ? 'w-64'
+            : 'w-16'
+      }`}
     >
-      {/* ─── Cabecera: Logo Limpio (Sin Cuadro) + Toggle Interno ────────── */}
       <div>
         {isOpen ? (
-          /* Cabecera Expandida */
-          <div className="flex items-center justify-between h-16 px-4 border-b border-slate-100">
+          <div className="flex items-center justify-between h-16 px-4 border-b border-slate-100 bg-white/60">
             <div
               onClick={() => setActive('dashboard')}
               className="flex items-center gap-2.5 cursor-pointer group min-w-0"
             >
-              <img
-                src="/logo.png"
-                alt="Logo"
-                className="h-8 w-auto object-contain transition-transform group-hover:scale-105"
-              />
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 shadow-sm shadow-slate-300/40">
+                <img
+                  src="/logo.png"
+                  alt="Logo"
+                  className="h-5 w-auto object-contain"
+                />
+              </div>
               <div className="flex flex-col min-w-0">
                 <span className="font-bold text-sm text-slate-900 tracking-tight leading-tight truncate">
                   Planilla Enterprise
@@ -74,7 +82,6 @@ export default function Sidebar({
               </div>
             </div>
 
-            {/* Botón de colapso DENTRO del panel */}
             <button
               onClick={onToggle}
               title="Contraer menú lateral"
@@ -84,30 +91,29 @@ export default function Sidebar({
             </button>
           </div>
         ) : (
-          /* Cabecera Colapsada: Logo y Botón de Abrir DENTRO */
-          <div className="flex flex-col items-center py-3 border-b border-slate-100 gap-2">
-            <img
-              src="/logo.png"
-              alt="Logo"
-              onClick={() => setActive('dashboard')}
-              className="h-8 w-auto object-contain cursor-pointer transition-transform hover:scale-105"
-              title="Planilla Enterprise"
-            />
-            {/* Botón de abrir DENTRO del panel */}
+          <div className="flex flex-col items-center py-3 border-b border-slate-100 gap-2 bg-white/60">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 shadow-sm shadow-slate-300/40">
+              <img
+                src="/logo.png"
+                alt="Logo"
+                onClick={() => setActive('dashboard')}
+                className="h-5 w-auto object-contain cursor-pointer transition-transform hover:scale-105"
+                title="Planilla Enterprise"
+              />
+            </div>
             <button
               onClick={onToggle}
               title="Expandir menú lateral"
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all cursor-pointer"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-sky-600 hover:bg-sky-50 transition-all cursor-pointer"
             >
               <PanelLeftOpen size={16} />
             </button>
           </div>
         )}
 
-        {/* ─── Navegación Principal con Animación Moderna ────────────────── */}
         <div className="p-2.5">
           {isOpen && (
-            <p className="px-3 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <p className="px-3 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-[0.18em]">
               Módulos
             </p>
           )}
@@ -126,19 +132,18 @@ export default function Sidebar({
                       : 'w-11 h-11 mx-auto justify-center'
                   } ${
                     isActive
-                      ? 'bg-blue-50/80 text-blue-700 font-bold border border-blue-100/80'
-                      : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 font-medium'
+                      ? 'bg-sky-50 text-sky-700 font-bold border border-sky-100 shadow-sm shadow-sky-100/60'
+                      : 'text-slate-600 hover:bg-slate-100/90 hover:text-slate-900 font-medium'
                   }`}
                 >
-                  {/* Indicador vertical a la izquierda si está activo */}
                   {isActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 rounded-r-full bg-blue-600 shadow-xs shadow-blue-600/50" />
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 rounded-r-full bg-sky-600 shadow-sm shadow-sky-600/40" />
                   )}
 
                   <Icon
                     size={19}
                     className={`flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${
-                      isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-700'
+                      isActive ? 'text-sky-600' : 'text-slate-400 group-hover:text-slate-700'
                     }`}
                     strokeWidth={isActive ? 2.3 : 1.9}
                   />
@@ -147,7 +152,6 @@ export default function Sidebar({
                     <span className="truncate tracking-tight">{label}</span>
                   )}
 
-                  {/* Tooltip moderno en modo colapsado */}
                   {!isOpen && (
                     <div className="absolute left-14 bg-slate-900 text-white text-[11px] font-semibold py-1.5 px-2.5 rounded-lg shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
                       {label}
@@ -160,9 +164,7 @@ export default function Sidebar({
         </div>
       </div>
 
-      {/* ─── Sección Inferior: Configuración y Usuario Limpio ───────────── */}
-      <div className="p-2.5 border-t border-slate-100 space-y-2">
-        {/* Configuración */}
+      <div className="p-2.5 border-t border-slate-100 space-y-2 bg-white/60">
         <button
           onClick={() => setActive('config')}
           title={!isOpen ? 'Configuración del Sistema' : undefined}
@@ -170,14 +172,13 @@ export default function Sidebar({
               ? 'gap-3 px-3.5 py-2.5 text-xs font-semibold'
               : 'w-11 h-11 mx-auto justify-center'
             } ${active === 'config'
-              ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
+              ? 'bg-slate-900 text-white shadow-md shadow-slate-300/40'
               : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium'
             }`}
         >
           <Settings
             size={19}
-            className={`flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${active === 'config' ? 'text-white' : 'text-slate-400 group-hover:text-slate-700'
-              }`}
+            className={`flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${active === 'config' ? 'text-white' : 'text-slate-400 group-hover:text-slate-700'}`}
           />
           {isOpen && <span className="truncate">Configuración</span>}
 
@@ -188,17 +189,14 @@ export default function Sidebar({
           )}
         </button>
 
-        {/* Separador sutil */}
         <div className="h-px bg-slate-100 my-1 mx-2" />
 
-        {/* Tarjeta de Usuario Limpia (Sin desbordes ni flechas raras) */}
         {isOpen ? (
-          /* Modo Expandido */
-          <div className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl bg-slate-50/70 border border-slate-100">
+          <div className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl bg-slate-50/80 border border-slate-100 shadow-sm">
             <button
               onClick={() => setActive('perfil')}
               title="Ver perfil"
-              className="w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-2xs hover:bg-slate-800 transition-colors cursor-pointer overflow-hidden"
+              className="w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-md hover:bg-slate-800 transition-colors cursor-pointer overflow-hidden"
             >
               {profileImage ? (
                 <img
@@ -227,12 +225,11 @@ export default function Sidebar({
             </button>
           </div>
         ) : (
-          /* Modo Colapsado: Avatar centrado impecable y botón logout */
           <div className="flex flex-col items-center gap-1.5 pt-1">
             <button
               onClick={() => setActive('perfil')}
               title="Ver perfil"
-              className="w-9 h-9 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shadow-xs hover:bg-slate-800 transition-colors cursor-pointer overflow-hidden"
+              className="w-9 h-9 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shadow-sm hover:bg-slate-800 transition-colors cursor-pointer overflow-hidden"
             >
               {profileImage ? (
                 <img
