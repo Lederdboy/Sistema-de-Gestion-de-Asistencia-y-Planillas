@@ -96,7 +96,7 @@ export default function Login({ onLogin }) {
               <div className="relative z-10">
                 <div className="mb-5 flex items-center gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]">
-                    <img src="/logo.png" alt="Logo" className="h-8 w-auto object-contain" />
+                    <img src="/logo.png" alt="Planilla Enterprise - Sistema de Gestión" className="h-8 w-auto object-contain" />
                   </div>
                   <div>
                     <p className="text-xs uppercase tracking-[0.2em] text-slate-300">Enterprise</p>
@@ -143,7 +143,7 @@ export default function Login({ onLogin }) {
                 <div className="lg:hidden">
                   <div className="flex items-center gap-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 ring-1 ring-slate-200">
-                      <img src="/logo.png" alt="Logo" className="h-8 w-auto object-contain" />
+                      <img src="/logo.png" alt="Planilla Enterprise - Sistema de Gestión" className="h-8 w-auto object-contain" />
                     </div>
                     <div>
                       <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Enterprise</p>
