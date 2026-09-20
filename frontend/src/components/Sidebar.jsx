@@ -131,18 +131,18 @@ export default function Sidebar({
                   } ${
                     isActive
                       ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20 ring-1 ring-blue-400/30'
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                   }`}
                 >
                   <div
                     className={`flex h-8 w-8 items-center justify-center rounded-lg ${
-                      isActive ? 'bg-white/10' : 'bg-slate-800 group-hover:bg-slate-700'
+                      isActive ? 'bg-white/20' : 'bg-transparent group-hover:bg-slate-700'
                     }`}
                   >
                     <Icon
                       size={18}
                       className={`flex-shrink-0 transition-transform duration-200 ${
-                        isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'
+                        isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'
                       }`}
                       strokeWidth={isActive ? 2.2 : 1.9}
                     />
