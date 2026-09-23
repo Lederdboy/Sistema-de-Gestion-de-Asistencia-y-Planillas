@@ -1,6 +1,24 @@
 // ─── Servicio API para Sistema Planillas Enterprise ────────────────────────
 const BASE_URL = '/api/v1'
 
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || '<cloud-name>'
+const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || '<upload-preset>'
+
+export async function uploadImageToCloudinary(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
+  formData.append('folder', 'planillas/avatares')
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+    method: 'POST',
+    body: formData,
+  })
+  if (!res.ok) throw new Error('Error al subir imagen a Cloudinary')
+  const data = await res.json()
+  return data.secure_url
+}
+
 export async function getSedes(empresaId) {
   try {
     const url = empresaId ? `${BASE_URL}/sedes?empresaId=${empresaId}` : `${BASE_URL}/sedes`
