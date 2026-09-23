@@ -13,6 +13,7 @@ import {
   Upload,
   X,
 } from 'lucide-react'
+import { uploadImageToCloudinary } from '../../services/api'
 
 export default function PerfilView({ user, showToast }) {
   const [isEditing, setIsEditing] = useState(false)
@@ -38,30 +39,27 @@ export default function PerfilView({ user, showToast }) {
     }
   }, [user?.email])
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0]
-    if (file) {
-      // Validar que sea una imagen
-      if (!file.type.startsWith('image/')) {
-        showToast('Por favor selecciona un archivo de imagen válido.', 'error')
-        return
-      }
-      
-      // Validar tamaño (máximo 2MB)
-      if (file.size > 2 * 1024 * 1024) {
-        showToast('La imagen no debe exceder 2MB.', 'error')
-        return
-      }
+    if (!file) return
 
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const imageDataUrl = event.target.result
-        setProfileImage(imageDataUrl)
-        // Guardar en localStorage
-        localStorage.setItem(`profile_image_${user?.email}`, imageDataUrl)
-        showToast('Imagen de perfil actualizada.', 'success')
-      }
-      reader.readAsDataURL(file)
+    if (!file.type.startsWith('image/')) {
+      showToast('Por favor selecciona un archivo de imagen válido.', 'error')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      showToast('La imagen no debe exceder 2MB.', 'error')
+      return
+    }
+
+    try {
+      showToast('Subiendo imagen...', 'info')
+      const url = await uploadImageToCloudinary(file)
+      setProfileImage(url)
+      localStorage.setItem(`profile_image_${user?.email}`, url)
+      showToast('Imagen de perfil actualizada.', 'success')
+    } catch (err) {
+      showToast('Error al subir imagen. Intenta de nuevo.', 'error')
     }
   }
 
