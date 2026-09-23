@@ -1,0 +1,10 @@
+# Copia este archivo como application-local.properties y rellena los valores
+# NUNCA subas application-local.properties a GitHub
+
+SPRING_DATASOURCE_URL=jdbc:postgresql://<proyecto>.supabase.co:5432/postgres
+SPRING_DATASOURCE_USERNAME=postgres
+SPRING_DATASOURCE_PASSWORD=<tu-password-supabase>
+
+CLOUDINARY_CLOUD_NAME=<cloud-name>
+CLOUDINARY_API_KEY=<api-key>
+CLOUDINARY_API_SECRET=<api-secret>
