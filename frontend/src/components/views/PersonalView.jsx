@@ -347,7 +347,7 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
       {/* Modal Nuevo Colaborador */}
       {showNewModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 border border-slate-200">
+          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 border border-slate-200 overflow-y-auto max-h-[90vh]">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                 <Users size={18} className="text-blue-600" />
@@ -577,7 +577,7 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
       {/* Modal Editar Colaborador */}
       {isEditingWorker && selectedWorker && editForm && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-200">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-200 overflow-y-auto max-h-[90vh]">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="text-sm font-bold text-slate-900">Editar Colaborador — {selectedWorker.nombre}</h3>
               <button onClick={() => setIsEditingWorker(false)} className="text-slate-400 hover:text-slate-600 p-1">
