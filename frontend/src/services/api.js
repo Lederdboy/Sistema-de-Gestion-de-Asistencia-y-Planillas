@@ -1,5 +1,36 @@
 // ─── Servicio API para Sistema Planillas Enterprise ────────────────────────
+import { supabase } from './supabase'
+
 const BASE_URL = '/api/v1'
+
+export async function login(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) throw new Error(error.message)
+
+  const { data: perfil, error: perfilError } = await supabase
+    .from('usuarios_perfil')
+    .select('nombre, rol, sede_id, empresa_id, cargo, activo')
+    .eq('id', data.user.id)
+    .single()
+
+  if (perfilError) throw new Error('Usuario sin perfil asignado. Contacta al administrador.')
+  if (perfil.activo === false) throw new Error('Tu cuenta está desactivada. Contacta al administrador.')
+
+  return {
+    uuid: data.user.id,
+    email: data.user.email,
+    nombre: perfil.nombre,
+    rol: perfil.rol,
+    sedeId: perfil.sede_id,
+    empresaId: perfil.empresa_id,
+    cargo: perfil.cargo,
+    token: data.session.access_token,
+  }
+}
+
+export async function logout() {
+  await supabase.auth.signOut()
+}
 
 // Sube imagen al BACKEND, que a su vez la sube a Cloudinary
 // Las credenciales de Cloudinary nunca se exponen en el frontend
