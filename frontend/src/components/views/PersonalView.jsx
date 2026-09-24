@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { Users, Search, Plus, MapPin, Mail, X, Camera, Upload } from 'lucide-react'
 import { EMPRESAS, SEDES, AFPS } from '../../data/mockData'
-import { crearTrabajador, actualizarTrabajador, uploadImageToCloudinary } from '../../services/api'
+import { crearTrabajador, actualizarTrabajador } from '../../services/api'
 
 export default function PersonalView({ workers, onAddWorker, onUpdateWorker, showToast }) {
   const [search, setSearch] = useState('')
@@ -12,7 +12,9 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
   const [isEditingWorker, setIsEditingWorker] = useState(false)
   const [editForm, setEditForm] = useState(null)
   const [newFotoUrl, setNewFotoUrl] = useState(null)
+  const [newFotoFile, setNewFotoFile] = useState(null)
   const [editFotoUrl, setEditFotoUrl] = useState(null)
+  const [editFotoFile, setEditFotoFile] = useState(null)
   const newFotoRef = useRef(null)
   const editFotoRef = useRef(null)
 
@@ -42,16 +44,12 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
     return matchSearch && matchSede && matchEstado
   })
 
-  const handleFotoUpload = async (file, setter) => {
+  const handleFotoUpload = (file, setUrl, setFile) => {
     if (!file) return
     if (!file.type.startsWith('image/')) { showToast('Selecciona una imagen válida.', 'error'); return }
     if (file.size > 2 * 1024 * 1024) { showToast('La imagen no debe exceder 2MB.', 'error'); return }
-    try {
-      showToast('Subiendo foto...', 'info')
-      const url = await uploadImageToCloudinary(file)
-      setter(url)
-      showToast('Foto subida correctamente.', 'success')
-    } catch { showToast('Error al subir foto.', 'error') }
+    setFile(file)
+    setUrl(URL.createObjectURL(file))
   }
 
   const handleCreateWorker = async (e) => {
@@ -81,8 +79,7 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
         fechaIngreso: new Date().toISOString().split('T')[0],
         sueldoBasico,
         sueldoDiario: parseFloat((sueldoBasico / 30).toFixed(2)),
-        fotoUrl: newFotoUrl || null,
-      })
+      }, newFotoFile)
 
       const newWorker = {
         id: created.id,
@@ -114,6 +111,7 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
 
     setShowNewModal(false)
     setNewFotoUrl(null)
+    setNewFotoFile(null)
     setForm({ dni: '', nombre: '', cargo: '', empresaId: '1', sedeId: '1', sueldoBase: '1500', afp: 'integra', asigFamiliar: true, email: '', telefono: '', regimen: 'D.L. 728' })
   }
 
@@ -127,6 +125,7 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
       estado: worker.estado,
     })
     setEditFotoUrl(worker.fotoUrl || null)
+    setEditFotoFile(null)
     setIsEditingWorker(true)
   }
 
@@ -151,8 +150,7 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
         sueldoBasico,
         sueldoDiario: parseFloat((sueldoBasico / 30).toFixed(2)),
         activo: editForm.estado === 'Activo',
-        fotoUrl: editFotoUrl || null,
-      })
+      }, editFotoFile)
       onUpdateWorker({
         ...selectedWorker,
         cargo: editForm.cargo,
@@ -478,7 +476,7 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Foto del Colaborador</label>
                 <input ref={newFotoRef} type="file" accept="image/*" className="hidden"
-                  onChange={(e) => handleFotoUpload(e.target.files[0], setNewFotoUrl)} />
+                  onChange={(e) => handleFotoUpload(e.target.files[0], setNewFotoUrl, setNewFotoFile)} />
                 <div className="flex items-center gap-3">
                   {newFotoUrl
                     ? <img src={newFotoUrl} alt="foto" className="w-12 h-12 rounded-full object-cover border border-slate-200" />
@@ -488,7 +486,7 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 cursor-pointer">
                     <Upload size={12} /> {newFotoUrl ? 'Cambiar foto' : 'Subir foto'}
                   </button>
-                  {newFotoUrl && <button type="button" onClick={() => setNewFotoUrl(null)}
+                  {newFotoUrl && <button type="button" onClick={() => { setNewFotoUrl(null); setNewFotoFile(null) }}
                     className="text-xs text-rose-500 hover:text-rose-700 cursor-pointer">Quitar</button>}
                 </div>
               </div>
@@ -662,7 +660,7 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Foto del Colaborador</label>
                 <input ref={editFotoRef} type="file" accept="image/*" className="hidden"
-                  onChange={(e) => handleFotoUpload(e.target.files[0], setEditFotoUrl)} />
+                  onChange={(e) => handleFotoUpload(e.target.files[0], setEditFotoUrl, setEditFotoFile)} />
                 <div className="flex items-center gap-3">
                   {editFotoUrl
                     ? <img src={editFotoUrl} alt="foto" className="w-12 h-12 rounded-full object-cover border border-slate-200" />
@@ -672,7 +670,7 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 cursor-pointer">
                     <Upload size={12} /> {editFotoUrl ? 'Cambiar foto' : 'Subir foto'}
                   </button>
-                  {editFotoUrl && <button type="button" onClick={() => setEditFotoUrl(null)}
+                  {editFotoUrl && <button type="button" onClick={() => { setEditFotoUrl(null); setEditFotoFile(null) }}
                     className="text-xs text-rose-500 hover:text-rose-700 cursor-pointer">Quitar</button>}
                 </div>
               </div>

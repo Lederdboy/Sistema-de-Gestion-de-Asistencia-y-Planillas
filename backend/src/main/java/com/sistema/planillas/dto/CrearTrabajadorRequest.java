@@ -53,4 +53,6 @@ public class CrearTrabajadorRequest {
     private BigDecimal sueldoBasico;
 
     private BigDecimal sueldoDiario;
+
+    private String fotoUrl;
 }

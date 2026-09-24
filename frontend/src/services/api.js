@@ -1,22 +1,19 @@
 // ─── Servicio API para Sistema Planillas Enterprise ────────────────────────
 const BASE_URL = '/api/v1'
 
-const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || '<cloud-name>'
-const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || '<upload-preset>'
-
-export async function uploadImageToCloudinary(file) {
+// Sube imagen al BACKEND, que a su vez la sube a Cloudinary
+// Las credenciales de Cloudinary nunca se exponen en el frontend
+export async function uploadImageToBackend(file) {
   const formData = new FormData()
-  formData.append('file', file)
-  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
-  formData.append('folder', 'planillas/avatares')
-
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+  formData.append('foto', file)
+  // Usamos un endpoint dedicado para subir solo la foto del perfil admin
+  const res = await fetch(`${BASE_URL}/trabajadores/upload-foto`, {
     method: 'POST',
     body: formData,
   })
-  if (!res.ok) throw new Error('Error al subir imagen a Cloudinary')
+  if (!res.ok) throw new Error('Error al subir imagen')
   const data = await res.json()
-  return data.secure_url
+  return data.url
 }
 
 export async function getSedes(empresaId) {
@@ -61,21 +58,28 @@ export async function getMatrizAsistencia(mes = 9, anio = 2026, sedeId = 1) {
   }
 }
 
-export async function crearTrabajador(data) {
+// Envía datos + foto como multipart/form-data al backend
+export async function crearTrabajador(data, fotoFile = null) {
+  const formData = new FormData()
+  formData.append('datos', new Blob([JSON.stringify(data)], { type: 'application/json' }))
+  if (fotoFile) formData.append('foto', fotoFile)
+
   const res = await fetch(`${BASE_URL}/trabajadores`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
+    body: formData,
   })
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
   return await res.json()
 }
 
-export async function actualizarTrabajador(id, data) {
+export async function actualizarTrabajador(id, data, fotoFile = null) {
+  const formData = new FormData()
+  formData.append('datos', new Blob([JSON.stringify(data)], { type: 'application/json' }))
+  if (fotoFile) formData.append('foto', fotoFile)
+
   const res = await fetch(`${BASE_URL}/trabajadores/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
+    body: formData,
   })
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
   return await res.json()

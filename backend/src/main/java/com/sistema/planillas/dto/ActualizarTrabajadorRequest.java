@@ -52,4 +52,6 @@ public class ActualizarTrabajadorRequest {
     private BigDecimal sueldoDiario;
 
     private Boolean activo;
+
+    private String fotoUrl;
 }

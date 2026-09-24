@@ -13,7 +13,7 @@ import {
   Upload,
   X,
 } from 'lucide-react'
-import { uploadImageToCloudinary } from '../../services/api'
+import { uploadImageToBackend } from '../../services/api'
 
 export default function PerfilView({ user, showToast }) {
   const [isEditing, setIsEditing] = useState(false)
@@ -70,7 +70,7 @@ export default function PerfilView({ user, showToast }) {
 
     try {
       showToast('Subiendo imagen...', 'info')
-      const url = await uploadImageToCloudinary(file)
+      const url = await uploadImageToBackend(file)
       setProfileImage(url)
       localStorage.setItem(`profile_image_${user?.email}`, url)
       showToast('Imagen de perfil actualizada.', 'success')
