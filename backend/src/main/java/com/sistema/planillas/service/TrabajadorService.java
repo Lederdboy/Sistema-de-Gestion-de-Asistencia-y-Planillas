@@ -77,6 +77,7 @@ public class TrabajadorService {
                 .fechaIngreso(request.getFechaIngreso())
                 .sueldoBasico(request.getSueldoBasico())
                 .sueldoDiario(sueldoDiario)
+                .fotoUrl(request.getFotoUrl())
                 .activo(true)
                 .fechaCreacion(LocalDateTime.now())
                 .build();
@@ -117,9 +118,8 @@ public class TrabajadorService {
         trabajador.setFechaIngreso(request.getFechaIngreso());
         trabajador.setSueldoBasico(request.getSueldoBasico());
         trabajador.setSueldoDiario(sueldoDiario);
-        if (request.getActivo() != null) {
-            trabajador.setActivo(request.getActivo());
-        }
+        if (request.getFotoUrl() != null) trabajador.setFotoUrl(request.getFotoUrl());
+        if (request.getActivo() != null) trabajador.setActivo(request.getActivo());
 
         Trabajador actualizado = trabajadorRepository.save(trabajador);
         return mapToDTO(actualizado);
@@ -131,6 +131,14 @@ public class TrabajadorService {
                 throw new BusinessException("Para tipo de documento DNI se requieren exactamente 8 dígitos numéricos.");
             }
         }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public TrabajadorDTO vincularUsuario(Long id, String usuarioId) {
+        Trabajador trabajador = trabajadorRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado con ID: " + id));
+        trabajador.setUsuarioId(usuarioId);
+        return mapToDTO(trabajadorRepository.save(trabajador));
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -159,6 +167,8 @@ public class TrabajadorService {
                 .sueldoBasico(t.getSueldoBasico())
                 .sueldoDiario(t.getSueldoDiario())
                 .activo(t.getActivo())
+                .fotoUrl(t.getFotoUrl())
+                .usuarioId(t.getUsuarioId())
                 .build();
     }
 }

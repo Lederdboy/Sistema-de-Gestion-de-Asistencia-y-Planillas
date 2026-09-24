@@ -59,6 +59,7 @@ public class UsuarioController {
             Map<String, Object> perfilBody = new HashMap<>();
             perfilBody.put("id", nuevoUuid);
             perfilBody.put("nombre", req.getNombre());
+            perfilBody.put("email", req.getEmail());
             perfilBody.put("rol", req.getRol());
             perfilBody.put("empresa_id", req.getEmpresa_id());
             perfilBody.put("activo", true);
@@ -79,6 +80,48 @@ public class UsuarioController {
             }
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("mensaje", "Error interno: " + e.getMessage()));
+        }
+    }
+
+    @PatchMapping("/{uuid}/reset-password")
+    public ResponseEntity<?> resetPassword(@PathVariable String uuid, @RequestBody Map<String, String> body) {
+        try {
+            String authUrl = supabaseUrl + "/auth/v1/admin/users/" + uuid;
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("apikey", serviceRoleKey);
+            headers.set("Authorization", "Bearer " + serviceRoleKey);
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("password", body.get("password"));
+            restTemplate.exchange(authUrl, org.springframework.http.HttpMethod.PUT, new HttpEntity<>(payload, headers), String.class);
+            return ResponseEntity.ok(Map.of("mensaje", "Contraseña actualizada correctamente"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("mensaje", "Error al resetear contraseña: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{uuid}")
+    public ResponseEntity<?> eliminarUsuario(@PathVariable String uuid) {
+        try {
+            // 1. Eliminar de usuarios_perfil via REST API
+            String perfilUrl = supabaseUrl + "/rest/v1/usuarios_perfil?id=eq." + uuid;
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("apikey", serviceRoleKey);
+            headers.set("Authorization", "Bearer " + serviceRoleKey);
+            restTemplate.exchange(perfilUrl, org.springframework.http.HttpMethod.DELETE, new HttpEntity<>(headers), String.class);
+
+            // 2. Eliminar de auth.users via Admin API
+            String authUrl = supabaseUrl + "/auth/v1/admin/users/" + uuid;
+            HttpHeaders authHeaders = new HttpHeaders();
+            authHeaders.set("apikey", serviceRoleKey);
+            authHeaders.set("Authorization", "Bearer " + serviceRoleKey);
+            restTemplate.exchange(authUrl, org.springframework.http.HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
+
+            return ResponseEntity.ok(Map.of("mensaje", "Usuario eliminado correctamente"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("mensaje", "Error al eliminar usuario: " + e.getMessage()));
         }
     }
 }

@@ -75,6 +75,14 @@ public class TrabajadorController {
         return ResponseEntity.ok(trabajadorService.cambiarEstado(id, activo));
     }
 
+    @PatchMapping("/{id}/vincular-usuario")
+    public ResponseEntity<?> vincularUsuario(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, String> body
+    ) {
+        return ResponseEntity.ok(trabajadorService.vincularUsuario(id, body.get("usuarioId")));
+    }
+
     @PostMapping(value = "/upload-foto", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<java.util.Map<String, String>> uploadFoto(
             @RequestPart("foto") MultipartFile foto

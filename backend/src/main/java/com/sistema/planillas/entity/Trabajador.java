@@ -65,4 +65,10 @@ public class Trabajador {
     @Builder.Default
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion = LocalDateTime.now();
+
+    @Column(name = "foto_url", length = 500)
+    private String fotoUrl;
+
+    @Column(name = "usuario_id", length = 36)
+    private String usuarioId;
 }

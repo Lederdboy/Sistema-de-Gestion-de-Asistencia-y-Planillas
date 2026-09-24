@@ -28,4 +28,6 @@ public class TrabajadorDTO {
     private BigDecimal sueldoBasico;
     private BigDecimal sueldoDiario;
     private Boolean activo;
+    private String fotoUrl;
+    private String usuarioId;
 }
