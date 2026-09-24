@@ -77,6 +77,13 @@ export default function TopBar({
           <span>Periodo: 2026-09</span>
         </div>
 
+        {user?.sedeName && (
+          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-xs font-semibold text-indigo-700">
+            <Shield size={13} className="text-indigo-500" />
+            <span>{user.sedeName}</span>
+          </div>
+        )}
+
         <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs font-medium text-slate-600 capitalize">
           <span>{today}</span>
         </div>

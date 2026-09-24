@@ -141,6 +141,16 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
             }),
           })
           if (res.ok) {
+            const data = await res.json()
+            const nuevoUuid = data.uuid
+            // Vincular usuario_id al trabajador recién creado
+            if (nuevoUuid && created.id) {
+              await fetch(`/api/v1/trabajadores/${created.id}/vincular-usuario`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usuarioId: nuevoUuid }),
+              })
+            }
             showToast(`Acceso creado: ${emailGenerado} / contraseña: DNI`, 'success')
           }
         } catch {

@@ -9,7 +9,7 @@ export async function login(email, password) {
 
   const { data: perfil, error: perfilError } = await supabase
     .from('usuarios_perfil')
-    .select('nombre, rol, sede_id, empresa_id, cargo, activo')
+    .select('nombre, rol, sede_id, empresa_id, cargo, activo, sedes(nombre)')
     .eq('id', data.user.id)
     .single()
 
@@ -22,6 +22,7 @@ export async function login(email, password) {
     nombre: perfil.nombre,
     rol: perfil.rol,
     sedeId: perfil.sede_id,
+    sedeName: perfil.sedes?.nombre || null,
     empresaId: perfil.empresa_id,
     cargo: perfil.cargo,
     token: data.session.access_token,
