@@ -8,10 +8,11 @@ import {
   ShieldCheck,
   Check,
 } from 'lucide-react'
+import { login } from '../services/api'
 
 export default function Login({ onLogin }) {
-  const [email, setEmail] = useState('admin@empresa.com')
-  const [password, setPassword] = useState('admin123')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
   const [loading, setLoading] = useState(false)
@@ -31,7 +32,7 @@ export default function Login({ onLogin }) {
 
   const resetTilt = () => setTilt({ x: 0, y: 0 })
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
 
@@ -41,28 +42,14 @@ export default function Login({ onLogin }) {
     }
 
     setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
-      const user = {
-        name: email.includes('admin') ? 'Carlos Mendoza (Admin)' : 'Patricia Vargas (RRHH)',
-        email: email.includes('admin') ? 'carlos.mendoza@minera-andina.com' : 'patricia.vargas@minera-andina.com',
-        originalEmail: email,
-        role: email.includes('admin') ? 'Administrador General' : 'Especialista de Planillas',
-        avatarText: email.includes('admin') ? 'CM' : 'PV',
-      }
+    try {
+      const user = await login(email, password)
       onLogin(user, rememberMe)
-    }, 500)
-  }
-
-  const handleDemoFill = (role) => {
-    if (role === 'admin') {
-      setEmail('admin@empresa.com')
-      setPassword('admin123')
-    } else {
-      setEmail('rrhh@empresa.com')
-      setPassword('rrhh123')
+    } catch (err) {
+      setError(err.message || 'Credenciales incorrectas.')
+    } finally {
+      setLoading(false)
     }
-    setError('')
   }
 
   return (
@@ -246,27 +233,6 @@ export default function Login({ onLogin }) {
                 </button>
               </form>
 
-              <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
-                <p className="mb-3 text-center text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400">
-                  Accesos de demostración
-                </p>
-                <div className="grid grid-cols-2 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => handleDemoFill('admin')}
-                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm transition-all hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
-                  >
-                    Admin General
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDemoFill('rrhh')}
-                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm transition-all hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
-                  >
-                    Especialista RRHH
-                  </button>
-                </div>
-              </div>
 
               <div className="mt-6 flex items-center justify-center gap-2 border-t border-slate-100 pt-4 text-[11px] text-slate-400">
                 <ShieldCheck size={13} className="text-slate-500" />
