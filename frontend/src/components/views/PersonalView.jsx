@@ -1,27 +1,20 @@
-import { useState } from 'react'
-import {
-  Users,
-  Search,
-  Plus,
-  Building2,
-  MapPin,
-  Mail,
-  Phone,
-  Calendar,
-  CreditCard,
-  CheckCircle2,
-  X,
-  FileText,
-  Filter,
-} from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Users, Search, Plus, MapPin, Mail, X, Camera, Upload } from 'lucide-react'
 import { EMPRESAS, SEDES, AFPS } from '../../data/mockData'
+import { crearTrabajador, actualizarTrabajador, uploadImageToCloudinary } from '../../services/api'
 
-export default function PersonalView({ workers, onAddWorker, showToast }) {
+export default function PersonalView({ workers, onAddWorker, onUpdateWorker, showToast }) {
   const [search, setSearch] = useState('')
   const [selectedSede, setSelectedSede] = useState('')
   const [selectedEstado, setSelectedEstado] = useState('')
   const [showNewModal, setShowNewModal] = useState(false)
   const [selectedWorker, setSelectedWorker] = useState(null)
+  const [isEditingWorker, setIsEditingWorker] = useState(false)
+  const [editForm, setEditForm] = useState(null)
+  const [newFotoUrl, setNewFotoUrl] = useState(null)
+  const [editFotoUrl, setEditFotoUrl] = useState(null)
+  const newFotoRef = useRef(null)
+  const editFotoRef = useRef(null)
 
   // Formulario nuevo colaborador
   const [form, setForm] = useState({
@@ -49,51 +42,133 @@ export default function PersonalView({ workers, onAddWorker, showToast }) {
     return matchSearch && matchSede && matchEstado
   })
 
-  const handleCreateWorker = (e) => {
+  const handleFotoUpload = async (file, setter) => {
+    if (!file) return
+    if (!file.type.startsWith('image/')) { showToast('Selecciona una imagen válida.', 'error'); return }
+    if (file.size > 2 * 1024 * 1024) { showToast('La imagen no debe exceder 2MB.', 'error'); return }
+    try {
+      showToast('Subiendo foto...', 'info')
+      const url = await uploadImageToCloudinary(file)
+      setter(url)
+      showToast('Foto subida correctamente.', 'success')
+    } catch { showToast('Error al subir foto.', 'error') }
+  }
+
+  const handleCreateWorker = async (e) => {
     e.preventDefault()
     if (!form.dni || !form.nombre || !form.cargo || !form.sueldoBase) {
       showToast('Por favor completa los campos requeridos (DNI, Nombre, Cargo, Sueldo).', 'error')
       return
     }
 
-    const newWorker = {
-      id: Date.now(),
-      dni: form.dni,
-      nombre: form.nombre,
-      cargo: form.cargo,
-      empresaId: form.empresaId,
-      sedeId: form.sedeId,
-      sueldoBase: parseFloat(form.sueldoBase) || 1025.00,
-      afp: form.afp,
-      asigFamiliar: form.asigFamiliar,
-      estado: 'Activo',
-      fechaIngreso: new Date().toISOString().split('T')[0],
-      regimen: form.regimen,
-      email: form.email || `${form.nombre.toLowerCase().replace(/\s+/g, '.')}@empresa.com`,
-      telefono: form.telefono || '999 000 000',
-      // Tareo inicial de 31 días (días hábiles D, fines de semana DL)
-      tareo: Array.from({ length: 31 }, (_, i) => {
-        const dayOfWeek = (i + 1) % 7
-        return (dayOfWeek === 0 || dayOfWeek === 6) ? 'DL' : 'D'
-      }),
+    const partes = form.nombre.trim().split(' ')
+    const apellidoPaterno = partes[0] || ''
+    const apellidoMaterno = partes[1] || ''
+    const nombres = partes.slice(2).join(' ') || apellidoPaterno
+
+    const sueldoBasico = parseFloat(form.sueldoBase) || 1025.00
+
+    try {
+      const created = await crearTrabajador({
+        empresaId: parseInt(form.empresaId),
+        sedeId: parseInt(form.sedeId),
+        tipoDocumento: 'DNI',
+        numeroDocumento: form.dni,
+        nombres,
+        apellidoPaterno,
+        apellidoMaterno,
+        cargo: form.cargo,
+        fechaIngreso: new Date().toISOString().split('T')[0],
+        sueldoBasico,
+        sueldoDiario: parseFloat((sueldoBasico / 30).toFixed(2)),
+        fotoUrl: newFotoUrl || null,
+      })
+
+      const newWorker = {
+        id: created.id,
+        dni: form.dni,
+        nombre: form.nombre,
+        cargo: form.cargo,
+        empresaId: form.empresaId,
+        sedeId: form.sedeId,
+        sueldoBase: sueldoBasico,
+        afp: form.afp,
+        asigFamiliar: form.asigFamiliar,
+        estado: 'Activo',
+        fechaIngreso: new Date().toISOString().split('T')[0],
+        regimen: form.regimen,
+        email: form.email || `${form.nombre.toLowerCase().replace(/\s+/g, '.')}@empresa.com`,
+        telefono: form.telefono || '999 000 000',
+        fotoUrl: newFotoUrl || null,
+        tareo: Array.from({ length: 31 }, (_, i) => {
+          const dayOfWeek = (i + 1) % 7
+          return (dayOfWeek === 0 || dayOfWeek === 6) ? 'DL' : 'D'
+        }),
+      }
+
+      onAddWorker(newWorker)
+      showToast(`Colaborador ${newWorker.nombre} registrado exitosamente.`, 'success')
+    } catch (err) {
+      showToast('Error al registrar colaborador en la base de datos.', 'error')
     }
 
-    onAddWorker(newWorker)
     setShowNewModal(false)
-    setForm({
-      dni: '',
-      nombre: '',
-      cargo: '',
-      empresaId: '1',
-      sedeId: '1',
-      sueldoBase: '1500',
-      afp: 'integra',
-      asigFamiliar: true,
-      email: '',
-      telefono: '',
-      regimen: 'D.L. 728',
+    setNewFotoUrl(null)
+    setForm({ dni: '', nombre: '', cargo: '', empresaId: '1', sedeId: '1', sueldoBase: '1500', afp: 'integra', asigFamiliar: true, email: '', telefono: '', regimen: 'D.L. 728' })
+  }
+
+  const handleOpenEdit = (worker) => {
+    setEditForm({
+      cargo: worker.cargo,
+      sueldoBase: String(worker.sueldoBase),
+      sedeId: worker.sedeId,
+      afp: worker.afp,
+      asigFamiliar: worker.asigFamiliar,
+      estado: worker.estado,
     })
-    showToast(`Colaborador ${newWorker.nombre} registrado exitosamente.`, 'success')
+    setEditFotoUrl(worker.fotoUrl || null)
+    setIsEditingWorker(true)
+  }
+
+  const handleSaveEdit = async (e) => {
+    e.preventDefault()
+    try {
+      const sueldoBasico = parseFloat(editForm.sueldoBase)
+      const partes = selectedWorker.nombre.trim().split(' ')
+      const apellidoPaterno = partes[0] || ''
+      const apellidoMaterno = partes[1] || ''
+      const nombres = partes.slice(2).join(' ') || apellidoPaterno
+
+      await actualizarTrabajador(selectedWorker.id, {
+        sedeId: parseInt(editForm.sedeId),
+        tipoDocumento: 'DNI',
+        numeroDocumento: selectedWorker.dni,
+        nombres,
+        apellidoPaterno,
+        apellidoMaterno,
+        cargo: editForm.cargo,
+        fechaIngreso: selectedWorker.fechaIngreso,
+        sueldoBasico,
+        sueldoDiario: parseFloat((sueldoBasico / 30).toFixed(2)),
+        activo: editForm.estado === 'Activo',
+        fotoUrl: editFotoUrl || null,
+      })
+      onUpdateWorker({
+        ...selectedWorker,
+        cargo: editForm.cargo,
+        sueldoBase: sueldoBasico,
+        sedeId: editForm.sedeId,
+        afp: editForm.afp,
+        asigFamiliar: editForm.asigFamiliar,
+        estado: editForm.estado,
+        fotoUrl: editFotoUrl || null,
+      })
+      setIsEditingWorker(false)
+      setSelectedWorker(null)
+      showToast('Colaborador actualizado correctamente.', 'success')
+    } catch (err) {
+      showToast('Error al actualizar colaborador.', 'error')
+    }
   }
 
   return (
@@ -184,9 +259,10 @@ export default function PersonalView({ workers, onAddWorker, showToast }) {
                     {/* Colaborador */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center flex-shrink-0 text-xs">
-                          {w.nombre.slice(0, 2).toUpperCase()}
-                        </div>
+                        {w.fotoUrl
+                          ? <img src={w.fotoUrl} alt={w.nombre} className="w-8 h-8 rounded-full object-cover border border-slate-200 flex-shrink-0" />
+                          : <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center flex-shrink-0 text-xs">{w.nombre.slice(0, 2).toUpperCase()}</div>
+                        }
                         <div>
                           <p className="font-semibold text-slate-900">{w.nombre}</p>
                           <p className="text-[11px] text-slate-400 flex items-center gap-1">
@@ -247,12 +323,20 @@ export default function PersonalView({ workers, onAddWorker, showToast }) {
 
                     {/* Acciones */}
                     <td className="px-4 py-3 text-center">
-                      <button
-                        onClick={() => setSelectedWorker(w)}
-                        className="px-2.5 py-1 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded border border-blue-200 transition-colors cursor-pointer"
-                      >
-                        Ver Ficha
-                      </button>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => setSelectedWorker(w)}
+                          className="px-2.5 py-1 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded border border-blue-200 transition-colors cursor-pointer"
+                        >
+                          Ver Ficha
+                        </button>
+                        <button
+                          onClick={() => { setSelectedWorker(w); handleOpenEdit(w) }}
+                          className="px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded border border-slate-200 transition-colors cursor-pointer"
+                        >
+                          Editar
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 )
@@ -390,6 +474,25 @@ export default function PersonalView({ workers, onAddWorker, showToast }) {
                 </label>
               </div>
 
+              {/* Foto */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Foto del Colaborador</label>
+                <input ref={newFotoRef} type="file" accept="image/*" className="hidden"
+                  onChange={(e) => handleFotoUpload(e.target.files[0], setNewFotoUrl)} />
+                <div className="flex items-center gap-3">
+                  {newFotoUrl
+                    ? <img src={newFotoUrl} alt="foto" className="w-12 h-12 rounded-full object-cover border border-slate-200" />
+                    : <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400"><Camera size={18} /></div>
+                  }
+                  <button type="button" onClick={() => newFotoRef.current?.click()}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 cursor-pointer">
+                    <Upload size={12} /> {newFotoUrl ? 'Cambiar foto' : 'Subir foto'}
+                  </button>
+                  {newFotoUrl && <button type="button" onClick={() => setNewFotoUrl(null)}
+                    className="text-xs text-rose-500 hover:text-rose-700 cursor-pointer">Quitar</button>}
+                </div>
+              </div>
+
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
@@ -425,9 +528,10 @@ export default function PersonalView({ workers, onAddWorker, showToast }) {
             </div>
 
             <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 border border-blue-100">
-              <div className="w-12 h-12 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-sm">
-                {selectedWorker.nombre.slice(0, 2).toUpperCase()}
-              </div>
+              {selectedWorker.fotoUrl
+                ? <img src={selectedWorker.fotoUrl} alt={selectedWorker.nombre} className="w-12 h-12 rounded-full object-cover border-2 border-blue-200" />
+                : <div className="w-12 h-12 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-sm">{selectedWorker.nombre.slice(0, 2).toUpperCase()}</div>
+              }
               <div>
                 <h4 className="font-bold text-slate-900 text-sm">{selectedWorker.nombre}</h4>
                 <p className="text-xs text-slate-500 font-mono">DNI: {selectedWorker.dni}</p>
@@ -454,14 +558,141 @@ export default function PersonalView({ workers, onAddWorker, showToast }) {
               </div>
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end gap-2 pt-2">
               <button
-                onClick={() => setSelectedWorker(null)}
+                onClick={() => { setSelectedWorker(null); setIsEditingWorker(false) }}
                 className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-semibold cursor-pointer"
               >
                 Cerrar Ficha
               </button>
+              <button
+                onClick={() => handleOpenEdit(selectedWorker)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold cursor-pointer"
+              >
+                Editar
+              </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Editar Colaborador */}
+      {isEditingWorker && selectedWorker && editForm && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-sm font-bold text-slate-900">Editar Colaborador — {selectedWorker.nombre}</h3>
+              <button onClick={() => setIsEditingWorker(false)} className="text-slate-400 hover:text-slate-600 p-1">
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="space-y-3.5 mt-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Cargo *</label>
+                <input
+                  type="text"
+                  required
+                  value={editForm.cargo}
+                  onChange={(e) => setEditForm({ ...editForm, cargo: e.target.value })}
+                  className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Sueldo Básico (S/) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    value={editForm.sueldoBase}
+                    onChange={(e) => setEditForm({ ...editForm, sueldoBase: e.target.value })}
+                    className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Sede</label>
+                  <select
+                    value={editForm.sedeId}
+                    onChange={(e) => setEditForm({ ...editForm, sedeId: e.target.value })}
+                    className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  >
+                    {SEDES.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Sistema de Pensión</label>
+                  <select
+                    value={editForm.afp}
+                    onChange={(e) => setEditForm({ ...editForm, afp: e.target.value })}
+                    className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  >
+                    {AFPS.map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Estado</label>
+                  <select
+                    value={editForm.estado}
+                    onChange={(e) => setEditForm({ ...editForm, estado: e.target.value })}
+                    className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  >
+                    <option value="Activo">Activo</option>
+                    <option value="Vacaciones">Vacaciones</option>
+                    <option value="Licencia">Licencia</option>
+                    <option value="Inactivo">Inactivo</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-700">
+                  <input type="checkbox" checked={editForm.asigFamiliar}
+                    onChange={(e) => setEditForm({ ...editForm, asigFamiliar: e.target.checked })}
+                    className="w-4 h-4 rounded border-slate-300 text-blue-600" />
+                  <span>Tiene derecho a Asignación Familiar</span>
+                </label>
+              </div>
+
+              {/* Foto */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Foto del Colaborador</label>
+                <input ref={editFotoRef} type="file" accept="image/*" className="hidden"
+                  onChange={(e) => handleFotoUpload(e.target.files[0], setEditFotoUrl)} />
+                <div className="flex items-center gap-3">
+                  {editFotoUrl
+                    ? <img src={editFotoUrl} alt="foto" className="w-12 h-12 rounded-full object-cover border border-slate-200" />
+                    : <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400"><Camera size={18} /></div>
+                  }
+                  <button type="button" onClick={() => editFotoRef.current?.click()}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 cursor-pointer">
+                    <Upload size={12} /> {editFotoUrl ? 'Cambiar foto' : 'Subir foto'}
+                  </button>
+                  {editFotoUrl && <button type="button" onClick={() => setEditFotoUrl(null)}
+                    className="text-xs text-rose-500 hover:text-rose-700 cursor-pointer">Quitar</button>}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsEditingWorker(false)}
+                  className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 border border-slate-200 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold cursor-pointer"
+                >
+                  Guardar Cambios
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

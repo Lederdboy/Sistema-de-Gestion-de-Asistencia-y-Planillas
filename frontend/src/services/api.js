@@ -61,6 +61,26 @@ export async function getMatrizAsistencia(mes = 9, anio = 2026, sedeId = 1) {
   }
 }
 
+export async function crearTrabajador(data) {
+  const res = await fetch(`${BASE_URL}/trabajadores`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
+  return await res.json()
+}
+
+export async function actualizarTrabajador(id, data) {
+  const res = await fetch(`${BASE_URL}/trabajadores/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
+  return await res.json()
+}
+
 export async function updateMarcacion({ trabajadorId, sedeId, fecha, codigoAsistencia, observacion }) {
   try {
     const res = await fetch(`${BASE_URL}/asistencia/marcacion`, {

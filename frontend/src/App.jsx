@@ -153,6 +153,11 @@ export default function App() {
     )
   }
 
+  // Actualizar colaborador existente
+  const handleUpdateWorker = (updatedWorker) => {
+    setWorkers((prev) => prev.map((w) => w.id === updatedWorker.id ? updatedWorker : w))
+  }
+
   // Agregar nuevo colaborador
   const handleAddWorker = (newWorker) => {
     setWorkers((prev) => [newWorker, ...prev])
@@ -245,6 +250,7 @@ export default function App() {
             <PersonalView
               workers={workers}
               onAddWorker={handleAddWorker}
+              onUpdateWorker={handleUpdateWorker}
               showToast={showToast}
             />
           )}

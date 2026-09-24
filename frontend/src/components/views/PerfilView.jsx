@@ -20,16 +20,32 @@ export default function PerfilView({ user, showToast }) {
   const [profileImage, setProfileImage] = useState(null)
   const fileInputRef = useRef(null)
   
-  const [profileData, setProfileData] = useState({
+  const [profileData, setProfileData] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`perfil_admin_${user?.email}`)
+      if (saved) return JSON.parse(saved)
+    } catch {}
+    return {
+      nombre: user?.name || 'Carlos Mendoza',
+      email: user?.email || 'carlos.mendoza@empresa.com',
+      telefono: '+51 987 654 321',
+      cargo: user?.role || 'Administrador General',
+      departamento: 'Gerencia General',
+      sede: 'Sede Principal - Lima',
+      fechaIngreso: '15/03/2018',
+      avatarText: user?.avatarText || 'CM',
+    }
+  })
+  const [originalData] = useState(() => ({
     nombre: user?.name || 'Carlos Mendoza',
-    email: user?.email || 'carlos.mendoza@minera-andina.com',
+    email: user?.email || 'carlos.mendoza@empresa.com',
     telefono: '+51 987 654 321',
     cargo: user?.role || 'Administrador General',
     departamento: 'Gerencia General',
     sede: 'Sede Principal - Lima',
     fechaIngreso: '15/03/2018',
     avatarText: user?.avatarText || 'CM',
-  })
+  }))
 
   // Cargar imagen de perfil desde localStorage al montar el componente
   useEffect(() => {
@@ -75,23 +91,19 @@ export default function PerfilView({ user, showToast }) {
 
   const handleSave = (e) => {
     e.preventDefault()
+    localStorage.setItem(`perfil_admin_${user?.email}`, JSON.stringify(profileData))
     setIsEditing(false)
     showToast('Perfil actualizado exitosamente.', 'success')
   }
 
   const handleCancel = () => {
     setIsEditing(false)
-    // Reset to original values
-    setProfileData({
-      nombre: user?.name || 'Carlos Mendoza',
-      email: user?.email || 'carlos.mendoza@minera-andina.com',
-      telefono: '+51 987 654 321',
-      cargo: user?.role || 'Administrador General',
-      departamento: 'Gerencia General',
-      sede: 'Sede Principal - Lima',
-      fechaIngreso: '15/03/2018',
-      avatarText: user?.avatarText || 'CM',
-    })
+    try {
+      const saved = localStorage.getItem(`perfil_admin_${user?.email}`)
+      setProfileData(saved ? JSON.parse(saved) : originalData)
+    } catch {
+      setProfileData(originalData)
+    }
   }
 
   return (
