@@ -22,6 +22,12 @@ export default function PerfilView({ user, showToast }) {
     cargo: user?.cargo || ROL_LABEL[user?.rol] || '',
   })
 
+  const [showPasswordSection, setShowPasswordSection] = useState(false)
+  const [passwordForm, setPasswordForm] = useState({ nueva: '', confirmar: '' })
+  const [showNueva, setShowNueva] = useState(false)
+  const [showConfirmar, setShowConfirmar] = useState(false)
+  const [savingPassword, setSavingPassword] = useState(false)
+
   useEffect(() => {
     if (user?.email) {
       const savedImage = localStorage.getItem(`profile_image_${user.email}`)
@@ -60,11 +66,12 @@ export default function PerfilView({ user, showToast }) {
     showToast('Imagen eliminada.', 'info')
   }
 
-  const [showPasswordSection, setShowPasswordSection] = useState(false)
-  const [passwordForm, setPasswordForm] = useState({ nueva: '', confirmar: '' })
-  const [showNueva, setShowNueva] = useState(false)
-  const [showConfirmar, setShowConfirmar] = useState(false)
-  const [savingPassword, setSavingPassword] = useState(false)
+  const handleSave = (e) => {
+    e.preventDefault()
+    localStorage.setItem(`perfil_extra_${user?.email}`, JSON.stringify(profileData))
+    setIsEditing(false)
+    showToast('Perfil actualizado.', 'success')
+  }
 
   const handleChangePassword = async (e) => {
     e.preventDefault()
@@ -77,11 +84,6 @@ export default function PerfilView({ user, showToast }) {
     showToast('Contraseña actualizada correctamente.', 'success')
     setPasswordForm({ nueva: '', confirmar: '' })
     setShowPasswordSection(false)
-  }
-    e.preventDefault()
-    localStorage.setItem(`perfil_extra_${user?.email}`, JSON.stringify(profileData))
-    setIsEditing(false)
-    showToast('Perfil actualizado.', 'success')
   }
 
   const avatarText = user?.nombre
@@ -99,21 +101,19 @@ export default function PerfilView({ user, showToast }) {
           <p className="text-xs text-slate-500">Información personal y profesional</p>
         </div>
         {!isEditing ? (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="h-9 px-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <Edit size={14} />
-            Editar Perfil
+          <button onClick={() => setIsEditing(true)}
+            className="h-9 px-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer">
+            <Edit size={14} /> Editar Perfil
           </button>
         ) : (
           <div className="flex gap-2">
-            <button onClick={() => setIsEditing(false)} className="h-9 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold cursor-pointer">
+            <button onClick={() => setIsEditing(false)}
+              className="h-9 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold cursor-pointer">
               Cancelar
             </button>
-            <button onClick={handleSave} className="h-9 px-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer">
-              <Save size={14} />
-              Guardar
+            <button onClick={handleSave}
+              className="h-9 px-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer">
+              <Save size={14} /> Guardar
             </button>
           </div>
         )}
@@ -135,11 +135,13 @@ export default function PerfilView({ user, showToast }) {
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                 {isEditing && (
                   <div className="absolute bottom-0 right-0 flex gap-1">
-                    <button onClick={() => fileInputRef.current?.click()} className="w-8 h-8 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-md cursor-pointer">
+                    <button onClick={() => fileInputRef.current?.click()}
+                      className="w-8 h-8 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-md cursor-pointer">
                       <Camera size={14} />
                     </button>
                     {profileImage && (
-                      <button onClick={handleRemoveImage} className="w-8 h-8 bg-rose-600 hover:bg-rose-700 text-white rounded-full flex items-center justify-center shadow-md cursor-pointer">
+                      <button onClick={handleRemoveImage}
+                        className="w-8 h-8 bg-rose-600 hover:bg-rose-700 text-white rounded-full flex items-center justify-center shadow-md cursor-pointer">
                         <X size={14} />
                       </button>
                     )}
@@ -151,17 +153,16 @@ export default function PerfilView({ user, showToast }) {
                 {ROL_LABEL[user?.rol] || user?.rol}
               </span>
               {!isEditing && !profileImage && (
-                <button onClick={() => fileInputRef.current?.click()} className="mt-2 text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer">
-                  <Upload size={10} />
-                  Agregar foto
+                <button onClick={() => fileInputRef.current?.click()}
+                  className="mt-2 text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer">
+                  <Upload size={10} /> Agregar foto
                 </button>
               )}
             </div>
 
             <div className="p-4 border border-slate-200 rounded-lg bg-slate-50/50 space-y-3">
               <h4 className="text-xs font-bold text-slate-700 flex items-center gap-2">
-                <Mail size={14} className="text-blue-600" />
-                Contacto
+                <Mail size={14} className="text-blue-600" /> Contacto
               </h4>
               <div>
                 <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">Email</label>
@@ -170,12 +171,9 @@ export default function PerfilView({ user, showToast }) {
               <div>
                 <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">Teléfono</label>
                 {isEditing ? (
-                  <input
-                    type="tel"
-                    value={profileData.telefono}
+                  <input type="tel" value={profileData.telefono}
                     onChange={(e) => setProfileData({ ...profileData, telefono: e.target.value })}
-                    className="w-full h-8 px-2 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                  />
+                    className="w-full h-8 px-2 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                 ) : (
                   <p className="text-xs text-slate-700">{profileData.telefono || '—'}</p>
                 )}
@@ -183,23 +181,19 @@ export default function PerfilView({ user, showToast }) {
             </div>
           </div>
 
-          {/* Info laboral + sistema */}
+          {/* Info laboral + sistema + seguridad */}
           <div className="lg:col-span-2 space-y-4">
             <div className="p-4 border border-slate-200 rounded-lg bg-slate-50/50">
               <h4 className="text-xs font-bold text-slate-700 flex items-center gap-2 mb-3">
-                <Building2 size={14} className="text-blue-600" />
-                Información Laboral
+                <Building2 size={14} className="text-blue-600" /> Información Laboral
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">Cargo</label>
                   {isEditing ? (
-                    <input
-                      type="text"
-                      value={profileData.cargo}
+                    <input type="text" value={profileData.cargo}
                       onChange={(e) => setProfileData({ ...profileData, cargo: e.target.value })}
-                      className="w-full h-8 px-2 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                    />
+                      className="w-full h-8 px-2 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                   ) : (
                     <p className="text-xs text-slate-700">{profileData.cargo || '—'}</p>
                   )}
@@ -213,8 +207,7 @@ export default function PerfilView({ user, showToast }) {
 
             <div className="p-4 border border-slate-200 rounded-lg bg-slate-50/50">
               <h4 className="text-xs font-bold text-slate-700 flex items-center gap-2 mb-3">
-                <Shield size={14} className="text-blue-600" />
-                Información del Sistema
+                <Shield size={14} className="text-blue-600" /> Información del Sistema
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
@@ -232,30 +225,24 @@ export default function PerfilView({ user, showToast }) {
             <div className="p-4 border border-slate-200 rounded-lg bg-slate-50/50">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-xs font-bold text-slate-700 flex items-center gap-2">
-                  <KeyRound size={14} className="text-blue-600" />
-                  Seguridad
+                  <KeyRound size={14} className="text-blue-600" /> Seguridad
                 </h4>
-                <button
-                  onClick={() => setShowPasswordSection(!showPasswordSection)}
-                  className="text-xs font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
-                >
+                <button onClick={() => setShowPasswordSection(!showPasswordSection)}
+                  className="text-xs font-semibold text-blue-600 hover:text-blue-700 cursor-pointer">
                   {showPasswordSection ? 'Cancelar' : 'Cambiar contraseña'}
                 </button>
               </div>
               {!showPasswordSection ? (
-                <p className="text-xs text-slate-500">Tu contraseña fue actualizada recientemente. Manténla segura.</p>
+                <p className="text-xs text-slate-500">Mantén tu contraseña segura y cámbiala periódicamente.</p>
               ) : (
                 <form onSubmit={handleChangePassword} className="space-y-3">
                   <div>
                     <label className="block text-[10px] font-semibold text-slate-500 mb-1">Nueva contraseña</label>
                     <div className="relative">
-                      <input
-                        type={showNueva ? 'text' : 'password'}
-                        value={passwordForm.nueva}
+                      <input type={showNueva ? 'text' : 'password'} value={passwordForm.nueva}
                         onChange={(e) => setPasswordForm({ ...passwordForm, nueva: e.target.value })}
                         placeholder="Mínimo 8 caracteres"
-                        className="w-full h-9 px-3 pr-9 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                      />
+                        className="w-full h-9 px-3 pr-9 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                       <button type="button" onClick={() => setShowNueva(!showNueva)}
                         className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
                         {showNueva ? <EyeOff size={13} /> : <Eye size={13} />}
@@ -265,13 +252,10 @@ export default function PerfilView({ user, showToast }) {
                   <div>
                     <label className="block text-[10px] font-semibold text-slate-500 mb-1">Confirmar contraseña</label>
                     <div className="relative">
-                      <input
-                        type={showConfirmar ? 'text' : 'password'}
-                        value={passwordForm.confirmar}
+                      <input type={showConfirmar ? 'text' : 'password'} value={passwordForm.confirmar}
                         onChange={(e) => setPasswordForm({ ...passwordForm, confirmar: e.target.value })}
                         placeholder="Repite la contraseña"
-                        className="w-full h-9 px-3 pr-9 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                      />
+                        className="w-full h-9 px-3 pr-9 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                       <button type="button" onClick={() => setShowConfirmar(!showConfirmar)}
                         className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
                         {showConfirmar ? <EyeOff size={13} /> : <Eye size={13} />}
