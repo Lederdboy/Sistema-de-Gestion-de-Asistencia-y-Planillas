@@ -13,6 +13,7 @@ import PlanillaView from './components/views/PlanillaView'
 import ReportesView from './components/views/ReportesView'
 import ConfigView from './components/views/ConfigView'
 import PerfilView from './components/views/PerfilView'
+import GestionUsuariosView from './components/views/GestionUsuariosView'
 
 import { INITIAL_WORKERS } from './data/mockData'
 import { getTrabajadores, getSedes, logout } from './services/api'
@@ -117,7 +118,7 @@ export default function App() {
     if (remember) {
       localStorage.setItem('planilla_user', JSON.stringify(loggedUser))
     }
-    showToast(`Bienvenido a Planilla Enterprise, ${loggedUser.name}`, 'success')
+    showToast(`Bienvenido a Planilla Enterprise, ${loggedUser.nombre}`, 'success')
   }
 
   // Manejador de Logout
@@ -294,8 +295,12 @@ export default function App() {
             />
           )}
 
-          {activeNav === 'config' && (
+          {activeNav === 'config' && user?.rol === 'GERENTE_GENERAL' && (
             <ConfigView showToast={showToast} />
+          )}
+
+          {activeNav === 'usuarios' && ['GERENTE_GENERAL', 'GERENTE_SEDE'].includes(user?.rol) && (
+            <GestionUsuariosView user={user} showToast={showToast} />
           )}
 
           {activeNav === 'perfil' && (
