@@ -248,7 +248,7 @@ export default function App() {
       >
         <div className="mx-auto w-full max-w-[1700px]">
           {activeNav === 'dashboard' && (
-            <DashboardView onNavigate={setActiveNav} workers={workers} />
+            <DashboardView onNavigate={setActiveNav} workers={workers} user={user} />
           )}
 
           {activeNav === 'personal' && (
