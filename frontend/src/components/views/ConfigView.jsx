@@ -8,31 +8,52 @@ export default function ConfigView({ showToast }) {
   const [dominioEmail, setDominioEmail] = useState('empresa.com')
   const [savingDominio, setSavingDominio] = useState(false)
 
+  const [savingEmpresa, setSavingEmpresa] = useState(false)
+
   const [empresaData, setEmpresaData] = useState({
-    nombre: 'Minera Andina S.A.',
-    ruc: '20489123891',
-    direccion: 'Av. Las Camelias 450, San Isidro, Lima',
-    representante: 'Carlos A. Mendoza Ríos',
-    actividadEconomica: 'Extracción de minerales metalíferos',
+    razon_social: '',
+    ruc: '',
+    direccion: '',
+    representante: '',
+    actividad_economica: '',
   })
 
   const [laboralData, setLaboralData] = useState({
     rmv: PARAMETROS_LABORALES.rmv,
     asigFamiliar: PARAMETROS_LABORALES.asigFamiliar,
     essalud: 9,
-    sctr: 1.5,
     uit: PARAMETROS_LABORALES.uit,
     jornadaHoras: 8,
   })
 
   useEffect(() => {
-    supabase.from('empresas').select('dominio_email').eq('id', 1).single()
-      .then(({ data }) => { if (data?.dominio_email) setDominioEmail(data.dominio_email) })
+    supabase.from('empresas').select('ruc, razon_social, direccion, representante, actividad_economica, dominio_email').eq('id', 1).single()
+      .then(({ data }) => {
+        if (!data) return
+        if (data.dominio_email) setDominioEmail(data.dominio_email)
+        setEmpresaData({
+          razon_social: data.razon_social || '',
+          ruc: data.ruc || '',
+          direccion: data.direccion || '',
+          representante: data.representante || '',
+          actividad_economica: data.actividad_economica || '',
+        })
+      })
   }, [])
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault()
-    showToast('Configuración guardada exitosamente.', 'success')
+    setSavingEmpresa(true)
+    const { error } = await supabase.from('empresas').update({
+      ruc: empresaData.ruc,
+      razon_social: empresaData.razon_social,
+      direccion: empresaData.direccion,
+      representante: empresaData.representante,
+      actividad_economica: empresaData.actividad_economica,
+    }).eq('id', 1)
+    setSavingEmpresa(false)
+    if (error) { showToast('Error al guardar datos de empresa.', 'error'); return }
+    showToast('Datos de empresa guardados correctamente.', 'success')
   }
 
   const handleGuardarDominio = async (e) => {
