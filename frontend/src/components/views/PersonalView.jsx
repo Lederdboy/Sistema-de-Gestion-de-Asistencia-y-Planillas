@@ -387,187 +387,184 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
         </div>
       </div>
 
-      {/* Modal Nuevo Colaborador */}
+      {/* Drawer Nuevo Colaborador */}
       {showNewModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 border border-slate-200 overflow-y-auto max-h-[90vh]">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Users size={18} className="text-blue-600" />
-                Registrar Nuevo Colaborador
-              </h3>
-              <button
-                onClick={() => setShowNewModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1"
-              >
-                <X size={18} />
+        <div className="fixed inset-0 z-50 flex">
+          {/* Backdrop */}
+          <div className="flex-1 bg-black/40 backdrop-blur-xs" onClick={() => setShowNewModal(false)} />
+          {/* Panel lateral */}
+          <div className="w-full max-w-xl bg-white shadow-2xl flex flex-col h-full overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-blue-600 to-indigo-600">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
+                  <Users size={18} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Nuevo Colaborador</h3>
+                  <p className="text-[11px] text-blue-100">Completa los datos para registrar</p>
+                </div>
+              </div>
+              <button onClick={() => setShowNewModal(false)} className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white cursor-pointer">
+                <X size={16} />
               </button>
             </div>
 
-            <form onSubmit={handleCreateWorker} className="space-y-3.5 mt-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">DNI *</label>
-                  <input
-                    type="text"
-                    maxLength={8}
-                    required
-                    value={form.dni}
-                    onChange={(e) => setForm({ ...form, dni: e.target.value })}
-                    placeholder="8 dígitos"
-                    className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Sueldo Básico (S/) *</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    value={form.sueldoBase}
-                    onChange={(e) => setForm({ ...form, sueldoBase: e.target.value })}
-                    placeholder="1500.00"
-                    className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                  />
-                </div>
-              </div>
+            {/* Contenido scrolleable */}
+            <form onSubmit={handleCreateWorker} className="flex-1 overflow-y-auto">
+              <div className="p-6 space-y-5">
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Apellidos y Nombres *</label>
-                <input
-                  type="text"
-                  required
-                  value={form.nombre}
-                  onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-                  placeholder="Ej: Pedro Castillo, Taylor Swift"
-                  className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Cargo *</label>
-                  <input
-                    type="text"
-                    required
-                    value={form.cargo}
-                    onChange={(e) => setForm({ ...form, cargo: e.target.value })}
-                    placeholder="Ej: Asistente de Operaciones"
-                    className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Sistema de Pensión</label>
-                  <select
-                    value={form.afp}
-                    onChange={(e) => setForm({ ...form, afp: e.target.value })}
-                    className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                  >
-                    {AFPS.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Empresa</label>
-                  <select
-                    value={form.empresaId}
-                    onChange={(e) => setForm({ ...form, empresaId: e.target.value })}
-                    className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                  >
-                    {EMPRESAS.map((emp) => (
-                      <option key={emp.id} value={emp.id}>
-                        {emp.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Sede de Trabajo</label>
-                  <select
-                    value={form.sedeId}
-                    onChange={(e) => setForm({ ...form, sedeId: e.target.value })}
-                    className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                  >
-                    {SEDES.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={form.asigFamiliar}
-                    onChange={(e) => setForm({ ...form, asigFamiliar: e.target.checked })}
-                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span>Tiene derecho a Asignación Familiar (Hijos menores o estudios superiores)</span>
-                </label>
-              </div>
-
-              <div className="pt-1 border-t border-slate-100">
-                <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={darAcceso}
-                    onChange={(e) => setDarAcceso(e.target.checked)}
-                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="font-semibold text-blue-700">Dar acceso al sistema</span>
-                </label>
-                {darAcceso && form.nombre && (
-                  <div className="mt-2 p-2.5 rounded-lg bg-blue-50 border border-blue-100 text-[11px] text-blue-700 space-y-0.5">
-                    <p>Email: <span className="font-mono font-semibold">{generarEmail(form.nombre)}</span></p>
-                    <p>Contraseña temporal: <span className="font-mono font-semibold">{form.dni || '(ingresa el DNI)'}</span></p>
+                {/* Avatar preview + foto */}
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                  <div className="relative flex-shrink-0">
+                    {newFotoUrl
+                      ? <img src={newFotoUrl} alt="foto" className="w-16 h-16 rounded-full object-cover border-2 border-blue-200 shadow" />
+                      : <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold text-xl flex items-center justify-center shadow">
+                          {form.nombre ? form.nombre.trim().split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase() : <Camera size={20} />}
+                        </div>
+                    }
+                    <button type="button" onClick={() => newFotoRef.current?.click()}
+                      className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow cursor-pointer">
+                      <Upload size={11} />
+                    </button>
+                    <input ref={newFotoRef} type="file" accept="image/*" className="hidden"
+                      onChange={(e) => handleFotoUpload(e.target.files[0], setNewFotoUrl, setNewFotoFile)} />
                   </div>
-                )}
-              </div>
-
-              {/* Foto */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Foto del Colaborador</label>
-                <input ref={newFotoRef} type="file" accept="image/*" className="hidden"
-                  onChange={(e) => handleFotoUpload(e.target.files[0], setNewFotoUrl, setNewFotoFile)} />
-                <div className="flex items-center gap-3">
-                  {newFotoUrl
-                    ? <img src={newFotoUrl} alt="foto" className="w-12 h-12 rounded-full object-cover border border-slate-200" />
-                    : <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400"><Camera size={18} /></div>
-                  }
-                  <button type="button" onClick={() => newFotoRef.current?.click()}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 cursor-pointer">
-                    <Upload size={12} /> {newFotoUrl ? 'Cambiar foto' : 'Subir foto'}
-                  </button>
-                  {newFotoUrl && <button type="button" onClick={() => { setNewFotoUrl(null); setNewFotoFile(null) }}
-                    className="text-xs text-rose-500 hover:text-rose-700 cursor-pointer">Quitar</button>}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-slate-800 truncate">{form.nombre || 'Nombre del colaborador'}</p>
+                    <p className="text-xs text-slate-400 truncate">{form.cargo || 'Cargo'}</p>
+                    {newFotoUrl && (
+                      <button type="button" onClick={() => { setNewFotoUrl(null); setNewFotoFile(null) }}
+                        className="mt-1 text-[11px] text-rose-500 hover:text-rose-700 cursor-pointer">Quitar foto</button>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setShowNewModal(false)}
-                  className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 border border-slate-200 cursor-pointer"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-md shadow-blue-500/20 cursor-pointer"
-                >
-                  Guardar y Activar
-                </button>
+                {/* Sección 1: Identidad */}
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Identidad</p>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">DNI *</label>
+                        <input type="text" maxLength={8} required value={form.dni}
+                          onChange={(e) => setForm({ ...form, dni: e.target.value.replace(/\D/g,'') })}
+                          placeholder="12345678"
+                          className="w-full h-9 px-3 text-xs font-mono border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">Fecha de ingreso</label>
+                        <input type="date" value={form.fechaIngreso || new Date().toISOString().split('T')[0]}
+                          onChange={(e) => setForm({ ...form, fechaIngreso: e.target.value })}
+                          className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Apellidos y Nombres *</label>
+                      <input type="text" required value={form.nombre}
+                        onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                        placeholder="Ej: García López Juan Carlos"
+                        className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sección 2: Datos laborales */}
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Datos Laborales</p>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">Cargo *</label>
+                        <input type="text" required value={form.cargo}
+                          onChange={(e) => setForm({ ...form, cargo: e.target.value })}
+                          placeholder="Ej: Operario de Planta"
+                          className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">Sueldo Básico (S/) *</label>
+                        <input type="number" step="0.01" required value={form.sueldoBase}
+                          onChange={(e) => setForm({ ...form, sueldoBase: e.target.value })}
+                          placeholder="1500.00"
+                          className="w-full h-9 px-3 text-xs font-mono border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">Sede de Trabajo</label>
+                        <select value={form.sedeId} onChange={(e) => setForm({ ...form, sedeId: e.target.value })}
+                          className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white">
+                          {SEDES.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">Sistema de Pensión</label>
+                        <select value={form.afp} onChange={(e) => setForm({ ...form, afp: e.target.value })}
+                          className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white">
+                          {AFPS.map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <label className="flex items-center gap-2.5 cursor-pointer p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
+                      <input type="checkbox" checked={form.asigFamiliar}
+                        onChange={(e) => setForm({ ...form, asigFamiliar: e.target.checked })}
+                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                      <div>
+                        <p className="text-xs font-semibold text-slate-700">Asignación Familiar</p>
+                        <p className="text-[11px] text-slate-400">Hijos menores de edad o en estudios superiores</p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Sección 3: Acceso al sistema */}
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Acceso al Sistema</p>
+                  <label className={`flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                    darAcceso ? 'border-blue-400 bg-blue-50' : 'border-slate-200 hover:border-slate-300'
+                  }`}>
+                    <input type="checkbox" checked={darAcceso} onChange={(e) => setDarAcceso(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-slate-800">Crear cuenta de acceso</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">El trabajador podrá ver sus boletas, vacaciones y perfil</p>
+                      {darAcceso && (
+                        <div className="mt-2.5 space-y-1.5">
+                          <div className="flex items-center gap-2 p-2 rounded-lg bg-white border border-blue-200">
+                            <span className="text-[10px] font-bold text-slate-400 w-16 flex-shrink-0">EMAIL</span>
+                            <span className="text-[11px] font-mono text-blue-700 font-semibold truncate">
+                              {form.nombre ? generarEmail(form.nombre) : `usuario@${dominioEmail}`}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 p-2 rounded-lg bg-white border border-blue-200">
+                            <span className="text-[10px] font-bold text-slate-400 w-16 flex-shrink-0">CLAVE</span>
+                            <span className="text-[11px] font-mono text-blue-700 font-semibold">
+                              {form.dni || '(ingresa el DNI)'}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                </div>
+
               </div>
             </form>
+
+            {/* Footer fijo */}
+            <div className="px-6 py-4 border-t border-slate-100 bg-white flex items-center justify-between gap-3">
+              <p className="text-[11px] text-slate-400">Los campos con * son obligatorios</p>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setShowNewModal(false)}
+                  className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 border border-slate-200 cursor-pointer">
+                  Cancelar
+                </button>
+                <button type="submit" form="form-nuevo-colaborador" onClick={handleCreateWorker}
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm shadow-blue-500/20 cursor-pointer flex items-center gap-1.5">
+                  <Users size={13} /> Registrar Colaborador
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
