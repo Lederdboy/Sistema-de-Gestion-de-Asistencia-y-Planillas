@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { User, Mail, Building2, Shield, Edit, Save, Camera, Upload, X } from 'lucide-react'
+import { User, Mail, Building2, Shield, Edit, Save, Camera, Upload, X, KeyRound, Eye, EyeOff } from 'lucide-react'
 import { uploadImageToBackend } from '../../services/api'
 import { supabase } from '../../services/supabase'
 
@@ -60,7 +60,24 @@ export default function PerfilView({ user, showToast }) {
     showToast('Imagen eliminada.', 'info')
   }
 
-  const handleSave = (e) => {
+  const [showPasswordSection, setShowPasswordSection] = useState(false)
+  const [passwordForm, setPasswordForm] = useState({ nueva: '', confirmar: '' })
+  const [showNueva, setShowNueva] = useState(false)
+  const [showConfirmar, setShowConfirmar] = useState(false)
+  const [savingPassword, setSavingPassword] = useState(false)
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault()
+    if (passwordForm.nueva.length < 8) { showToast('La contraseña debe tener al menos 8 caracteres.', 'error'); return }
+    if (passwordForm.nueva !== passwordForm.confirmar) { showToast('Las contraseñas no coinciden.', 'error'); return }
+    setSavingPassword(true)
+    const { error } = await supabase.auth.updateUser({ password: passwordForm.nueva })
+    setSavingPassword(false)
+    if (error) { showToast('Error al cambiar contraseña.', 'error'); return }
+    showToast('Contraseña actualizada correctamente.', 'success')
+    setPasswordForm({ nueva: '', confirmar: '' })
+    setShowPasswordSection(false)
+  }
     e.preventDefault()
     localStorage.setItem(`perfil_extra_${user?.email}`, JSON.stringify(profileData))
     setIsEditing(false)
@@ -209,6 +226,64 @@ export default function PerfilView({ user, showToast }) {
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Activo</span>
                 </div>
               </div>
+            </div>
+
+            {/* Cambio de contraseña */}
+            <div className="p-4 border border-slate-200 rounded-lg bg-slate-50/50">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-xs font-bold text-slate-700 flex items-center gap-2">
+                  <KeyRound size={14} className="text-blue-600" />
+                  Seguridad
+                </h4>
+                <button
+                  onClick={() => setShowPasswordSection(!showPasswordSection)}
+                  className="text-xs font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
+                >
+                  {showPasswordSection ? 'Cancelar' : 'Cambiar contraseña'}
+                </button>
+              </div>
+              {!showPasswordSection ? (
+                <p className="text-xs text-slate-500">Tu contraseña fue actualizada recientemente. Manténla segura.</p>
+              ) : (
+                <form onSubmit={handleChangePassword} className="space-y-3">
+                  <div>
+                    <label className="block text-[10px] font-semibold text-slate-500 mb-1">Nueva contraseña</label>
+                    <div className="relative">
+                      <input
+                        type={showNueva ? 'text' : 'password'}
+                        value={passwordForm.nueva}
+                        onChange={(e) => setPasswordForm({ ...passwordForm, nueva: e.target.value })}
+                        placeholder="Mínimo 8 caracteres"
+                        className="w-full h-9 px-3 pr-9 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      />
+                      <button type="button" onClick={() => setShowNueva(!showNueva)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
+                        {showNueva ? <EyeOff size={13} /> : <Eye size={13} />}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-slate-500 mb-1">Confirmar contraseña</label>
+                    <div className="relative">
+                      <input
+                        type={showConfirmar ? 'text' : 'password'}
+                        value={passwordForm.confirmar}
+                        onChange={(e) => setPasswordForm({ ...passwordForm, confirmar: e.target.value })}
+                        placeholder="Repite la contraseña"
+                        className="w-full h-9 px-3 pr-9 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      />
+                      <button type="button" onClick={() => setShowConfirmar(!showConfirmar)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
+                        {showConfirmar ? <EyeOff size={13} /> : <Eye size={13} />}
+                      </button>
+                    </div>
+                  </div>
+                  <button type="submit" disabled={savingPassword}
+                    className="h-9 px-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-lg text-xs font-semibold cursor-pointer">
+                    {savingPassword ? 'Guardando...' : 'Actualizar contraseña'}
+                  </button>
+                </form>
+              )}
             </div>
           </div>
         </div>

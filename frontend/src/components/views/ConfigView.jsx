@@ -1,19 +1,20 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Settings,
   Building2,
   Percent,
   Sliders,
   Save,
-  CheckCircle2,
   MapPin,
-  Clock,
-  Shield,
+  Globe,
 } from 'lucide-react'
 import { EMPRESAS, SEDES, AFPS, PARAMETROS_LABORALES } from '../../data/mockData'
+import { supabase } from '../../services/supabase'
 
 export default function ConfigView({ showToast }) {
   const [activeTab, setActiveTab] = useState('empresa')
+  const [dominioEmail, setDominioEmail] = useState('empresa.com')
+  const [savingDominio, setSavingDominio] = useState(false)
   const [empresaData, setEmpresaData] = useState({
     nombre: 'Minera Andina S.A.',
     ruc: '20489123891',
@@ -21,6 +22,21 @@ export default function ConfigView({ showToast }) {
     representante: 'Carlos A. Mendoza Ríos',
     actividadEconomica: 'Extracción de minerales metalíferos',
   })
+
+  useEffect(() => {
+    supabase.from('empresas').select('dominio_email').eq('id', 1).single()
+      .then(({ data }) => { if (data?.dominio_email) setDominioEmail(data.dominio_email) })
+  }, [])
+
+  const handleGuardarDominio = async (e) => {
+    e.preventDefault()
+    if (!dominioEmail || !dominioEmail.includes('.')) { showToast('Ingresa un dominio válido. Ej: empresa.com', 'error'); return }
+    setSavingDominio(true)
+    const { error } = await supabase.from('empresas').update({ dominio_email: dominioEmail }).eq('id', 1)
+    setSavingDominio(false)
+    if (error) { showToast('Error al guardar dominio.', 'error'); return }
+    showToast(`Dominio actualizado a @${dominioEmail}`, 'success')
+  }
 
   const [laboralData, setLaboralData] = useState({
     rmv: PARAMETROS_LABORALES.rmv,
@@ -72,6 +88,7 @@ export default function ConfigView({ showToast }) {
             { id: 'laboral', label: 'Parámetros de Ley', icon: Sliders },
             { id: 'afps', label: 'Comisiones AFP / ONP', icon: Percent },
             { id: 'sedes', label: 'Sedes y Turnos', icon: MapPin },
+            { id: 'dominio', label: 'Dominio de Correo', icon: Globe },
           ].map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -336,8 +353,48 @@ export default function ConfigView({ showToast }) {
               </div>
             </div>
           )}
+          {activeTab === 'dominio' && (
+            <form onSubmit={handleGuardarDominio} className="max-w-lg space-y-4">
+              <div className="rounded-[24px] border border-slate-200 bg-slate-50/60 p-4 sm:p-5">
+                <div className="mb-4 flex items-center gap-2">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+                    <Globe size={16} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">Dominio de correo corporativo</h3>
+                    <p className="text-[11px] text-slate-500">Los usuarios nuevos tendrán emails con este dominio</p>
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600">Dominio *</label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-slate-400">@</span>
+                    <input
+                      type="text"
+                      value={dominioEmail}
+                      onChange={(e) => setDominioEmail(e.target.value.toLowerCase().replace(/\s/g, ''))}
+                      placeholder="ixotech.com"
+                      className="h-11 flex-1 rounded-2xl border border-slate-200 bg-white px-3 text-xs text-slate-800 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                    />
+                  </div>
+                  <p className="mt-2 text-[11px] text-slate-400">
+                    Ejemplo: si el dominio es <span className="font-semibold">ixotech.com</span>, el usuario Juan Pérez tendrá el correo <span className="font-semibold">j.perez@ixotech.com</span>
+                  </p>
+                </div>
+                <div className="mt-4 p-3 rounded-xl bg-blue-50 border border-blue-100">
+                  <p className="text-[11px] text-blue-700 font-semibold">Vista previa:</p>
+                  <p className="text-xs text-blue-800 font-mono mt-0.5">j.perez@{dominioEmail || 'empresa.com'}</p>
+                </div>
+              </div>
+              <button type="submit" disabled={savingDominio}
+                className="inline-flex items-center gap-2 rounded-2xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-sky-700 disabled:opacity-60">
+                <Save size={14} />
+                {savingDominio ? 'Guardando...' : 'Guardar dominio'}
+              </button>
+            </form>
+          )}
         </div>
-      </div>
+
     </div>
   )
 }

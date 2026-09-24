@@ -14,6 +14,7 @@ import ReportesView from './components/views/ReportesView'
 import ConfigView from './components/views/ConfigView'
 import PerfilView from './components/views/PerfilView'
 import GestionUsuariosView from './components/views/GestionUsuariosView'
+import TrabajadorView from './components/views/TrabajadorView'
 
 import { INITIAL_WORKERS } from './data/mockData'
 import { getTrabajadores, getSedes, logout } from './services/api'
@@ -118,6 +119,8 @@ export default function App() {
     if (remember) {
       localStorage.setItem('planilla_user', JSON.stringify(loggedUser))
     }
+    const navInicial = loggedUser.rol === 'TRABAJADOR' ? 'mi-espacio' : 'dashboard'
+    setActiveNav(navInicial)
     showToast(`Bienvenido a Planilla Enterprise, ${loggedUser.nombre}`, 'success')
   }
 
@@ -305,6 +308,10 @@ export default function App() {
 
           {activeNav === 'perfil' && (
             <PerfilView user={user} showToast={showToast} />
+          )}
+
+          {activeNav === 'mi-espacio' && user?.rol === 'TRABAJADOR' && (
+            <TrabajadorView user={user} setActive={setActiveNav} />
           )}
         </div>
       </main>

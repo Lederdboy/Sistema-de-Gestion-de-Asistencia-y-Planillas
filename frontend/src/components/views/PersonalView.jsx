@@ -1,7 +1,8 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Users, Search, Plus, MapPin, Mail, X, Camera, Upload } from 'lucide-react'
 import { EMPRESAS, SEDES, AFPS } from '../../data/mockData'
 import { crearTrabajador, actualizarTrabajador } from '../../services/api'
+import { supabase } from '../../services/supabase'
 
 export default function PersonalView({ workers, onAddWorker, onUpdateWorker, showToast }) {
   const [search, setSearch] = useState('')
@@ -17,6 +18,20 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
   const [editFotoFile, setEditFotoFile] = useState(null)
   const newFotoRef = useRef(null)
   const editFotoRef = useRef(null)
+
+  const [dominioEmail, setDominioEmail] = useState('empresa.com')
+  const [darAcceso, setDarAcceso] = useState(false)
+
+  useEffect(() => {
+    supabase.from('empresas').select('dominio_email').eq('id', 1).single()
+      .then(({ data }) => { if (data?.dominio_email) setDominioEmail(data.dominio_email) })
+  }, [])
+
+  function generarEmail(nombre) {
+    const partes = nombre.trim().toLowerCase().split(' ').filter(Boolean)
+    if (partes.length < 2) return `${partes[0] || 'usuario'}@${dominioEmail}`
+    return `${partes[0][0]}.${partes[1]}@${dominioEmail}`
+  }
 
   // Formulario nuevo colaborador
   const [form, setForm] = useState({
@@ -105,6 +120,33 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
 
       onAddWorker(newWorker)
       showToast(`Colaborador ${newWorker.nombre} registrado exitosamente.`, 'success')
+
+      // Crear acceso al sistema si se marcó el checkbox
+      if (darAcceso) {
+        try {
+          const emailGenerado = generarEmail(form.nombre)
+          const token = (await supabase.auth.getSession()).data.session?.access_token
+          const res = await fetch('/api/v1/usuarios', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({
+              nombre: form.nombre,
+              email: emailGenerado,
+              password: form.dni,
+              rol: 'TRABAJADOR',
+              sede_id: parseInt(form.sedeId) || null,
+              empresa_id: parseInt(form.empresaId) || 1,
+              cargo: form.cargo || null,
+              creado_por: null,
+            }),
+          })
+          if (res.ok) {
+            showToast(`Acceso creado: ${emailGenerado} / contraseña: DNI`, 'success')
+          }
+        } catch {
+          showToast('Trabajador creado pero no se pudo crear el acceso al sistema.', 'error')
+        }
+      }
     } catch (err) {
       showToast('Error al registrar colaborador en la base de datos.', 'error')
     }
@@ -112,6 +154,7 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
     setShowNewModal(false)
     setNewFotoUrl(null)
     setNewFotoFile(null)
+    setDarAcceso(false)
     setForm({ dni: '', nombre: '', cargo: '', empresaId: '1', sedeId: '1', sueldoBase: '1500', afp: 'integra', asigFamiliar: true, email: '', telefono: '', regimen: 'D.L. 728' })
   }
 
@@ -470,6 +513,24 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
                   />
                   <span>Tiene derecho a Asignación Familiar (Hijos menores o estudios superiores)</span>
                 </label>
+              </div>
+
+              <div className="pt-1 border-t border-slate-100">
+                <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={darAcceso}
+                    onChange={(e) => setDarAcceso(e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="font-semibold text-blue-700">Dar acceso al sistema</span>
+                </label>
+                {darAcceso && form.nombre && (
+                  <div className="mt-2 p-2.5 rounded-lg bg-blue-50 border border-blue-100 text-[11px] text-blue-700 space-y-0.5">
+                    <p>Email: <span className="font-mono font-semibold">{generarEmail(form.nombre)}</span></p>
+                    <p>Contraseña temporal: <span className="font-mono font-semibold">{form.dni || '(ingresa el DNI)'}</span></p>
+                  </div>
+                )}
               </div>
 
               {/* Foto */}

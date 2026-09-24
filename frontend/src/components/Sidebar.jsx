@@ -56,6 +56,12 @@ const ALL_NAV_ITEMS = [
     icon: UserCog,
     roles: ['GERENTE_GENERAL', 'GERENTE_SEDE'],
   },
+  {
+    id: 'mi-espacio',
+    label: 'Mi Espacio',
+    icon: Users,
+    roles: ['TRABAJADOR'],
+  },
 ]
 
 const ROL_LABEL = {
