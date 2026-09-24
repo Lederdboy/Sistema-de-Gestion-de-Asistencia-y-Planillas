@@ -15,7 +15,7 @@ import ConfigView from './components/views/ConfigView'
 import PerfilView from './components/views/PerfilView'
 
 import { INITIAL_WORKERS } from './data/mockData'
-import { getTrabajadores, getSedes } from './services/api'
+import { getTrabajadores, getSedes, logout } from './services/api'
 
 export default function App() {
   const [isMobile, setIsMobile] = useState(false)
@@ -121,7 +121,8 @@ export default function App() {
   }
 
   // Manejador de Logout
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logout()
     localStorage.removeItem('planilla_user')
     setUser(null)
     showToast('Sesión cerrada correctamente.', 'info')
