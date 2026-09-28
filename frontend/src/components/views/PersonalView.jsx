@@ -33,10 +33,16 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
     return `${partes[0][0]}.${partes[1]}@${dominioEmail}`
   }
 
+  function nombreCompleto() {
+    return `${form.apellidoPaterno} ${form.apellidoMaterno} ${form.nombres}`.replace(/\s+/g, ' ').trim()
+  }
+
   // Formulario nuevo colaborador
   const [form, setForm] = useState({
     dni: '',
-    nombre: '',
+    apellidoPaterno: '',
+    apellidoMaterno: '',
+    nombres: '',
     cargo: '',
     empresaId: '1',
     sedeId: '1',
@@ -69,15 +75,10 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
 
   const handleCreateWorker = async (e) => {
     e.preventDefault()
-    if (!form.dni || !form.nombre || !form.cargo || !form.sueldoBase) {
-      showToast('Por favor completa los campos requeridos (DNI, Nombre, Cargo, Sueldo).', 'error')
+    if (!form.dni || !form.apellidoPaterno || !form.nombres || !form.cargo || !form.sueldoBase) {
+      showToast('Completa los campos obligatorios: DNI, Apellido Paterno, Nombres, Cargo y Sueldo.', 'error')
       return
     }
-
-    const partes = form.nombre.trim().split(' ')
-    const apellidoPaterno = partes[0] || ''
-    const apellidoMaterno = partes[1] || ''
-    const nombres = partes.slice(2).join(' ') || apellidoPaterno
 
     const sueldoBasico = parseFloat(form.sueldoBase) || 1025.00
 
@@ -87,19 +88,20 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
         sedeId: parseInt(form.sedeId),
         tipoDocumento: 'DNI',
         numeroDocumento: form.dni,
-        nombres,
-        apellidoPaterno,
-        apellidoMaterno,
+        nombres: form.nombres,
+        apellidoPaterno: form.apellidoPaterno,
+        apellidoMaterno: form.apellidoMaterno || '',
         cargo: form.cargo,
-        fechaIngreso: new Date().toISOString().split('T')[0],
+        fechaIngreso: form.fechaIngreso || new Date().toISOString().split('T')[0],
         sueldoBasico,
         sueldoDiario: parseFloat((sueldoBasico / 30).toFixed(2)),
       }, newFotoFile)
 
+
       const newWorker = {
         id: created.id,
         dni: form.dni,
-        nombre: form.nombre,
+        nombre: nombreCompleto(),
         cargo: form.cargo,
         empresaId: form.empresaId,
         sedeId: form.sedeId,
@@ -107,9 +109,9 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
         afp: form.afp,
         asigFamiliar: form.asigFamiliar,
         estado: 'Activo',
-        fechaIngreso: new Date().toISOString().split('T')[0],
+        fechaIngreso: form.fechaIngreso,
         regimen: form.regimen,
-        email: form.email || `${form.nombre.toLowerCase().replace(/\s+/g, '.')}@empresa.com`,
+        email: form.email || generarEmail(form.apellidoPaterno),
         telefono: form.telefono || '999 000 000',
         fotoUrl: newFotoUrl || null,
         tareo: Array.from({ length: 31 }, (_, i) => {
@@ -118,19 +120,20 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
         }),
       }
 
+
       onAddWorker(newWorker)
       showToast(`Colaborador ${newWorker.nombre} registrado exitosamente.`, 'success')
 
       // Crear acceso al sistema si se marcó el checkbox
       if (darAcceso) {
         try {
-          const emailGenerado = generarEmail(form.nombre)
-          const token = (await supabase.auth.getSession()).data.session?.access_token
+          const emailGenerado = generarEmail(form.apellidoPaterno)
+          const token = JSON.parse(localStorage.getItem('planilla_user') || '{}').token
           const res = await fetch('/api/v1/usuarios', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
             body: JSON.stringify({
-              nombre: form.nombre,
+              nombre: nombreCompleto(),
               email: emailGenerado,
               password: form.dni,
               rol: 'TRABAJADOR',
@@ -165,7 +168,8 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
     setNewFotoUrl(null)
     setNewFotoFile(null)
     setDarAcceso(false)
-    setForm({ dni: '', nombre: '', cargo: '', empresaId: '1', sedeId: '1', sueldoBase: '1500', afp: 'integra', asigFamiliar: true, email: '', telefono: '', regimen: 'D.L. 728' })
+    setForm({ dni: '', apellidoPaterno: '', apellidoMaterno: '', nombres: '', cargo: '', empresaId: '1', sedeId: '1', sueldoBase: '1500', afp: 'integra', asigFamiliar: true, email: '', telefono: '', regimen: 'D.L. 728', fechaIngreso: new Date().toISOString().split('T')[0] })
+
   }
 
   const handleOpenEdit = (worker) => {
@@ -430,7 +434,9 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
                     {newFotoUrl
                       ? <img src={newFotoUrl} alt="foto" className="w-16 h-16 rounded-full object-cover border-2 border-blue-200 shadow" />
                       : <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold text-xl flex items-center justify-center shadow">
-                          {form.nombre ? form.nombre.trim().split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase() : <Camera size={20} />}
+                          {(form.apellidoPaterno || form.nombres)
+                            ? `${form.apellidoPaterno?.[0] || ''}${form.nombres?.[0] || ''}`.toUpperCase()
+                            : <Camera size={20} />}
                         </div>
                     }
                     <button type="button" onClick={() => newFotoRef.current?.click()}
@@ -441,7 +447,9 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
                       onChange={(e) => handleFotoUpload(e.target.files[0], setNewFotoUrl, setNewFotoFile)} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-slate-800 truncate">{form.nombre || 'Nombre del colaborador'}</p>
+                    <p className="text-sm font-bold text-slate-800 truncate">
+                      {nombreCompleto() || 'Nombre del colaborador'}
+                    </p>
                     <p className="text-xs text-slate-400 truncate">{form.cargo || 'Cargo'}</p>
                     {newFotoUrl && (
                       <button type="button" onClick={() => { setNewFotoUrl(null); setNewFotoFile(null) }}
@@ -469,11 +477,27 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
                           className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white" />
                       </div>
                     </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">Apellido Paterno *</label>
+                        <input type="text" required value={form.apellidoPaterno}
+                          onChange={(e) => setForm({ ...form, apellidoPaterno: e.target.value })}
+                          placeholder="Ej: García"
+                          className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">Apellido Materno</label>
+                        <input type="text" value={form.apellidoMaterno}
+                          onChange={(e) => setForm({ ...form, apellidoMaterno: e.target.value })}
+                          placeholder="Ej: López"
+                          className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white" />
+                      </div>
+                    </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-600 mb-1">Apellidos y Nombres *</label>
-                      <input type="text" required value={form.nombre}
-                        onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-                        placeholder="Ej: García López Juan Carlos"
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Nombres *</label>
+                      <input type="text" required value={form.nombres}
+                        onChange={(e) => setForm({ ...form, nombres: e.target.value })}
+                        placeholder="Ej: Juan Carlos"
                         className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white" />
                     </div>
                   </div>
@@ -543,7 +567,7 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
                           <div className="flex items-center gap-2 p-2 rounded-lg bg-white border border-blue-200">
                             <span className="text-[10px] font-bold text-slate-400 w-16 flex-shrink-0">EMAIL</span>
                             <span className="text-[11px] font-mono text-blue-700 font-semibold truncate">
-                              {form.nombre ? generarEmail(form.nombre) : `usuario@${dominioEmail}`}
+                              {form.apellidoPaterno ? generarEmail(form.apellidoPaterno) : `usuario@${dominioEmail}`}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 p-2 rounded-lg bg-white border border-blue-200">
