@@ -1,30 +1,12 @@
 import { useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  Palmtree,
-  Calendar,
-  CalendarDays,
-  CheckCircle2,
-  AlertTriangle,
-  FileText,
-  Search,
-  Plus,
-  Download,
-  Printer,
-  Info,
-  DollarSign,
-  Users,
-  X,
-  Plane,
-  Sun,
-  ShieldAlert,
-  ArrowRight,
+  Palmtree, Calendar, CalendarDays, CheckCircle2, AlertTriangle, FileText,
+  Search, Plus, Download, Printer, Info, DollarSign, Users, X, Plane, Sun,
+  ShieldAlert, ArrowRight,
 } from 'lucide-react'
-import {
-  SEDES,
-  INITIAL_VACACIONES_REQUESTS,
-  getVacationRecordForWorker,
-} from '../../data/mockData'
+import { SEDES, INITIAL_VACACIONES_REQUESTS, getVacationRecordForWorker } from '../../data/mockData'
+import { supabase } from '../../services/supabase'
 
 export default function VacacionesView({
   workers,
@@ -145,7 +127,7 @@ export default function VacacionesView({
   }
 
   // Guardar nueva solicitud
-  const handleCreateRequest = (e) => {
+  const handleCreateRequest = async (e) => {
     e.preventDefault()
     if (!form.trabajadorId) {
       showToast('Por favor selecciona un colaborador.', 'error')
@@ -156,8 +138,7 @@ export default function VacacionesView({
     if (!worker) return
 
     const newId = `VAC-2026-${String(requests.length + 1).padStart(3, '0')}`
-    const isEnGoce =
-      form.fechaInicio <= '2026-09-07' && form.fechaFin >= '2026-09-07'
+    const isEnGoce = form.fechaInicio <= '2026-09-07' && form.fechaFin >= '2026-09-07'
     const estado = isEnGoce ? 'En Goce' : 'Programada'
 
     const newRequest = {
@@ -171,13 +152,25 @@ export default function VacacionesView({
       estado,
       documento: `SOL-VAC-${String(requests.length + 20).padStart(3, '0')}`,
       observaciones: form.observaciones || 'Solicitud registrada desde el panel de RRHH.',
-      aprobadoPor: 'Carlos Mendoza (Admin)',
+      aprobadoPor: 'Gerente',
       fechaRegistro: new Date().toISOString().split('T')[0],
     }
 
     setRequests([newRequest, ...requests])
 
-    // Sincronizar con tareo y estado si fue solicitado
+    // Guardar en Supabase si el trabajador tiene id numérico real
+    if (worker.id && typeof worker.id === 'number') {
+      supabase.from('solicitudes_vacaciones').insert({
+        trabajador_id: worker.id,
+        fecha_inicio: form.fechaInicio,
+        fecha_fin: form.fechaFin,
+        dias: Number(form.dias),
+        estado: estado === 'En Goce' ? 'APROBADO' : 'PENDIENTE',
+      }).then(({ error }) => {
+        if (error) console.warn('No se pudo guardar vacación en Supabase:', error.message)
+      })
+    }
+
     if (form.syncTareo && onScheduleVacation) {
       onScheduleVacation({
         workerId: Number(form.trabajadorId),
@@ -190,20 +183,10 @@ export default function VacacionesView({
 
     setShowNewModal(false)
     setForm({
-      trabajadorId: '',
-      tipo: 'Goce Regular',
-      fechaInicio: '2026-09-10',
-      fechaFin: '2026-09-24',
-      dias: 15,
-      periodo: '2024-2025',
-      observaciones: '',
-      syncTareo: true,
+      trabajadorId: '', tipo: 'Goce Regular', fechaInicio: '2026-09-10',
+      fechaFin: '2026-09-24', dias: 15, periodo: '2024-2025', observaciones: '', syncTareo: true,
     })
-
-    showToast(
-      `Vacaciones programadas para ${worker.nombre} (${newRequest.dias} días) con éxito.`,
-      'success'
-    )
+    showToast(`Vacaciones programadas para ${worker.nombre} (${newRequest.dias} días) con éxito.`, 'success')
   }
 
   // Aprobar solicitud pendiente

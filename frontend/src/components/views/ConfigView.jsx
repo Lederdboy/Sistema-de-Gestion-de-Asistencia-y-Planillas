@@ -126,8 +126,8 @@ export default function ConfigView({ showToast }) {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600">Razón Social *</label>
-                    <input type="text" value={empresaData.nombre}
-                      onChange={(e) => setEmpresaData({ ...empresaData, nombre: e.target.value })}
+                    <input type="text" value={empresaData.razon_social}
+                      onChange={(e) => setEmpresaData({ ...empresaData, razon_social: e.target.value })}
                       className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-xs text-slate-800 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100" />
                   </div>
                   <div>
@@ -152,8 +152,8 @@ export default function ConfigView({ showToast }) {
                   </div>
                   <div>
                     <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600">Actividad Económica (CIIU)</label>
-                    <input type="text" value={empresaData.actividadEconomica}
-                      onChange={(e) => setEmpresaData({ ...empresaData, actividadEconomica: e.target.value })}
+                    <input type="text" value={empresaData.actividad_economica}
+                      onChange={(e) => setEmpresaData({ ...empresaData, actividad_economica: e.target.value })}
                       className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-xs text-slate-800 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100" />
                   </div>
                 </div>
