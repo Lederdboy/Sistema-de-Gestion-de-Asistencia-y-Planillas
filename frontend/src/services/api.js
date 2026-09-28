@@ -1,6 +1,24 @@
 // ─── Servicio API para Sistema Planillas Enterprise ────────────────────────
 const BASE_URL = '/api/v1'
 
+// Lee el token del usuario guardado en localStorage
+function getToken() {
+  try {
+    const saved = localStorage.getItem('planilla_user')
+    return saved ? JSON.parse(saved).token : null
+  } catch {
+    return null
+  }
+}
+
+function authHeaders(extra = {}) {
+  const token = getToken()
+  return {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...extra,
+  }
+}
+
 export async function login(email, password) {
   const res = await fetch(`${BASE_URL}/auth/login`, {
     method: 'POST',
@@ -26,14 +44,12 @@ export async function logout() {
   // Con JWT propio solo limpiamos el estado local — no hay sesión en servidor
 }
 
-// Sube imagen al BACKEND, que a su vez la sube a Cloudinary
-// Las credenciales de Cloudinary nunca se exponen en el frontend
 export async function uploadImageToBackend(file) {
   const formData = new FormData()
   formData.append('foto', file)
-  // Usamos un endpoint dedicado para subir solo la foto del perfil admin
   const res = await fetch(`${BASE_URL}/trabajadores/upload-foto`, {
     method: 'POST',
+    headers: authHeaders(),
     body: formData,
   })
   if (!res.ok) throw new Error('Error al subir imagen')
@@ -44,11 +60,11 @@ export async function uploadImageToBackend(file) {
 export async function getSedes(empresaId) {
   try {
     const url = empresaId ? `${BASE_URL}/sedes?empresaId=${empresaId}` : `${BASE_URL}/sedes`
-    const res = await fetch(url)
+    const res = await fetch(url, { headers: authHeaders() })
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
     return await res.json()
   } catch (err) {
-    console.warn('Fallo al conectar con /api/v1/sedes, usando datos locales:', err)
+    console.warn('Fallo al conectar con /api/v1/sedes:', err)
     return null
   }
 }
@@ -62,7 +78,9 @@ export async function getTrabajadores({ empresaId, sedeId, search, page = 0, siz
     params.append('page', page)
     params.append('size', size)
 
-    const res = await fetch(`${BASE_URL}/trabajadores?${params.toString()}`)
+    const res = await fetch(`${BASE_URL}/trabajadores?${params.toString()}`, {
+      headers: authHeaders(),
+    })
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
     const data = await res.json()
     return data.content || []
@@ -74,7 +92,9 @@ export async function getTrabajadores({ empresaId, sedeId, search, page = 0, siz
 
 export async function getMatrizAsistencia(mes = 9, anio = 2026, sedeId = 1) {
   try {
-    const res = await fetch(`${BASE_URL}/asistencia/matriz?mes=${mes}&anio=${anio}&sedeId=${sedeId}`)
+    const res = await fetch(`${BASE_URL}/asistencia/matriz?mes=${mes}&anio=${anio}&sedeId=${sedeId}`, {
+      headers: authHeaders(),
+    })
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
     return await res.json()
   } catch (err) {
@@ -83,7 +103,6 @@ export async function getMatrizAsistencia(mes = 9, anio = 2026, sedeId = 1) {
   }
 }
 
-// Envía datos + foto como multipart/form-data al backend
 export async function crearTrabajador(data, fotoFile = null) {
   const formData = new FormData()
   formData.append('datos', new Blob([JSON.stringify(data)], { type: 'application/json' }))
@@ -91,6 +110,7 @@ export async function crearTrabajador(data, fotoFile = null) {
 
   const res = await fetch(`${BASE_URL}/trabajadores`, {
     method: 'POST',
+    headers: authHeaders(),
     body: formData,
   })
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
@@ -104,6 +124,7 @@ export async function actualizarTrabajador(id, data, fotoFile = null) {
 
   const res = await fetch(`${BASE_URL}/trabajadores/${id}`, {
     method: 'PUT',
+    headers: authHeaders(),
     body: formData,
   })
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
@@ -114,7 +135,7 @@ export async function updateMarcacion({ trabajadorId, sedeId, fecha, codigoAsist
   try {
     const res = await fetch(`${BASE_URL}/asistencia/marcacion`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
         trabajadorId,
         sedeId,
