@@ -278,7 +278,7 @@ export default function ConfigView({ showToast }) {
                       <div>
                         <h4 className="text-xs font-bold text-slate-900">{s.nombre}</h4>
                         <p className="mt-1 text-[11px] text-slate-500">{emp?.nombre}</p>
-                        <span className="mt-1 inline-flex text-[10px] font-medium text-slate-400">Ciudad: {s.ciudad}</span>
+                        <span className="mt-1 inline-flex text-[10px] font-medium text-slate-400">{s.direccion || ''}</span>
                       </div>
                       <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700">
                         Activa

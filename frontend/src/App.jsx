@@ -102,8 +102,8 @@ export default function App() {
   }
 
   useEffect(() => {
-    syncWithDatabase()
-  }, [])
+    if (user) syncWithDatabase()
+  }, [user])
 
   // Notificaciones Toast
   const showToast = (message, type = 'info') => {

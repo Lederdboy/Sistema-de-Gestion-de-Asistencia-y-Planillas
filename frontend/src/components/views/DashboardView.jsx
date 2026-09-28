@@ -16,7 +16,7 @@ export default function DashboardView({ onNavigate, workers = [], user }) {
     if (!esGerenteGeneral) return
     setLoadingSedes(true)
     Promise.all([
-      supabase.from('sedes').select('id, nombre, ciudad').eq('activo', true),
+      supabase.from('sedes').select('id, nombre').eq('activo', true),
       supabase.from('trabajadores').select('sede_id, sueldo_basico').eq('activo', true),
     ]).then(([{ data: sedes }, { data: trabajadores }]) => {
       if (!sedes || !trabajadores) return
@@ -26,7 +26,7 @@ export default function DashboardView({ onNavigate, workers = [], user }) {
         const costoSede = enSede.reduce((acc, t) => acc + Number(t.sueldo_basico || 0), 0)
         return {
           sede: s.nombre,
-          ciudad: s.ciudad,
+          ciudad: '',
           count: enSede.length,
           costo: costoSede,
           pct: totalSueldos > 0 ? Math.round((costoSede / totalSueldos) * 100) : 0,
