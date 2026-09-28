@@ -113,9 +113,9 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
         estado: 'Activo',
         fechaIngreso: form.fechaIngreso,
         regimen: form.regimen,
-        email: form.email || generarEmail(form.apellidoPaterno),
+        email: form.email || generarEmail(),
         telefono: form.telefono || '999 000 000',
-        fotoUrl: newFotoUrl || null,
+        fotoUrl: created.fotoUrl || newFotoUrl || null,
         tareo: Array.from({ length: 31 }, (_, i) => {
           const dayOfWeek = (i + 1) % 7
           return (dayOfWeek === 0 || dayOfWeek === 6) ? 'DL' : 'D'
