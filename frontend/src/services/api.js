@@ -1,36 +1,29 @@
 // ─── Servicio API para Sistema Planillas Enterprise ────────────────────────
-import { supabase } from './supabase'
-
 const BASE_URL = '/api/v1'
 
 export async function login(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-  if (error) throw new Error(error.message)
-
-  const { data: perfil, error: perfilError } = await supabase
-    .from('usuarios_perfil')
-    .select('nombre, rol, sede_id, empresa_id, cargo, activo, sedes(nombre)')
-    .eq('id', data.user.id)
-    .single()
-
-  if (perfilError) throw new Error('Usuario sin perfil asignado. Contacta al administrador.')
-  if (perfil.activo === false) throw new Error('Tu cuenta está desactivada. Contacta al administrador.')
-
+  const res = await fetch(`${BASE_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.mensaje || 'Credenciales incorrectas.')
   return {
-    uuid: data.user.id,
-    email: data.user.email,
-    nombre: perfil.nombre,
-    rol: perfil.rol,
-    sedeId: perfil.sede_id,
-    sedeName: perfil.sedes?.nombre || null,
-    empresaId: perfil.empresa_id,
-    cargo: perfil.cargo,
-    token: data.session.access_token,
+    uuid: data.uuid,
+    email: data.email,
+    nombre: data.nombre,
+    rol: data.rol,
+    sedeId: data.sedeId,
+    sedeName: data.sedeName,
+    empresaId: data.empresaId,
+    cargo: data.cargo,
+    token: data.token,
   }
 }
 
 export async function logout() {
-  await supabase.auth.signOut()
+  // Con JWT propio solo limpiamos el estado local — no hay sesión en servidor
 }
 
 // Sube imagen al BACKEND, que a su vez la sube a Cloudinary

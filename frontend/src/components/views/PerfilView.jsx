@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { User, Mail, Building2, Shield, Edit, Save, Camera, Upload, X, KeyRound, Eye, EyeOff } from 'lucide-react'
 import { uploadImageToBackend } from '../../services/api'
-import { supabase } from '../../services/supabase'
 
 const ROL_LABEL = {
   GERENTE_GENERAL: 'Gerente General',
@@ -14,7 +13,7 @@ const ROL_LABEL = {
 export default function PerfilView({ user, showToast }) {
   const [isEditing, setIsEditing] = useState(false)
   const [profileImage, setProfileImage] = useState(null)
-  const [sedeName, setSedeName] = useState('')
+  const [sedeName, setSedeName] = useState(user?.sedeName || '')
   const fileInputRef = useRef(null)
 
   const [profileData, setProfileData] = useState({
@@ -23,7 +22,7 @@ export default function PerfilView({ user, showToast }) {
   })
 
   const [showPasswordSection, setShowPasswordSection] = useState(false)
-  const [passwordForm, setPasswordForm] = useState({ nueva: '', confirmar: '' })
+  const [passwordForm, setPasswordForm] = useState({ actual: '', nueva: '', confirmar: '' })
   const [showNueva, setShowNueva] = useState(false)
   const [showConfirmar, setShowConfirmar] = useState(false)
   const [savingPassword, setSavingPassword] = useState(false)
@@ -38,11 +37,7 @@ export default function PerfilView({ user, showToast }) {
         setProfileData((prev) => ({ ...prev, ...extra }))
       }
     }
-    if (user?.sedeId) {
-      supabase.from('sedes').select('nombre').eq('id', user.sedeId).single()
-        .then(({ data }) => { if (data) setSedeName(data.nombre) })
-    }
-  }, [user?.email, user?.sedeId])
+  }, [user?.email])
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0]
@@ -75,15 +70,32 @@ export default function PerfilView({ user, showToast }) {
 
   const handleChangePassword = async (e) => {
     e.preventDefault()
+    if (!passwordForm.actual) { showToast('Ingresa tu contraseña actual.', 'error'); return }
     if (passwordForm.nueva.length < 8) { showToast('La contraseña debe tener al menos 8 caracteres.', 'error'); return }
     if (passwordForm.nueva !== passwordForm.confirmar) { showToast('Las contraseñas no coinciden.', 'error'); return }
     setSavingPassword(true)
-    const { error } = await supabase.auth.updateUser({ password: passwordForm.nueva })
-    setSavingPassword(false)
-    if (error) { showToast('Error al cambiar contraseña.', 'error'); return }
-    showToast('Contraseña actualizada correctamente.', 'success')
-    setPasswordForm({ nueva: '', confirmar: '' })
-    setShowPasswordSection(false)
+    try {
+      const res = await fetch('/api/v1/auth/cambiar-password', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user?.token}`,
+        },
+        body: JSON.stringify({
+          passwordActual: passwordForm.actual,
+          passwordNueva: passwordForm.nueva,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { showToast(data.mensaje || 'Error al cambiar contraseña.', 'error'); return }
+      showToast('Contraseña actualizada correctamente.', 'success')
+      setPasswordForm({ actual: '', nueva: '', confirmar: '' })
+      setShowPasswordSection(false)
+    } catch {
+      showToast('Error al cambiar contraseña.', 'error')
+    } finally {
+      setSavingPassword(false)
+    }
   }
 
   const avatarText = user?.nombre
@@ -236,6 +248,13 @@ export default function PerfilView({ user, showToast }) {
                 <p className="text-xs text-slate-500">Mantén tu contraseña segura y cámbiala periódicamente.</p>
               ) : (
                 <form onSubmit={handleChangePassword} className="space-y-3">
+                  <div>
+                    <label className="block text-[10px] font-semibold text-slate-500 mb-1">Contraseña actual</label>
+                    <input type="password" value={passwordForm.actual}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, actual: e.target.value })}
+                      placeholder="Tu contraseña actual"
+                      className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                  </div>
                   <div>
                     <label className="block text-[10px] font-semibold text-slate-500 mb-1">Nueva contraseña</label>
                     <div className="relative">
