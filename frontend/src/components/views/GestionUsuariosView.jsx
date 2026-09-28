@@ -309,81 +309,156 @@ export default function GestionUsuariosView({ user, showToast }) {
         )}
       </div>
 
-      {/* Modal Crear */}
+      {/* Drawer Crear Usuario */}
       {modalCrear && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-200 overflow-y-auto max-h-[90vh]">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Shield size={16} className="text-blue-600" /> Crear Nuevo Usuario
-              </h3>
-              <button onClick={() => setModalCrear(false)} className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"><X size={18} /></button>
+        <div className="fixed inset-0 z-50 flex">
+          <div className="flex-1 bg-black/40 backdrop-blur-xs" onClick={() => setModalCrear(false)} />
+          <div className="w-full max-w-md bg-white shadow-2xl flex flex-col h-full overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-blue-600 to-indigo-600">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
+                  <Shield size={18} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Nuevo Usuario</h3>
+                  <p className="text-[11px] text-blue-100">Completa los datos para crear acceso</p>
+                </div>
+              </div>
+              <button onClick={() => setModalCrear(false)} className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white cursor-pointer">
+                <X size={16} />
+              </button>
             </div>
-            <form onSubmit={handleCrear} className="space-y-3.5 mt-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Nombre completo *</label>
-                <input type="text" required value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-                  placeholder="Ej: María García López"
-                  className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Correo electrónico *</label>
-                <input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="usuario@empresa.com"
-                  className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Contraseña temporal *</label>
-                <div className="relative">
-                  <input type={showPassword ? 'text' : 'password'} required value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Mínimo 8 caracteres"
-                    className="w-full h-9 px-3 pr-9 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none" />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
-                    {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                  </button>
+
+            {/* Contenido scrolleable */}
+            <form onSubmit={handleCrear} className="flex-1 overflow-y-auto">
+              <div className="p-6 space-y-6">
+
+                {/* Preview del usuario */}
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 text-white font-bold text-lg flex items-center justify-center flex-shrink-0 shadow">
+                    {form.nombre
+                      ? form.nombre.trim().split(' ').slice(0, 2).map((n) => n[0]).join('').toUpperCase()
+                      : <UserCog size={20} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-slate-800 truncate">{form.nombre || 'Nombre del usuario'}</p>
+                    <p className="text-xs text-slate-400 truncate">{form.email || 'correo@empresa.com'}</p>
+                    {form.rol && (
+                      <span className={`mt-1 inline-block px-2 py-0.5 rounded text-[10px] font-bold ${ROL_COLOR[form.rol] || 'bg-slate-100 text-slate-600'}`}>
+                        {ROL_LABEL[form.rol] || form.rol}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+
+                {/* Sección: Datos de acceso */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Rol *</label>
-                  <select value={form.rol} onChange={(e) => setForm({ ...form, rol: e.target.value })}
-                    className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none">
-                    {rolesDisponibles.map((r) => <option key={r} value={r}>{ROL_LABEL[r]}</option>)}
-                  </select>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Datos de Acceso</p>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Nombre completo *</label>
+                      <input type="text" required value={form.nombre}
+                        onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                        placeholder="Ej: María García López"
+                        className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Correo electrónico *</label>
+                      <input type="email" required value={form.email}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
+                        placeholder="usuario@empresa.com"
+                        className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Contraseña temporal *</label>
+                      <div className="relative">
+                        <input type={showPassword ? 'text' : 'password'} required value={form.password}
+                          onChange={(e) => setForm({ ...form, password: e.target.value })}
+                          placeholder="Mínimo 8 caracteres"
+                          className="w-full h-9 px-3 pr-9 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white" />
+                        <button type="button" onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
+                          {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                        </button>
+                      </div>
+                      {form.password && (
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <div className="flex gap-1 flex-1">
+                            {[1,2,3,4].map((i) => (
+                              <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${
+                                form.password.length >= i * 3
+                                  ? form.password.length >= 12 ? 'bg-emerald-500'
+                                  : form.password.length >= 8 ? 'bg-amber-400' : 'bg-rose-400'
+                                  : 'bg-slate-200'
+                              }`} />
+                            ))}
+                          </div>
+                          <span className={`text-[10px] font-semibold ${
+                            form.password.length >= 12 ? 'text-emerald-600'
+                            : form.password.length >= 8 ? 'text-amber-600' : 'text-rose-500'
+                          }`}>
+                            {form.password.length >= 12 ? 'Fuerte' : form.password.length >= 8 ? 'Aceptable' : 'Débil'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
+
+                {/* Sección: Permisos y ubicación */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Sede *</label>
-                  {sedeDelGerente ? (
-                    <select disabled className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg bg-slate-50 text-slate-500">
-                      <option>{sedes.find((s) => s.id === sedeDelGerente)?.nombre || 'Tu sede'}</option>
-                    </select>
-                  ) : (
-                    <select value={form.sede_id} onChange={(e) => setForm({ ...form, sede_id: e.target.value })}
-                      className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none">
-                      <option value="">— Seleccionar —</option>
-                      {sedes.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
-                    </select>
-                  )}
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Permisos y Ubicación</p>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Rol *</label>
+                      <select value={form.rol} onChange={(e) => setForm({ ...form, rol: e.target.value })}
+                        className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white">
+                        {rolesDisponibles.map((r) => <option key={r} value={r}>{ROL_LABEL[r]}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Sede *</label>
+                      {sedeDelGerente ? (
+                        <div className="h-9 px-3 flex items-center text-xs border border-slate-200 rounded-lg bg-slate-50 text-slate-500">
+                          <MapPin size={12} className="mr-1.5 text-slate-400" />
+                          {sedes.find((s) => s.id === sedeDelGerente)?.nombre || 'Tu sede'}
+                        </div>
+                      ) : (
+                        <select value={form.sede_id} onChange={(e) => setForm({ ...form, sede_id: e.target.value })}
+                          className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white">
+                          <option value="">— Seleccionar sede —</option>
+                          {sedes.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
+                        </select>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Cargo <span className="text-slate-400 font-normal">(opcional)</span></label>
+                      <input type="text" value={form.cargo}
+                        onChange={(e) => setForm({ ...form, cargo: e.target.value })}
+                        placeholder="Ej: Jefe de Operaciones"
+                        className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white" />
+                    </div>
+                  </div>
                 </div>
+
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Cargo (opcional)</label>
-                <input type="text" value={form.cargo} onChange={(e) => setForm({ ...form, cargo: e.target.value })}
-                  placeholder="Ej: Jefe de Operaciones"
-                  className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none" />
-              </div>
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+            </form>
+
+            {/* Footer fijo */}
+            <div className="px-6 py-4 border-t border-slate-100 bg-white flex items-center justify-between gap-3">
+              <p className="text-[11px] text-slate-400">Los campos con * son obligatorios</p>
+              <div className="flex gap-2">
                 <button type="button" onClick={() => setModalCrear(false)}
                   className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 border border-slate-200 cursor-pointer">
                   Cancelar
                 </button>
-                <button type="submit" disabled={saving}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-lg text-xs font-semibold cursor-pointer">
-                  {saving ? 'Creando...' : 'Crear Usuario'}
+                <button type="submit" form="form-crear-usuario" onClick={handleCrear} disabled={saving}
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-lg text-xs font-semibold shadow-sm shadow-blue-500/20 cursor-pointer flex items-center gap-1.5">
+                  <Shield size={13} /> {saving ? 'Creando...' : 'Crear Usuario'}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
