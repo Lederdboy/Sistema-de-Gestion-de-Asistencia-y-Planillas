@@ -27,10 +27,12 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
       .then(({ data }) => { if (data?.dominio_email) setDominioEmail(data.dominio_email) })
   }, [])
 
-  function generarEmail(nombre) {
-    const partes = nombre.trim().toLowerCase().split(' ').filter(Boolean)
-    if (partes.length < 2) return `${partes[0] || 'usuario'}@${dominioEmail}`
-    return `${partes[0][0]}.${partes[1]}@${dominioEmail}`
+  function generarEmail() {
+    const ap = form.apellidoPaterno.trim().toLowerCase().replace(/\s+/g, '')
+    const nombres = form.nombres.trim().toLowerCase().split(' ').filter(Boolean)
+    const primerNombre = nombres[0] || 'usuario'
+    if (!ap) return `${primerNombre}@${dominioEmail}`
+    return `${primerNombre[0]}.${ap}@${dominioEmail}`
   }
 
   function nombreCompleto() {
@@ -127,7 +129,7 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
       // Crear acceso al sistema si se marcó el checkbox
       if (darAcceso) {
         try {
-          const emailGenerado = generarEmail(form.apellidoPaterno)
+          const emailGenerado = generarEmail()
           const token = JSON.parse(localStorage.getItem('planilla_user') || '{}').token
           const res = await fetch('/api/v1/usuarios', {
             method: 'POST',
@@ -567,7 +569,7 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
                           <div className="flex items-center gap-2 p-2 rounded-lg bg-white border border-blue-200">
                             <span className="text-[10px] font-bold text-slate-400 w-16 flex-shrink-0">EMAIL</span>
                             <span className="text-[11px] font-mono text-blue-700 font-semibold truncate">
-                              {form.apellidoPaterno ? generarEmail(form.apellidoPaterno) : `usuario@${dominioEmail}`}
+                              {form.apellidoPaterno ? generarEmail() : `usuario@${dominioEmail}`}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 p-2 rounded-lg bg-white border border-blue-200">
