@@ -15,8 +15,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UsuarioController {
 
-    private final PasswordEncoder passwordEncoder;
     private final JdbcTemplate jdbc;
+    private final PasswordEncoder passwordEncoder;
 
     @PostMapping
     public ResponseEntity<?> crearUsuario(@RequestBody CrearUsuarioRequest req) {
@@ -35,7 +35,7 @@ public class UsuarioController {
 
             jdbc.update(
                 "INSERT INTO usuarios_perfil (id, nombre, email, password_hash, rol, sede_id, empresa_id, cargo, creado_por, activo) " +
-                "VALUES (?::uuid, ?, ?, ?, ?, ?, ?, ?, ?::uuid, true)",
+                "VALUES (?::uuid, ?, ?, ?, ?, ?, ?, ?, CAST(? AS uuid), true)",
                 nuevoUuid,
                 req.getNombre(),
                 req.getEmail(),
