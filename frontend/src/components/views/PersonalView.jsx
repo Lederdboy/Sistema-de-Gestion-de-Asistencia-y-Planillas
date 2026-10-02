@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import { EMPRESAS, SEDES, AFPS } from '../../data/mockData'
 
-export default function PersonalView({ workers, onAddWorker, showToast }) {
+export default function PersonalView({ workers, onAddWorker, showToast, loading = false }) {
   const [search, setSearch] = useState('')
   const [selectedSede, setSelectedSede] = useState('')
   const [selectedEstado, setSelectedEstado] = useState('')
@@ -37,6 +37,46 @@ export default function PersonalView({ workers, onAddWorker, showToast }) {
     telefono: '',
     regimen: 'D.L. 728',
   })
+
+  if (loading) {
+    return (
+      <div className="space-y-4 animate-pulse">
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-2">
+            <div className="h-5 w-48 rounded-full bg-slate-200" />
+            <div className="h-3.5 w-64 rounded-full bg-slate-200" />
+          </div>
+          <div className="h-9 w-36 rounded-xl bg-slate-200" />
+        </div>
+
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs flex flex-wrap items-center gap-3">
+          <div className="h-9 flex-1 min-w-[240px] rounded-xl bg-slate-200" />
+          <div className="h-9 w-36 rounded-xl bg-slate-200" />
+          <div className="h-9 w-36 rounded-xl bg-slate-200" />
+        </div>
+
+        <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xs overflow-hidden p-4 space-y-3.5">
+          <div className="h-6 w-full rounded-lg bg-slate-200" />
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="flex items-center justify-between gap-4 py-3 border-b border-slate-100 last:border-0">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0" />
+                <div className="space-y-1.5">
+                  <div className="h-3.5 w-40 rounded-full bg-slate-200" />
+                  <div className="h-2.5 w-24 rounded-full bg-slate-200" />
+                </div>
+              </div>
+              <div className="h-3.5 w-20 rounded-full bg-slate-200" />
+              <div className="h-3.5 w-28 rounded-full bg-slate-200" />
+              <div className="h-3.5 w-24 rounded-full bg-slate-200" />
+              <div className="h-3.5 w-20 rounded-full bg-slate-200" />
+              <div className="h-6 w-16 rounded-full bg-slate-200" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   const filtered = workers.filter((w) => {
     const matchSearch =

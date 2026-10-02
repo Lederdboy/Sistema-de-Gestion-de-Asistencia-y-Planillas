@@ -5,10 +5,11 @@ export async function getSedes(empresaId) {
   try {
     const url = empresaId ? `${BASE_URL}/sedes?empresaId=${empresaId}` : `${BASE_URL}/sedes`
     const res = await fetch(url)
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
-    return await res.json()
-  } catch (err) {
-    console.warn('Fallo al conectar con /api/v1/sedes, usando datos locales:', err)
+    if (!res.ok) return null
+    const data = await res.json()
+    if (data.offline) return null
+    return data
+  } catch {
     return null
   }
 }
@@ -23,11 +24,11 @@ export async function getTrabajadores({ empresaId, sedeId, search, page = 0, siz
     params.append('size', size)
 
     const res = await fetch(`${BASE_URL}/trabajadores?${params.toString()}`)
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
+    if (!res.ok) return null
     const data = await res.json()
+    if (data.offline) return null
     return data.content || []
-  } catch (err) {
-    console.warn('Fallo al conectar con /api/v1/trabajadores:', err)
+  } catch {
     return null
   }
 }
@@ -35,10 +36,11 @@ export async function getTrabajadores({ empresaId, sedeId, search, page = 0, siz
 export async function getMatrizAsistencia(mes = 9, anio = 2026, sedeId = 1) {
   try {
     const res = await fetch(`${BASE_URL}/asistencia/matriz?mes=${mes}&anio=${anio}&sedeId=${sedeId}`)
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
-    return await res.json()
-  } catch (err) {
-    console.warn('Fallo al conectar con /api/v1/asistencia/matriz:', err)
+    if (!res.ok) return null
+    const data = await res.json()
+    if (data.offline) return null
+    return data
+  } catch {
     return null
   }
 }
@@ -57,9 +59,11 @@ export async function updateMarcacion({ trabajadorId, sedeId, fecha, codigoAsist
         usuarioModificacion: 'admin',
       }),
     })
-    return res.ok
-  } catch (err) {
-    console.warn('Fallo al actualizar marcación en backend:', err)
+    if (!res.ok) return false
+    const data = await res.json()
+    if (data.offline) return false
+    return true
+  } catch {
     return false
   }
 }

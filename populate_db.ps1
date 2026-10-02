@@ -1,8 +1,8 @@
 param(
-    [string]$Server = ($env:DB_SERVER ? $env:DB_SERVER : "localhost"),
-    [string]$Database = ($env:DB_NAME ? $env:DB_NAME : "SistemaPlanillasDB"),
-    [string]$User = ($env:DB_USER ? $env:DB_USER : "sa"),
-    [string]$Password = ($env:DB_PASSWORD ? $env:DB_PASSWORD : "")
+    [string]$Server = $(if ($env:DB_SERVER) { $env:DB_SERVER } else { "localhost" }),
+    [string]$Database = $(if ($env:DB_NAME) { $env:DB_NAME } else { "SistemaPlanillasDB" }),
+    [string]$User = $(if ($env:DB_USER) { $env:DB_USER } else { "sa" }),
+    [string]$Password = $(if ($env:DB_PASSWORD) { $env:DB_PASSWORD } else { "" })
 )
 
 $connStr = "Server=$Server;Database=$Database;User Id=$User;Password=$Password;Encrypt=False;TrustServerCertificate=True"

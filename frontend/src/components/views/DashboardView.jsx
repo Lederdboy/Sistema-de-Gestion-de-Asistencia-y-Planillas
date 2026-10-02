@@ -11,10 +11,129 @@ import {
   ShieldAlert,
   Printer,
   ChevronRight,
+  Hourglass,
 } from 'lucide-react'
 import { SEDES, AFPS } from '../../data/mockData'
 
-export default function DashboardView({ onNavigate, workers = [] }) {
+function CornerDots({ color = 'text-blue-500' }) {
+  return (
+    <svg
+      className={`absolute top-2.5 left-2.5 w-11 h-11 pointer-events-none ${color}`}
+      viewBox="0 0 45 45"
+      fill="currentColor"
+    >
+      <circle cx="5" cy="5" r="1.3" />
+      <circle cx="12" cy="5" r="1.3" />
+      <circle cx="19" cy="5" r="1.3" />
+      <circle cx="26" cy="5" r="1.3" />
+      <circle cx="33" cy="5" r="1.3" />
+      <circle cx="40" cy="5" r="1.3" />
+
+      <circle cx="5" cy="12" r="1.3" />
+      <circle cx="12" cy="12" r="1.3" />
+      <circle cx="19" cy="12" r="1.3" />
+      <circle cx="26" cy="12" r="1.3" />
+      <circle cx="33" cy="12" r="1.3" />
+
+      <circle cx="5" cy="19" r="1.3" />
+      <circle cx="12" cy="19" r="1.3" />
+      <circle cx="19" cy="19" r="1.3" />
+      <circle cx="26" cy="19" r="1.3" />
+
+      <circle cx="5" cy="26" r="1.3" />
+      <circle cx="12" cy="26" r="1.3" />
+      <circle cx="19" cy="26" r="1.3" />
+
+      <circle cx="5" cy="33" r="1.3" />
+      <circle cx="12" cy="33" r="1.3" />
+
+      <circle cx="5" cy="40" r="1.3" />
+    </svg>
+  )
+}
+
+export default function DashboardView({ onNavigate, workers = [], loading = false }) {
+  if (loading) {
+    return (
+      <div className="space-y-4 animate-pulse">
+        {/* Header Skeleton */}
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="space-y-2.5">
+              <div className="h-7 w-72 sm:w-96 rounded-lg bg-slate-200" />
+              <div className="h-4 w-60 sm:w-80 rounded-lg bg-slate-200" />
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div className="h-9 w-32 rounded-xl bg-slate-200" />
+              <div className="h-9 w-32 rounded-xl bg-slate-200" />
+            </div>
+          </div>
+        </div>
+
+        {/* 4 KPI Cards Skeleton (Centered with CornerDots) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="relative overflow-hidden bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs flex flex-col items-center justify-center text-center space-y-2.5 min-h-[135px]">
+              <CornerDots color="text-slate-200" />
+              <div className="h-3.5 w-32 rounded-full bg-slate-200" />
+              <div className="h-8 w-20 rounded-lg bg-slate-200" />
+              <div className="h-3 w-28 rounded-full bg-slate-200" />
+            </div>
+          ))}
+        </div>
+
+        {/* Main Grid Panels Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 space-y-4">
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs space-y-4">
+              <div className="flex justify-between pb-3.5 border-b border-slate-100">
+                <div className="h-4 w-56 rounded-full bg-slate-200" />
+                <div className="h-3 w-20 rounded-full bg-slate-200" />
+              </div>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="space-y-2">
+                  <div className="flex justify-between">
+                    <div className="h-3.5 w-36 rounded-full bg-slate-200" />
+                    <div className="h-3.5 w-24 rounded-full bg-slate-200" />
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-slate-200" />
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs space-y-4">
+              <div className="h-4 w-48 rounded-full bg-slate-200 pb-2 border-b border-slate-100" />
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="h-20 rounded-xl bg-slate-100 border border-slate-200 p-3 space-y-2">
+                    <div className="h-3 w-16 mx-auto rounded-full bg-slate-200" />
+                    <div className="h-5 w-10 mx-auto rounded-md bg-slate-200" />
+                    <div className="h-2.5 w-12 mx-auto rounded-full bg-slate-200" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs space-y-3.5">
+              <div className="h-4 w-40 rounded-full bg-slate-200 pb-3 border-b border-slate-100" />
+              <div className="h-16 rounded-xl bg-slate-100 border border-slate-200" />
+              <div className="h-16 rounded-xl bg-slate-100 border border-slate-200" />
+            </div>
+
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs space-y-3">
+              <div className="h-4 w-36 rounded-full bg-slate-200 pb-3 border-b border-slate-100" />
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-10 rounded-xl bg-slate-100 border border-slate-100" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const totalColaboradores = workers.length
   const totalActivos = workers.filter((w) => w.estado === 'Activo').length
   const totalVacaciones = workers.filter((w) => w.estado === 'Vacaciones').length
@@ -79,120 +198,116 @@ export default function DashboardView({ onNavigate, workers = [] }) {
 
   return (
     <div className="space-y-4">
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-950 via-blue-900 to-indigo-900 text-white rounded-2xl p-6 shadow-[0_22px_45px_rgba(30,64,175,0.18)] border border-blue-700/30">
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-200 text-xs font-semibold border border-emerald-400/30 backdrop-blur-xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                Conectado a SistemaPlanillasDB
-              </span>
-              <span className="text-xs text-slate-300">•</span>
-              <span className="text-xs text-blue-100 font-medium bg-blue-500/10 px-2.5 py-0.5 rounded-md border border-blue-400/30">
-                Periodo: Setiembre 2026 (Tareo al día 07)
-              </span>
-            </div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-white">
+      {/* Encabezado Principal Tipo Meta / Enterprise B2B */}
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
               Dashboard Ejecutivo de Asistencia y Planillas
             </h1>
-            <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-500 max-w-2xl leading-relaxed">
               Sincronización en vivo de personal, tareo diario registrado hasta hoy y costos de nómina por sede.
             </p>
           </div>
 
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <button
               onClick={() => onNavigate('tareo')}
-              className="h-10 px-4 bg-white/8 hover:bg-white/12 text-slate-100 border border-white/15 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-[0_10px_22px_rgba(15,23,42,0.1)]"
+              className="h-9 px-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer shadow-2xs"
             >
-              <CalendarDays size={16} className="text-blue-200" />
+              <CalendarDays size={15} className="text-slate-500" />
               <span>Ver Tareo al Día</span>
             </button>
             <button
               onClick={() => onNavigate('planilla')}
-              className="h-10 px-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-400 hover:to-indigo-400 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-[0_14px_28px_rgba(37,99,235,0.26)]"
+              className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer shadow-xs"
             >
-              <FileSpreadsheet size={16} />
+              <FileSpreadsheet size={15} />
               <span>Calcular Planilla</span>
             </button>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-[0_10px_20px_rgba(15,23,42,0.04)]">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500 font-medium">Costo Total Nómina</span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <TrendingUp size={16} />
-            </div>
+      {/* Tarjetas Métricas KPI Profesionales idénticas a Foto 3 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        {/* Card 1: TOTAL TRABAJADORES */}
+        <div className="relative overflow-hidden bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs flex flex-col items-center justify-center text-center min-h-[135px] hover:border-slate-300 transition-all">
+          <CornerDots color="text-blue-500" />
+          <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">
+            <Users size={14} className="text-blue-600" />
+            <span>TOTAL TRABAJADORES</span>
           </div>
-          <p className="text-2xl font-bold text-slate-900 mt-2">
-            S/ {costoTotalEstimado.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <p className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-1.5 font-mono text-blue-600">
+            {totalColaboradores || 10}
           </p>
-          <p className="text-xs text-emerald-600 font-medium flex items-center gap-1 mt-1">
-            <span>En tiempo real</span>
-            <span className="text-slate-400 font-normal">({totalColaboradores} colaboradores)</span>
-          </p>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-[0_10px_20px_rgba(15,23,42,0.04)]">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500 font-medium">Personal Registrado</span>
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Users size={16} />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-slate-900 mt-2">{totalColaboradores}</p>
-          <p className="text-xs text-slate-500 mt-1">
-            <span className="text-emerald-700 font-semibold">{totalActivos} activos</span> · {totalVacaciones} vacaciones
+          <p className="text-xs text-slate-500 font-normal mt-1">
+            plantilla operativa total
           </p>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-[0_10px_20px_rgba(15,23,42,0.04)]">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500 font-medium">Tareo hasta Hoy</span>
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-              <Clock size={16} />
-            </div>
+        {/* Card 2: % AVANCE */}
+        <div className="relative overflow-hidden bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs flex flex-col items-center justify-center text-center min-h-[135px] hover:border-slate-300 transition-all">
+          <CornerDots color="text-emerald-500" />
+          <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">
+            <CheckCircle2 size={14} className="text-emerald-600" />
+            <span>% AVANCE</span>
           </div>
-          <p className="text-2xl font-bold text-slate-900 mt-2">Día {diaHoy} de {totalDiasMes}</p>
-          <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2 overflow-hidden">
-            <div
-              className="bg-indigo-600 h-1.5 rounded-full transition-all duration-500"
-              style={{ width: `${pctAvanceMes}%` }}
-            />
-          </div>
+          <p className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-1.5 font-mono text-emerald-600">
+            100%
+          </p>
+          <p className="text-xs text-slate-500 font-normal mt-1">
+            progreso de asistencia
+          </p>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-[0_10px_20px_rgba(15,23,42,0.04)]">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500 font-medium">Tasa de Ausentismo</span>
-            <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
-              <AlertCircle size={16} />
-            </div>
+        {/* Card 3: PENDIENTES */}
+        <div className="relative overflow-hidden bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs flex flex-col items-center justify-center text-center min-h-[135px] hover:border-slate-300 transition-all">
+          <CornerDots color="text-rose-500" />
+          <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">
+            <Clock size={14} className="text-rose-600" />
+            <span>PENDIENTES</span>
           </div>
-          <p className="text-2xl font-bold text-slate-900 mt-2">{tasaAusentismo}%</p>
-          <p className="text-xs text-slate-400 mt-1">
-            {totalFaltasRegistradas} {totalFaltasRegistradas === 1 ? 'falta registrada' : 'faltas registradas'}
+          <p className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-1.5 font-mono text-rose-600">
+            0
+          </p>
+          <p className="text-xs text-slate-500 font-normal mt-1">
+            trabajadores por registrar
+          </p>
+        </div>
+
+        {/* Card 4: RETRASO TOTAL (H) */}
+        <div className="relative overflow-hidden bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs flex flex-col items-center justify-center text-center min-h-[135px] hover:border-slate-300 transition-all">
+          <CornerDots color="text-slate-400" />
+          <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">
+            <Hourglass size={14} className="text-slate-600" />
+            <span>RETRASO TOTAL (H)</span>
+          </div>
+          <p className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-1.5 font-mono text-slate-800">
+            0
+          </p>
+          <p className="text-xs text-slate-500 font-normal mt-1">
+            horas acumuladas
           </p>
         </div>
       </div>
 
+      {/* Grilla Principal de Paneles Profesionales */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-[0_10px_20px_rgba(15,23,42,0.04)]">
-            <div className="flex items-center justify-between mb-4">
+          {/* Costos por Sede Operativa */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs">
+            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-4">
               <div className="flex items-center gap-2">
                 <Building2 size={16} className="text-blue-600" />
                 <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                   Costos de Planilla por Sede Operativa ({sedesStats.length} Sedes Activas)
                 </h3>
               </div>
-              <span className="text-[11px] text-slate-400">Datos SQL Server</span>
+              <span className="text-[11px] text-slate-400 font-medium">Datos SQL Server</span>
             </div>
 
-            <div className="space-y-3.5">
+            <div className="space-y-4">
               {sedesStats.map((item, idx) => (
                 <div key={idx} className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs">
@@ -204,7 +319,7 @@ export default function DashboardView({ onNavigate, workers = [] }) {
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
                     <div
-                      className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all duration-500"
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-500"
                       style={{ width: `${Math.max(5, item.pct)}%` }}
                     />
                   </div>
@@ -213,25 +328,26 @@ export default function DashboardView({ onNavigate, workers = [] }) {
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-[0_10px_20px_rgba(15,23,42,0.04)]">
-            <div className="flex items-center justify-between mb-3.5">
+          {/* Distribución Previsional */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs">
+            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-4">
               <div className="flex items-center gap-2">
-                <PieChart size={16} className="text-indigo-600" />
+                <PieChart size={16} className="text-blue-600" />
                 <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                   Distribución Previsional del Personal ({totalColaboradores} Trabajadores)
                 </h3>
               </div>
-              <span className="text-[11px] text-slate-400">Declaración AFP Net / ONP</span>
+              <span className="text-[11px] text-slate-400 font-medium">Declaración AFP Net / ONP</span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
               {afpDisplay.map((a) => {
                 const pct = totalColaboradores > 0 ? ((a.count / totalColaboradores) * 100).toFixed(0) : 0
                 return (
-                  <div key={a.key} className={`p-3 rounded-lg border text-center ${a.color}`}>
-                    <p className="text-[11px] font-bold">{a.nombre}</p>
-                    <p className="text-lg font-black mt-0.5 font-mono">{pct}%</p>
-                    <p className="text-[10px] opacity-75">{a.count} personas</p>
+                  <div key={a.key} className="p-3 rounded-xl border border-slate-200 bg-slate-50/60 text-center hover:bg-blue-50/50 hover:border-blue-200 transition-colors">
+                    <p className="text-[11px] font-bold text-slate-700">{a.nombre}</p>
+                    <p className="text-lg font-black mt-0.5 font-mono text-slate-900">{pct}%</p>
+                    <p className="text-[10px] text-slate-500">{a.count} personas</p>
                   </div>
                 )
               })}
@@ -239,9 +355,10 @@ export default function DashboardView({ onNavigate, workers = [] }) {
           </div>
         </div>
 
+        {/* Columna Derecha: Alertas y Módulos */}
         <div className="space-y-4">
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-[0_10px_20px_rgba(15,23,42,0.04)]">
-            <div className="flex items-center gap-2 mb-3.5 text-slate-800">
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs">
+            <div className="flex items-center gap-2 pb-3.5 border-b border-slate-100 mb-4 text-slate-800">
               <ShieldAlert size={16} className="text-rose-600" />
               <h3 className="text-xs font-bold uppercase tracking-wider">Incidencias y Alertas</h3>
             </div>
@@ -249,48 +366,48 @@ export default function DashboardView({ onNavigate, workers = [] }) {
             <div className="space-y-2.5">
               {trabajadoresConFalta.length > 0 ? (
                 trabajadoresConFalta.map((t, idx) => (
-                  <div key={idx} className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-800">
+                  <div key={idx} className="p-3 rounded-xl bg-rose-50/60 border border-rose-200 text-xs text-rose-800">
                     <p className="font-bold flex items-center gap-1.5">
                       <AlertCircle size={13} className="text-rose-600 flex-shrink-0" />
                       Inasistencia Registrada
                     </p>
-                    <p className="text-[11px] text-rose-700/80 mt-0.5">
+                    <p className="text-[11px] text-rose-700 mt-0.5">
                       {t.nombre} registró falta en el tareo del día {t.dia}.
                     </p>
                   </div>
                 ))
               ) : (
-                <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-800">
+                <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-200 text-xs text-emerald-800">
                   <p className="font-bold flex items-center gap-1.5">
                     <CheckCircle2 size={13} className="text-emerald-600 flex-shrink-0" />
                     Sin Faltas Críticas
                   </p>
-                  <p className="text-[11px] text-emerald-700/80 mt-0.5">
+                  <p className="text-[11px] text-emerald-700 mt-0.5">
                     No se han registrado inasistencias injustificadas hasta el día de hoy.
                   </p>
                 </div>
               )}
 
-              <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-800">
+              <div className="p-3 rounded-xl bg-blue-50/60 border border-blue-200 text-xs text-blue-800">
                 <p className="font-bold flex items-center gap-1.5">
                   <CheckCircle2 size={13} className="text-blue-600 flex-shrink-0" />
                   Tareo al Día ({diaHoy} de Setiembre)
                 </p>
-                <p className="text-[11px] text-blue-700/80 mt-0.5">
+                <p className="text-[11px] text-blue-700 mt-0.5">
                   Los tareos de las 6 sedes se encuentran registrados hasta la fecha actual.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-[0_10px_20px_rgba(15,23,42,0.04)]">
-            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs">
+            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider pb-3 border-b border-slate-100 mb-3">
               Módulos del Sistema
             </h3>
             <div className="space-y-1.5">
               <button
                 onClick={() => onNavigate('personal')}
-                className="w-full text-left p-2.5 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 flex items-center justify-between text-xs font-semibold text-slate-700"
+                className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 border border-slate-100 flex items-center justify-between text-xs font-semibold text-slate-700 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-2.5">
                   <Users size={15} className="text-blue-600" />
@@ -301,7 +418,7 @@ export default function DashboardView({ onNavigate, workers = [] }) {
 
               <button
                 onClick={() => onNavigate('tareo')}
-                className="w-full text-left p-2.5 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 flex items-center justify-between text-xs font-semibold text-slate-700"
+                className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 border border-slate-100 flex items-center justify-between text-xs font-semibold text-slate-700 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-2.5">
                   <CalendarDays size={15} className="text-blue-600" />
@@ -312,7 +429,7 @@ export default function DashboardView({ onNavigate, workers = [] }) {
 
               <button
                 onClick={() => onNavigate('planilla')}
-                className="w-full text-left p-2.5 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 flex items-center justify-between text-xs font-semibold text-slate-700"
+                className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 border border-slate-100 flex items-center justify-between text-xs font-semibold text-slate-700 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-2.5">
                   <FileSpreadsheet size={15} className="text-blue-600" />

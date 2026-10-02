@@ -14,11 +14,30 @@ import ReportesView from './components/views/ReportesView'
 import ConfigView from './components/views/ConfigView'
 import PerfilView from './components/views/PerfilView'
 
-import { INITIAL_WORKERS } from './data/mockData'
+import { INITIAL_WORKERS, createTareoCompleto } from './data/mockData'
 import { getTrabajadores, getSedes } from './services/api'
 
 export default function App() {
   const [isMobile, setIsMobile] = useState(false)
+
+  // Medidor de vista (Escala porcentual del contenido de la vista, 100% por defecto)
+  const [viewZoom, setViewZoom] = useState(() => {
+    try {
+      const saved = localStorage.getItem('planilla_view_zoom')
+      return saved ? Number(saved) : 100
+    } catch {
+      return 100
+    }
+  })
+
+  const handleZoomChange = (zoomLevel) => {
+    setViewZoom(zoomLevel)
+    try {
+      localStorage.setItem('planilla_view_zoom', String(zoomLevel))
+    } catch {
+      // storage disabled
+    }
+  }
 
   // Estado de Autenticación
   const [user, setUser] = useState(() => {
@@ -57,6 +76,18 @@ export default function App() {
   const [workers, setWorkers] = useState(INITIAL_WORKERS)
   const [loading, setLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+
+  // Transición suave con Skeleton Loader al cambiar de sección
+  const handleNavigate = (newNav) => {
+    if (newNav !== activeNav) {
+      setLoading(true)
+      setActiveNav(newNav)
+      setTimeout(() => {
+        setLoading(false)
+      }, 260)
+    }
+  }
+
   const [lastUpdate, setLastUpdate] = useState(() =>
     new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })
   )
@@ -89,13 +120,13 @@ export default function App() {
             regimen: 'D.L. 728',
             email: `${(t.nombres || 'colab').toLowerCase().split(' ')[0]}.${(t.apellidoPaterno || 'corp').toLowerCase()}@empresa.com`,
             telefono: matchExisting ? matchExisting.telefono : '984 123 456',
-            tareo: matchExisting ? matchExisting.tareo : Array.from({ length: 30 }, (_, i) => i < 7 ? ((i + 1) % 7 === 0 || (i + 1) % 7 === 6 ? 'DL' : 'D') : null),
+            tareo: matchExisting ? matchExisting.tareo : createTareoCompleto(['D','D','D','D','DL','DL','D']),
           }
         })
         setWorkers(enriched)
       }
-    } catch (err) {
-      console.warn('Usando datos de inicialización sincronizados:', err)
+    } catch {
+      // Modo offline: mantiene datos sincronizados locales
     }
   }
 
@@ -137,6 +168,16 @@ export default function App() {
     setRefreshing(false)
     setLastUpdate(new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }))
     showToast('Datos de colaboradores y tareo sincronizados con SistemaPlanillasDB.', 'success')
+  }
+
+  // Autocompletar tareo mensual para todos los trabajadores
+  const handleCompleteAllTareo = () => {
+    setWorkers((prev) =>
+      prev.map((w) => ({
+        ...w,
+        tareo: createTareoCompleto(w.tareo || ['D', 'D', 'D', 'D', 'DL', 'DL', 'D']),
+      }))
+    )
   }
 
   // Actualizar asistencia en tareo
@@ -193,10 +234,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#e0f2fe_0%,_#f8fafc_30%,_#e2e8f0_100%)] font-sans text-slate-900 overflow-x-hidden">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(14,116,144,0.05),rgba(15,23,42,0.02))]" />
-      <div className="pointer-events-none absolute left-0 top-0 h-80 w-80 rounded-full bg-sky-200/30 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 right-0 h-96 w-96 rounded-full bg-indigo-200/20 blur-3xl" />
+    <div className="min-h-screen bg-[#F8FAFC] font-sans text-slate-900 overflow-x-hidden antialiased">
 
       {isMobile && isSidebarOpen && (
         <button
@@ -210,7 +248,7 @@ export default function App() {
       {/* Barra Lateral Izquierda (Abierta con nombres por defecto, logo limpio sin caja) */}
       <Sidebar
         active={activeNav}
-        setActive={setActiveNav}
+        setActive={handleNavigate}
         user={user}
         onLogout={handleLogout}
         isOpen={isSidebarOpen}
@@ -228,17 +266,26 @@ export default function App() {
         isSidebarOpen={isSidebarOpen}
         isMobile={isMobile}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        viewZoom={viewZoom}
+        onZoomChange={handleZoomChange}
       />
 
-      {/* Contenido Principal a Ancho Completo (Sin espacio blanco sobrante a los costados) */}
+      {/* Contenido Principal a Ancho Completo (Solo la vista escala según el medidor, el panel se mantiene intacto) */}
       <main
         className={`relative min-h-screen pt-20 pb-8 transition-all duration-300 ${
           isMobile ? 'ml-0 px-3 sm:px-5' : 'px-3 sm:px-5 lg:px-6'
         } ${isMobile ? '' : isSidebarOpen ? 'lg:ml-64' : 'lg:ml-16'}`}
       >
-        <div className="mx-auto w-full max-w-[1700px]">
+        <div
+          className="mx-auto w-full max-w-[1700px] origin-top transition-all duration-150"
+          style={{ zoom: `${viewZoom}%` }}
+        >
           {activeNav === 'dashboard' && (
-            <DashboardView onNavigate={setActiveNav} workers={workers} />
+            <DashboardView
+              onNavigate={handleNavigate}
+              workers={workers}
+              loading={loading}
+            />
           )}
 
           {activeNav === 'personal' && (
@@ -246,6 +293,7 @@ export default function App() {
               workers={workers}
               onAddWorker={handleAddWorker}
               showToast={showToast}
+              loading={loading}
             />
           )}
 
@@ -253,8 +301,9 @@ export default function App() {
             <TareoView
               workers={workers}
               onUpdateWorkerTareo={handleUpdateWorkerTareo}
+              onCompleteAllTareo={handleCompleteAllTareo}
               loading={loading}
-              onNavigateToPlanilla={() => setActiveNav('planilla')}
+              onNavigateToPlanilla={() => handleNavigate('planilla')}
               showToast={showToast}
             />
           )}
@@ -264,15 +313,17 @@ export default function App() {
               workers={workers}
               onScheduleVacation={handleScheduleVacation}
               showToast={showToast}
+              loading={loading}
             />
           )}
 
           {activeNav === 'planilla' && (
             <PlanillaView
               workers={workers}
+              loading={loading}
               onViewBoleta={(boleta) => {
                 setSelectedBoleta(boleta)
-                setActiveNav('reportes')
+                handleNavigate('reportes')
               }}
               showToast={showToast}
             />
@@ -284,6 +335,7 @@ export default function App() {
               selectedBoleta={selectedBoleta}
               onCloseBoleta={() => setSelectedBoleta(null)}
               showToast={showToast}
+              loading={loading}
             />
           )}
 

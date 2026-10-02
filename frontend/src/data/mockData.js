@@ -42,16 +42,26 @@ export const PARAMETROS_LABORALES = {
   jornadaHoras: 8,
 }
 
-// ─── Helper de Tareo Registrado hasta el Día de Hoy (07 de Setiembre) ───────
-// Días 1 a 7 registrados; días 8 a 30 pendientes/futuros
-const createTareoHastaHoy = (patron7Dias) => {
+// ─── Helper de Tareo Completo del Mes (Días 1 a 30) ──────────────────────────
+// Todos los colaboradores tienen su tareo 100% completo automáticamente
+export const createTareoCompleto = (patron7Dias) => {
   const result = [...patron7Dias]
   for (let i = 7; i < 30; i++) {
-    const dayOfWeek = (i + 1) % 7
-    result.push(dayOfWeek === 0 || dayOfWeek === 6 ? 'DL' : null)
+    const dayOfMonth = i + 1
+    // Días 5, 6, 12, 13, 19, 20, 26, 27 son fines de semana (DL: Descanso de Ley)
+    const isWeekend = (dayOfMonth % 7 === 5) || (dayOfMonth % 7 === 6)
+    if (isWeekend) {
+      result.push('DL')
+    } else {
+      // Asignar turno según el perfil del colaborador (V: Vacaciones, N: Noche, D: Día)
+      const baseCode = patron7Dias[0] === 'V' ? 'V' : (patron7Dias[0] === 'N' ? 'N' : 'D')
+      result.push(baseCode)
+    }
   }
   return result
 }
+
+const createTareoHastaHoy = createTareoCompleto
 
 // ─── 16 Colaboradores Registrados en SistemaPlanillasDB ──────────────────────
 export const INITIAL_WORKERS = [
