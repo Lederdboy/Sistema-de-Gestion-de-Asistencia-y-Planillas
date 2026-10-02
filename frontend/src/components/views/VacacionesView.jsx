@@ -30,6 +30,7 @@ export default function VacacionesView({
   workers,
   onScheduleVacation,
   showToast,
+  loading = false,
 }) {
   // Pestaña activa ('record' | 'solicitudes' | 'cronograma' | 'venta')
   const [activeTab, setActiveTab] = useState('record')
@@ -240,6 +241,54 @@ export default function VacacionesView({
   const simWorker = workers.find((w) => w.id === Number(simWorkerId)) || workers[0]
   const simValorDia = simWorker ? simWorker.sueldoBase / 30 : 0
   const simMontoVenta = (simValorDia * simDiasVenta).toFixed(2)
+
+  if (loading) {
+    return (
+      <div className="space-y-4 animate-pulse">
+        {/* Header Skeleton */}
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-2">
+            <div className="h-5 w-56 rounded-full bg-slate-200" />
+            <div className="h-3.5 w-80 rounded-full bg-slate-200" />
+          </div>
+          <div className="flex gap-2">
+            <div className="h-9 w-32 rounded-xl bg-slate-200" />
+            <div className="h-9 w-36 rounded-xl bg-slate-200" />
+          </div>
+        </div>
+
+        {/* 4 KPI Cards Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs space-y-2.5">
+              <div className="h-3.5 w-24 rounded-full bg-slate-200" />
+              <div className="h-8 w-32 rounded-lg bg-slate-200" />
+              <div className="h-3 w-28 rounded-full bg-slate-200" />
+            </div>
+          ))}
+        </div>
+
+        {/* Table Skeleton */}
+        <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xs p-5 space-y-4">
+          <div className="flex gap-3">
+            <div className="h-9 flex-1 rounded-xl bg-slate-200" />
+            <div className="h-9 w-36 rounded-xl bg-slate-200" />
+            <div className="h-9 w-36 rounded-xl bg-slate-200" />
+          </div>
+          <div className="h-7 w-full rounded-lg bg-slate-100" />
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="flex justify-between items-center py-3 border-b border-slate-100 last:border-0 gap-4">
+              <div className="h-4 w-44 rounded-full bg-slate-200" />
+              <div className="h-3.5 w-24 rounded-full bg-slate-200" />
+              <div className="h-3.5 w-28 rounded-full bg-slate-200" />
+              <div className="h-3.5 w-20 rounded-full bg-slate-200" />
+              <div className="h-6 w-20 rounded-full bg-slate-200" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">

@@ -13,10 +13,55 @@ import {
 } from 'lucide-react'
 import { calcularPlanillaTrabajador } from '../../data/mockData'
 
-export default function PlanillaView({ workers, onViewBoleta, showToast }) {
+export default function PlanillaView({ workers, onViewBoleta, showToast, loading = false }) {
   const [periodo, setPeriodo] = useState('2025-07')
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('Pre-Planilla') // 'Pre-Planilla' | 'Aprobada'
+
+  if (loading) {
+    return (
+      <div className="space-y-5 animate-pulse">
+        {/* Header Skeleton */}
+        <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-2">
+            <div className="h-6 w-64 rounded-full bg-slate-200" />
+            <div className="h-3.5 w-80 rounded-full bg-slate-200" />
+          </div>
+          <div className="flex gap-2.5">
+            <div className="h-9 w-32 rounded-xl bg-slate-200" />
+            <div className="h-9 w-40 rounded-xl bg-slate-200" />
+          </div>
+        </div>
+
+        {/* 4 Totales KPI Cards Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs space-y-2.5">
+              <div className="h-3.5 w-24 rounded-full bg-slate-200" />
+              <div className="h-8 w-36 rounded-lg bg-slate-200" />
+              <div className="h-3 w-28 rounded-full bg-slate-200" />
+            </div>
+          ))}
+        </div>
+
+        {/* Table Skeleton */}
+        <div className="rounded-2xl border border-slate-200/90 bg-white shadow-xs p-4 space-y-3">
+          <div className="h-9 w-64 rounded-xl bg-slate-200" />
+          <div className="h-7 w-full rounded-lg bg-slate-100" />
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="flex justify-between items-center py-3 border-b border-slate-100 last:border-0 gap-4">
+              <div className="h-4 w-40 rounded-full bg-slate-200" />
+              <div className="h-3.5 w-20 rounded-full bg-slate-200" />
+              <div className="h-3.5 w-24 rounded-full bg-slate-200" />
+              <div className="h-3.5 w-24 rounded-full bg-slate-200" />
+              <div className="h-3.5 w-24 rounded-full bg-slate-200" />
+              <div className="h-6 w-16 rounded-full bg-slate-200" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   // Calcular planilla para todos los trabajadores
   const planillas = workers.map(w => calcularPlanillaTrabajador(w))
@@ -47,7 +92,7 @@ export default function PlanillaView({ workers, onViewBoleta, showToast }) {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-[28px] border border-slate-200/80 bg-white/85 p-4 shadow-[0_18px_35px_rgba(15,23,42,0.06)] backdrop-blur-xl sm:p-5">
+      <div className="rounded-[28px] border border-slate-200/80 bg-white/85 p-4 backdrop-blur-xl sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-sky-700 shadow-inner shadow-sky-200/80">

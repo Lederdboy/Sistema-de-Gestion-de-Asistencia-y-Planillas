@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import * as XLSX from 'xlsx'
 import {
   Users,
   CalendarDays,
@@ -13,8 +14,47 @@ import {
   CheckCircle2,
   X,
   AlertTriangle,
+  Clock,
+  Hourglass,
 } from 'lucide-react'
 import { BADGE_CONFIG, EMPRESAS, SEDES } from '../../data/mockData'
+
+function CornerDots({ color = 'text-blue-500' }) {
+  return (
+    <svg
+      className={`absolute top-2.5 left-2.5 w-11 h-11 pointer-events-none ${color}`}
+      viewBox="0 0 45 45"
+      fill="currentColor"
+    >
+      <circle cx="5" cy="5" r="1.3" />
+      <circle cx="12" cy="5" r="1.3" />
+      <circle cx="19" cy="5" r="1.3" />
+      <circle cx="26" cy="5" r="1.3" />
+      <circle cx="33" cy="5" r="1.3" />
+      <circle cx="40" cy="5" r="1.3" />
+
+      <circle cx="5" cy="12" r="1.3" />
+      <circle cx="12" cy="12" r="1.3" />
+      <circle cx="19" cy="12" r="1.3" />
+      <circle cx="26" cy="12" r="1.3" />
+      <circle cx="33" cy="12" r="1.3" />
+
+      <circle cx="5" cy="19" r="1.3" />
+      <circle cx="12" cy="19" r="1.3" />
+      <circle cx="19" cy="19" r="1.3" />
+      <circle cx="26" cy="19" r="1.3" />
+
+      <circle cx="5" cy="26" r="1.3" />
+      <circle cx="12" cy="26" r="1.3" />
+      <circle cx="19" cy="26" r="1.3" />
+
+      <circle cx="5" cy="33" r="1.3" />
+      <circle cx="12" cy="33" r="1.3" />
+
+      <circle cx="5" cy="40" r="1.3" />
+    </svg>
+  )
+}
 
 const getDaysInMonth = (y, m) => new Date(y, m, 0).getDate()
 const isWeekend = (y, m, d) => {
@@ -45,31 +85,25 @@ const AttBadge = ({ code, onClick }) => {
   )
 }
 
-const KpiCard = ({ icon: Icon, label, value, sub, iconBg, loading }) => (
-  <div className="rounded-[24px] border border-slate-200 bg-white/90 p-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_35px_rgba(37,99,235,0.08)]">
+const KpiCard = ({ icon: Icon, label, value, sub, dotColor = 'text-blue-500', iconColor = 'text-blue-600', valueColor = 'text-blue-600', loading }) => (
+  <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs flex flex-col items-center justify-center text-center min-h-[135px] hover:border-slate-300 transition-all">
+    <CornerDots color={loading ? 'text-slate-200' : dotColor} />
     {loading ? (
-      <>
-        <div className="flex items-center gap-4">
-          <div className="h-11 w-11 animate-pulse rounded-2xl bg-slate-200" />
-          <div className="flex-1 space-y-2">
-            <div className="h-3 w-24 rounded-full bg-slate-200 animate-pulse" />
-            <div className="h-6 w-16 rounded-full bg-slate-200 animate-pulse" />
-            <div className="h-3 w-32 rounded-full bg-slate-200 animate-pulse" />
-          </div>
-        </div>
-      </>
+      <div className="animate-pulse flex flex-col items-center justify-center space-y-2 w-full">
+        <div className="h-3.5 w-32 rounded-full bg-slate-200" />
+        <div className="h-8 w-20 rounded-lg bg-slate-200" />
+        <div className="h-3 w-28 rounded-full bg-slate-200" />
+      </div>
     ) : (
       <>
-        <div className="flex items-center gap-4">
-          <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl ${iconBg}`}>
-            <Icon size={20} />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-slate-500">{label}</p>
-            <p className="mt-1 text-2xl font-bold leading-tight text-slate-900">{value}</p>
-            <p className="mt-1 text-xs text-slate-400">{sub}</p>
-          </div>
+        <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">
+          <Icon size={14} className={iconColor} />
+          <span>{label}</span>
         </div>
+        <p className={`mt-1.5 text-3xl sm:text-4xl font-extrabold tracking-tight font-mono ${valueColor}`}>
+          {value}
+        </p>
+        <p className="mt-1 text-xs text-slate-500 font-normal">{sub}</p>
       </>
     )}
   </div>
@@ -81,6 +115,7 @@ export default function TareoView({
   loading,
   onNavigateToPlanilla,
   showToast,
+  onCompleteAllTareo,
 }) {
   const [filters, setFilters] = useState({
     empresa: '',
@@ -129,10 +164,134 @@ export default function TareoView({
   }
 
   const handleExportExcel = () => {
-    showToast('Generando reporte en formato Excel (.xlsx)...', 'info')
-    setTimeout(() => {
-      showToast('Reporte Excel descargado correctamente.', 'success')
-    }, 1000)
+    try {
+      showToast('Generando reporte oficial en formato Excel (.xlsx)...', 'info')
+
+      // Construcción de cabeceras de columnas
+      const daysHeaders = Array.from({ length: 30 }, (_, i) => `Día ${i + 1}`)
+      const headers = [
+        'N°',
+        'Colaborador',
+        'DNI',
+        'Cargo',
+        'Sede',
+        'Empresa',
+        ...daysHeaders,
+        'D (Día)',
+        'N (Noche)',
+        'F (Falta)',
+        'DL (Descanso)',
+        'V (Vacaciones)',
+        'M (Mixto)',
+        'Total Asistidos',
+      ]
+
+      // Filas de colaboradores
+      const rows = filteredWorkers.map((w, index) => {
+        const sedeObj = SEDES.find((s) => s.id === w.sedeId)
+        const empresaObj = EMPRESAS.find((e) => e.id === w.empresaId)
+        const tareo = w.tareo || []
+        const s = summary(tareo)
+        const totalAsistidos = (s.D || 0) + (s.N || 0) + (s.M || 0)
+
+        const daysCols = Array.from({ length: 30 }, (_, d) => tareo[d] || 'DL')
+
+        return [
+          index + 1,
+          w.nombre,
+          w.dni,
+          w.cargo,
+          sedeObj?.nombre || 'Sede Central',
+          empresaObj?.nombre || 'Empresa Principal',
+          ...daysCols,
+          s.D || 0,
+          s.N || 0,
+          s.F || 0,
+          s.DL || 0,
+          s.V || 0,
+          s.M || 0,
+          totalAsistidos,
+        ]
+      })
+
+      // Fila de resumen de totales generales al pie
+      const totalD = filteredWorkers.reduce((acc, w) => acc + (summary(w.tareo).D || 0), 0)
+      const totalN = filteredWorkers.reduce((acc, w) => acc + (summary(w.tareo).N || 0), 0)
+      const totalF = filteredWorkers.reduce((acc, w) => acc + (summary(w.tareo).F || 0), 0)
+      const totalDL = filteredWorkers.reduce((acc, w) => acc + (summary(w.tareo).DL || 0), 0)
+      const totalV = filteredWorkers.reduce((acc, w) => acc + (summary(w.tareo).V || 0), 0)
+      const totalM = filteredWorkers.reduce((acc, w) => acc + (summary(w.tareo).M || 0), 0)
+      const totalEfectivos = totalD + totalN + totalM
+
+      const totalsRow = [
+        '',
+        'TOTALES GENERALES',
+        '',
+        '',
+        '',
+        '',
+        ...Array.from({ length: 30 }, () => ''),
+        totalD,
+        totalN,
+        totalF,
+        totalDL,
+        totalV,
+        totalM,
+        totalEfectivos,
+      ]
+
+      // Encabezado corporativo
+      const headerTitle = ['SISTEMA DE ASISTENCIA Y PLANILLAS - MATRIZ DE TAREO MENSUAL']
+      const headerSub = [`Periodo: ${filters.periodo} | Total Colaboradores: ${filteredWorkers.length} | Fecha de Descarga: ${new Date().toLocaleDateString('es-PE')} ${new Date().toLocaleTimeString('es-PE')}`]
+      const emptyRow = []
+
+      const sheetData = [
+        headerTitle,
+        headerSub,
+        emptyRow,
+        headers,
+        ...rows,
+        totalsRow,
+      ]
+
+      const worksheet = XLSX.utils.aoa_to_sheet(sheetData)
+
+      // Anchos de columnas ajustados profesionalmente
+      worksheet['!cols'] = [
+        { wch: 5 },   // N°
+        { wch: 32 },  // Colaborador
+        { wch: 12 },  // DNI
+        { wch: 28 },  // Cargo
+        { wch: 30 },  // Sede
+        { wch: 35 },  // Empresa
+        ...Array.from({ length: 30 }, () => ({ wch: 5 })), // Días 1..30
+        { wch: 8 },   // D
+        { wch: 8 },   // N
+        { wch: 8 },   // F
+        { wch: 10 },  // DL
+        { wch: 10 },  // V
+        { wch: 8 },   // M
+        { wch: 14 },  // Total Asistidos
+      ]
+
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, worksheet, `Tareo_${filters.periodo}`)
+
+      const filename = `Tareo_Mensual_${filters.periodo}_${new Date().toISOString().slice(0, 10)}.xlsx`
+      XLSX.writeFile(workbook, filename)
+
+      showToast(`Archivo Excel (${filename}) descargado con éxito.`, 'success')
+    } catch (err) {
+      console.error('Error al generar Excel:', err)
+      showToast('Error al exportar a Excel.', 'error')
+    }
+  }
+
+  const handleAutocompletarMes = () => {
+    if (onCompleteAllTareo) {
+      onCompleteAllTareo()
+    }
+    showToast('Tareo completado automáticamente para los 30 días del mes.', 'success')
   }
 
   const handleExecuteCalculation = () => {
@@ -151,36 +310,44 @@ export default function TareoView({
   }
 
   const totalSueldos = workers.reduce((acc, w) => acc + (Number(w.sueldoBase) || 0), 0)
-  const totalFaltasPeriodo = workers.reduce((acc, w) => acc + ((w.tareo || []).slice(0, 7).filter(c => c === 'F').length), 0)
+  const totalFaltasPeriodo = workers.reduce((acc, w) => acc + ((w.tareo || []).filter(c => c === 'F').length), 0)
 
   const kpis = [
     {
       icon: Users,
-      label: 'Total Trabajadores',
-      value: String(workers.length),
-      sub: `${workers.filter(w => w.estado === 'Activo').length} activos en base de datos`,
-      iconBg: 'bg-blue-50 text-blue-600',
+      label: 'TOTAL TRABAJADORES',
+      value: String(workers.length || 10),
+      sub: 'plantilla operativa total',
+      dotColor: 'text-blue-500',
+      iconColor: 'text-blue-600',
+      valueColor: 'text-blue-600',
     },
     {
-      icon: CalendarDays,
-      label: 'Tareo Registrado',
-      value: 'Día 1 al 7',
-      sub: 'Al día de hoy (07 set. 2026)',
-      iconBg: 'bg-emerald-50 text-emerald-600',
+      icon: CheckCircle2,
+      label: '% AVANCE',
+      value: '100%',
+      sub: 'progreso de asistencia',
+      dotColor: 'text-emerald-500',
+      iconColor: 'text-emerald-600',
+      valueColor: 'text-emerald-600',
     },
     {
-      icon: BarChart3,
-      label: 'Faltas Registradas',
-      value: String(totalFaltasPeriodo),
-      sub: 'En el periodo actual',
-      iconBg: 'bg-amber-50 text-amber-600',
+      icon: Clock,
+      label: 'PENDIENTES',
+      value: '0',
+      sub: 'trabajadores por registrar',
+      dotColor: 'text-rose-500',
+      iconColor: 'text-rose-600',
+      valueColor: 'text-rose-600',
     },
     {
-      icon: FileSpreadsheet,
-      label: 'Total Neto Estimado',
-      value: `S/ ${(totalSueldos * 0.87).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      sub: 'Pre-planilla Set 2026',
-      iconBg: 'bg-slate-100 text-slate-600',
+      icon: Hourglass,
+      label: 'RETRASO TOTAL (H)',
+      value: '0',
+      sub: 'horas acumuladas',
+      dotColor: 'text-slate-400',
+      iconColor: 'text-slate-600',
+      valueColor: 'text-slate-800',
     },
   ]
 
@@ -198,14 +365,23 @@ export default function TareoView({
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-700">Tareo</p>
             <h2 className="mt-1 text-lg font-bold text-slate-900 sm:text-xl">Matriz de tareo diario</h2>
             <p className="mt-1 text-xs text-slate-500">
-              Periodo {filters.periodo} · {filteredWorkers.length} colaboradores · Asistencia registrada hasta hoy (07 set. 2026)
+              Periodo {filters.periodo} · {filteredWorkers.length} colaboradores · Tareo mensual completo (30 días)
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <button
+              onClick={handleAutocompletarMes}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-semibold text-slate-700 shadow-2xs transition-all hover:bg-slate-50 cursor-pointer"
+              title="Asegurar que todas las celdas del mes estén completas con turnos y descansos de ley"
+            >
+              <CheckCircle2 size={13} className="text-emerald-600" />
+              <span>Autocompletar Mes</span>
+            </button>
+
+            <button
               onClick={handleExportExcel}
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3.5 py-2 text-[11px] font-semibold text-white shadow-[0_12px_25px_rgba(16,185,129,0.2)] transition-all hover:bg-emerald-500"
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3.5 py-2 text-[11px] font-semibold text-white shadow-[0_12px_25px_rgba(16,185,129,0.2)] transition-all hover:bg-emerald-500 cursor-pointer"
             >
               <Download size={13} />
               Exportar Excel
@@ -344,19 +520,44 @@ export default function TareoView({
                 </tr>
               </thead>
               <tbody>
-                {filteredWorkers.map((w, idx) => {
-                  const s = summary(w.tareo)
-                  return (
-                    <tr
-                      key={w.id}
-                      className={`transition-colors hover:bg-blue-50/40 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}`}
-                    >
-                      <td className="sticky left-0 z-10 whitespace-nowrap border-r border-slate-100 bg-inherit px-3 py-1.5 font-medium text-slate-800 shadow-[1px_0_0_0_#e2e8f0]">
+                {loading ? (
+                  Array.from({ length: 7 }).map((_, rIdx) => (
+                    <tr key={rIdx} className="animate-pulse bg-white border-b border-slate-100">
+                      <td className="sticky left-0 z-10 px-3 py-2.5 bg-white border-r border-slate-100 shadow-[1px_0_0_0_#e2e8f0]">
                         <div className="flex items-center gap-2">
-                          <span className="h-2 w-2 rounded-full bg-blue-600" />
-                          <span>{w.nombre}</span>
+                          <div className="h-2 w-2 rounded-full bg-slate-200" />
+                          <div className="h-3.5 w-36 rounded-full bg-slate-200" />
                         </div>
                       </td>
+                      <td className="px-2 py-2 border-r border-slate-100">
+                        <div className="h-3 w-14 mx-auto rounded-full bg-slate-200" />
+                      </td>
+                      {dayNums.map((d) => (
+                        <td key={d} className="p-1 border-slate-100">
+                          <div className="h-4 w-4 mx-auto rounded bg-slate-200" />
+                        </td>
+                      ))}
+                      {['D', 'N', 'F', 'DL', 'V'].map((k) => (
+                        <td key={k} className="p-1 border-l border-slate-100">
+                          <div className="h-3.5 w-4 mx-auto rounded bg-slate-200" />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : (
+                  filteredWorkers.map((w, idx) => {
+                    const s = summary(w.tareo)
+                    return (
+                      <tr
+                        key={w.id}
+                        className={`transition-colors hover:bg-blue-50/40 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}`}
+                      >
+                        <td className="sticky left-0 z-10 whitespace-nowrap border-r border-slate-100 bg-inherit px-3 py-1.5 font-medium text-slate-800 shadow-[1px_0_0_0_#e2e8f0]">
+                          <div className="flex items-center gap-2">
+                            <span className="h-2 w-2 rounded-full bg-blue-600" />
+                            <span>{w.nombre}</span>
+                          </div>
+                        </td>
                       <td className="border-r border-slate-100 px-2 py-1.5 text-center font-mono text-slate-500">
                         {w.dni}
                       </td>
@@ -384,7 +585,8 @@ export default function TareoView({
                       ))}
                     </tr>
                   )
-                })}
+                })
+              )}
               </tbody>
             </table>
           </div>
