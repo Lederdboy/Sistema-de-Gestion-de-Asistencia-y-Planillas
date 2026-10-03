@@ -27,6 +27,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
         try {
+            // Buscar primero en usuarios_perfil (gerentes, contadores, etc)
             List<Map<String, Object>> rows = jdbc.queryForList(
                 "SELECT up.id::text, up.email, up.nombre, up.rol, up.sede_id, up.empresa_id, " +
                 "up.cargo, up.activo, up.password_hash, s.nombre AS sede_nombre " +
@@ -35,6 +36,20 @@ public class AuthController {
                 "WHERE up.email = ?",
                 req.getEmail()
             );
+
+            // Si no está en usuarios_perfil, buscar en trabajadores
+            if (rows.isEmpty()) {
+                rows = jdbc.queryForList(
+                    "SELECT t.id::text AS id, t.email, " +
+                    "(t.apellido_paterno || ' ' || t.apellido_materno || ' ' || t.nombres) AS nombre, " +
+                    "'TRABAJADOR' AS rol, t.sede_id, t.empresa_id, " +
+                    "t.cargo, t.activo, t.password_hash, s.nombre AS sede_nombre " +
+                    "FROM trabajadores t " +
+                    "LEFT JOIN sedes s ON s.id = t.sede_id " +
+                    "WHERE t.email = ?",
+                    req.getEmail()
+                );
+            }
 
             if (rows.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -81,6 +96,30 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("mensaje", "Error interno: " + e.getMessage()));
+        }
+    }
+
+    // ENDPOINT TEMPORAL — solo para generar hash BCrypt, eliminar en producción
+    @GetMapping("/hash/{password}")
+    public ResponseEntity<?> generarHash(@PathVariable String password) {
+        return ResponseEntity.ok(Map.of("hash", passwordEncoder.encode(password)));
+    }
+
+    // ENDPOINT TEMPORAL — setea email y password directo en BD, eliminar en producción
+    @PostMapping("/setup-admin")
+    public ResponseEntity<?> setupAdmin(@RequestBody Map<String, String> body) {
+        try {
+            String email = body.get("email");
+            String password = body.get("password");
+            String uuid = body.get("uuid");
+            jdbc.update(
+                "UPDATE usuarios_perfil SET email = ?, password_hash = ? WHERE id = ?::uuid",
+                email, passwordEncoder.encode(password), uuid
+            );
+            return ResponseEntity.ok(Map.of("mensaje", "Admin configurado correctamente"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("mensaje", "Error: " + e.getMessage()));
         }
     }
 

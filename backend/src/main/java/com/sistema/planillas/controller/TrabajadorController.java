@@ -83,6 +83,20 @@ public class TrabajadorController {
         return ResponseEntity.ok(trabajadorService.vincularUsuario(id, body.get("usuarioId")));
     }
 
+    @PatchMapping("/{id}/crear-acceso")
+    public ResponseEntity<?> crearAcceso(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, String> body
+    ) {
+        try {
+            trabajadorService.crearAcceso(id, body.get("email"), body.get("password"));
+            return ResponseEntity.ok(java.util.Map.of("mensaje", "Acceso creado correctamente"));
+        } catch (Exception e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Map.of("mensaje", "Error: " + e.getMessage()));
+        }
+    }
+
     @PostMapping(value = "/upload-foto", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<java.util.Map<String, String>> uploadFoto(
             @RequestPart("foto") MultipartFile foto

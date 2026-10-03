@@ -26,6 +26,8 @@ public class SecurityConfig {
             .and()
             .authorizeRequests()
                 .antMatchers("/api/v1/auth/**").permitAll()
+                .antMatchers("/api/v1/usuarios/**").permitAll()
+                .antMatchers("/api/v1/trabajadores/**").permitAll()
                 .anyRequest().authenticated()
             .and()
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

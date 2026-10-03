@@ -131,32 +131,18 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
         try {
           const emailGenerado = generarEmail()
           const token = JSON.parse(localStorage.getItem('planilla_user') || '{}').token
-          const res = await fetch('/api/v1/usuarios', {
-            method: 'POST',
+          const res = await fetch(`/api/v1/trabajadores/${created.id}/crear-acceso`, {
+            method: 'PATCH',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
             body: JSON.stringify({
-              nombre: nombreCompleto(),
               email: emailGenerado,
               password: form.dni,
-              rol: 'TRABAJADOR',
-              sede_id: parseInt(form.sedeId) || null,
-              empresa_id: parseInt(form.empresaId) || 1,
-              cargo: form.cargo || null,
-              creado_por: null,
             }),
           })
           if (res.ok) {
-            const data = await res.json()
-            const nuevoUuid = data.uuid
-            // Vincular usuario_id al trabajador recién creado
-            if (nuevoUuid && created.id) {
-              await fetch(`/api/v1/trabajadores/${created.id}/vincular-usuario`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ usuarioId: nuevoUuid }),
-              })
-            }
-            showToast(`Acceso creado: ${emailGenerado} / contraseña: DNI`, 'success')
+            showToast(`Acceso creado: ${emailGenerado} / contraseña: ${form.dni}`, 'success')
+          } else {
+            showToast('Trabajador creado pero no se pudo crear el acceso.', 'error')
           }
         } catch {
           showToast('Trabajador creado pero no se pudo crear el acceso al sistema.', 'error')

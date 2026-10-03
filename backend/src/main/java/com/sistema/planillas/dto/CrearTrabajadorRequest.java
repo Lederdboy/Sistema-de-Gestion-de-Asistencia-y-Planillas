@@ -37,7 +37,6 @@ public class CrearTrabajadorRequest {
     @Size(max = 80, message = "El apellido paterno no puede exceder 80 caracteres")
     private String apellidoPaterno;
 
-    @NotBlank(message = "El apellido materno es obligatorio")
     @Size(max = 80, message = "El apellido materno no puede exceder 80 caracteres")
     private String apellidoMaterno;
 

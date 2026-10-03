@@ -9,6 +9,7 @@ import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "trabajadores")
@@ -43,7 +44,7 @@ public class Trabajador {
     @Column(name = "apellido_paterno", nullable = false, length = 80)
     private String apellidoPaterno;
 
-    @Column(name = "apellido_materno", nullable = false, length = 80)
+    @Column(name = "apellido_materno", nullable = true, length = 80)
     private String apellidoMaterno;
 
     @Column(nullable = false, length = 100)
@@ -69,6 +70,12 @@ public class Trabajador {
     @Column(name = "foto_url", length = 500)
     private String fotoUrl;
 
-    @Column(name = "usuario_id", length = 36)
-    private String usuarioId;
+    @Column(name = "email", length = 150)
+    private String email;
+
+    @Column(name = "password_hash", length = 255)
+    private String passwordHash;
+
+    @Column(name = "usuario_id", columnDefinition = "uuid")
+    private UUID usuarioId;
 }
