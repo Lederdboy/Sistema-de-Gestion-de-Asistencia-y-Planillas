@@ -75,23 +75,26 @@ export default function App() {
       const apiWorkers = await getTrabajadores()
       if (apiWorkers && apiWorkers.length > 0) {
         const enriched = apiWorkers.map((t) => {
-          const matchExisting = INITIAL_WORKERS.find((w) => w.dni === t.numeroDocumento)
+          const matchMock = INITIAL_WORKERS.find((w) => w.dni === t.numeroDocumento)
           return {
             id: t.id,
             dni: t.numeroDocumento,
-            nombre: t.nombreCompleto || `${t.nombres} ${t.apellidoPaterno} ${t.apellidoMaterno}`,
+            nombre: t.nombreCompleto || `${t.apellidoPaterno} ${t.apellidoMaterno} ${t.nombres}`.trim(),
             cargo: t.cargo,
             empresaId: String(t.empresaId || 1),
             sedeId: String(t.sedeId || 1),
-            sueldoBase: Number(t.sueldoBasico) || 1500,
-            afp: matchExisting ? matchExisting.afp : 'integra',
-            asigFamiliar: matchExisting ? matchExisting.asigFamiliar : true,
-            estado: matchExisting ? matchExisting.estado : 'Activo',
-            fechaIngreso: t.fechaIngreso || '2023-01-15',
+            sueldoBase: Number(t.sueldoBasico) || 1025,
+            afp: matchMock?.afp || 'integra',
+            asigFamiliar: matchMock?.asigFamiliar ?? true,
+            estado: t.activo === false ? 'Inactivo' : (matchMock?.estado || 'Activo'),
+            fechaIngreso: t.fechaIngreso || '',
             regimen: 'D.L. 728',
-            email: `${(t.nombres || 'colab').toLowerCase().split(' ')[0]}.${(t.apellidoPaterno || 'corp').toLowerCase()}@empresa.com`,
-            telefono: matchExisting ? matchExisting.telefono : '984 123 456',
-            tareo: matchExisting ? matchExisting.tareo : Array.from({ length: 30 }, (_, i) => i < 7 ? ((i + 1) % 7 === 0 || (i + 1) % 7 === 6 ? 'DL' : 'D') : null),
+            email: matchMock?.email || '',
+            telefono: matchMock?.telefono || '',
+            fotoUrl: t.fotoUrl || null,
+            tareo: matchMock?.tareo || Array.from({ length: 30 }, (_, i) =>
+              i < 7 ? ((i + 1) % 7 === 0 || (i + 1) % 7 === 6 ? 'DL' : 'D') : null
+            ),
           }
         })
         setWorkers(enriched)
