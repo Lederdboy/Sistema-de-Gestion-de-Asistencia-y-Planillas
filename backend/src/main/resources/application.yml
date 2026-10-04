@@ -7,22 +7,21 @@ spring:
   application:
     name: sistema-asistencia-planillas
   
-  # Configuración de Base de Datos (SQL Server 2008)
+  # Base de Datos PostgreSQL (Supabase)
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:sqlserver://localhost:1433;databaseName=AsistenciaPlanillasDB;encrypt=false;trustServerCertificate=true}
-    username: ${SPRING_DATASOURCE_USERNAME:sa}
-    password: ${SPRING_DATASOURCE_PASSWORD:YourPassword123}
-    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://aws-0-us-east-1.pooler.supabase.com:5432/postgres}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres.hofnyclwpjmmiliuwrww}
+    password: ${SPRING_DATASOURCE_PASSWORD:20200617proyecto2026herramientasdedesarrollo#}
+    driver-class-name: org.postgresql.Driver
   
   jpa:
-    database-platform: org.hibernate.dialect.SQLServer2008Dialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.SQLServer2008Dialect
-        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 # Configuración CORS para Dev 1 (Frontend SPA)
 cors:
