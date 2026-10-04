@@ -4,6 +4,7 @@ import com.sistema.planillas.dto.ActualizarTrabajadorRequest;
 import com.sistema.planillas.dto.CrearTrabajadorRequest;
 import com.sistema.planillas.dto.TrabajadorDTO;
 import com.sistema.planillas.service.CloudinaryServicio;
+import com.sistema.planillas.service.ReniecService;
 import com.sistema.planillas.service.TrabajadorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/trabajadores")
@@ -24,6 +26,7 @@ public class TrabajadorController {
 
     private final TrabajadorService trabajadorService;
     private final CloudinaryServicio cloudinaryServicio;
+    private final ReniecService reniecService;
 
     @GetMapping
     public ResponseEntity<Page<TrabajadorDTO>> listarTrabajadores(
@@ -98,10 +101,22 @@ public class TrabajadorController {
     }
 
     @PostMapping(value = "/upload-foto", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<java.util.Map<String, String>> uploadFoto(
+    public ResponseEntity<Map<String, String>> uploadFoto(
             @RequestPart("foto") MultipartFile foto
     ) throws Exception {
         String url = cloudinaryServicio.subirImagen(foto, "avatares");
-        return ResponseEntity.ok(java.util.Map.of("url", url));
+        return ResponseEntity.ok(Map.of("url", url));
+    }
+
+    @GetMapping("/reniec")
+    public ResponseEntity<?> consultarReniec(@RequestParam("dni") String dni) {
+        if (dni == null || !dni.matches("^[0-9]{8}$")) {
+            return ResponseEntity.badRequest().body(Map.of("error", "DNI debe tener exactamente 8 dígitos"));
+        }
+        try {
+            return ResponseEntity.ok(reniecService.consultarDni(dni));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
     }
 }

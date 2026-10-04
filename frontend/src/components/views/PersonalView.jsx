@@ -22,7 +22,6 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
   const [dominioEmail, setDominioEmail] = useState('empresa.com')
   const [darAcceso, setDarAcceso] = useState(false)
   const [reniecStatus, setReniecStatus] = useState(null) // null | 'loading' | 'ok' | 'error'
-  const reniecToken = 'Bearer sk_20127.YoDKTnJgVq7UJ7caCKp7JuJQXYbofPWn'
 
   useEffect(() => {
     supabase.from('empresas').select('dominio_email').eq('id', 1).single()
@@ -73,22 +72,23 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
     if (dni.length !== 8) return
     setReniecStatus('loading')
     try {
-      const res = await fetch(`https://api.decolecta.com/v1/reniec/dni?numero=${dni}`, {
-        headers: { 'Content-Type': 'application/json', Authorization: reniecToken },
+      const token = JSON.parse(localStorage.getItem('planilla_user') || '{}').token
+      const res = await fetch(`/api/v1/trabajadores/reniec?dni=${dni}`, {
+        headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) throw new Error('No encontrado')
       const data = await res.json()
       setForm(prev => ({
         ...prev,
-        apellidoPaterno: data.first_last_name || prev.apellidoPaterno,
-        apellidoMaterno: data.second_last_name || prev.apellidoMaterno,
-        nombres: data.first_name || prev.nombres,
+        apellidoPaterno: data.firstLastName || prev.apellidoPaterno,
+        apellidoMaterno: data.secondLastName || prev.apellidoMaterno,
+        nombres: data.firstName || prev.nombres,
       }))
       setReniecStatus('ok')
     } catch {
       setReniecStatus('error')
     }
-  }, [reniecToken])
+  }, [])
 
   const handleFotoUpload = (file, setUrl, setFile) => {
     if (!file) return
