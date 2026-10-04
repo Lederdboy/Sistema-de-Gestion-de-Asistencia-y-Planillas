@@ -4,7 +4,6 @@ import com.sistema.planillas.dto.ActualizarTrabajadorRequest;
 import com.sistema.planillas.dto.CrearTrabajadorRequest;
 import com.sistema.planillas.dto.TrabajadorDTO;
 import com.sistema.planillas.service.CloudinaryServicio;
-import com.sistema.planillas.service.ReniecService;
 import com.sistema.planillas.service.TrabajadorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,8 +25,6 @@ public class TrabajadorController {
 
     private final TrabajadorService trabajadorService;
     private final CloudinaryServicio cloudinaryServicio;
-    private final ReniecService reniecService;
-
     @GetMapping
     public ResponseEntity<Page<TrabajadorDTO>> listarTrabajadores(
             @RequestParam(value = "empresaId", required = false) Long empresaId,
@@ -108,15 +105,4 @@ public class TrabajadorController {
         return ResponseEntity.ok(Map.of("url", url));
     }
 
-    @GetMapping("/reniec")
-    public ResponseEntity<?> consultarReniec(@RequestParam("dni") String dni) {
-        if (dni == null || !dni.matches("^[0-9]{8}$")) {
-            return ResponseEntity.badRequest().body(Map.of("error", "DNI debe tener exactamente 8 dígitos"));
-        }
-        try {
-            return ResponseEntity.ok(reniecService.consultarDni(dni));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
-    }
 }

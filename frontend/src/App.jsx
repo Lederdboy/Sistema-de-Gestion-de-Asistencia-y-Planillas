@@ -73,6 +73,12 @@ export default function App() {
   const syncWithDatabase = async () => {
     try {
       const apiWorkers = await getTrabajadores()
+      if (apiWorkers === null) {
+        // Error de conexión o 500 — limpiar sesión y forzar re-login
+        localStorage.removeItem('planilla_user')
+        setUser(null)
+        return
+      }
       if (apiWorkers && apiWorkers.length > 0) {
         const enriched = apiWorkers.map((t) => {
           const matchMock = INITIAL_WORKERS.find((w) => w.dni === t.numeroDocumento)
