@@ -10,24 +10,27 @@ import {
   TrendingDown,
   ShieldCheck,
   Search,
+  FileText,
 } from 'lucide-react'
 import { calcularPlanillaTrabajador } from '../../data/mockData'
+import * as XLSX from 'xlsx'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 export default function PlanillaView({ workers, onViewBoleta, showToast }) {
-  const [periodo, setPeriodo] = useState('2025-07')
+  const hoy = new Date()
+  const periodoDefault = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`
+  const [periodo, setPeriodo] = useState(periodoDefault)
   const [search, setSearch] = useState('')
-  const [status, setStatus] = useState('Pre-Planilla') // 'Pre-Planilla' | 'Aprobada'
+  const [status, setStatus] = useState('Pre-Planilla')
 
-  // Calcular planilla para todos los trabajadores
   const planillas = workers.map(w => calcularPlanillaTrabajador(w))
-
   const filtered = planillas.filter(p =>
     !search ||
     p.nombre.toLowerCase().includes(search.toLowerCase()) ||
     p.dni.includes(search)
   )
 
-  // Totales
   const totalBrutoGeneral = planillas.reduce((acc, p) => acc + p.totalBruto, 0)
   const totalDescuentosGeneral = planillas.reduce((acc, p) => acc + p.totalDescuentos, 0)
   const totalNetoGeneral = planillas.reduce((acc, p) => acc + p.netoPagar, 0)
@@ -35,14 +38,128 @@ export default function PlanillaView({ workers, onViewBoleta, showToast }) {
 
   const handleApprove = () => {
     setStatus('Aprobada')
-    showToast(`Planilla del periodo ${periodo} aprobada satisfactoriamente. Lista para dispersión bancaria.`, 'success')
+    showToast(`Planilla ${periodo} aprobada. Lista para dispersión bancaria.`, 'success')
   }
 
-  const handleExportBank = () => {
-    showToast('Generando archivo de dispersión bancaria formato BCP Telecrédito / BBVA...', 'info')
-    setTimeout(() => {
-      showToast('Archivo bancario generado exitosamente (pagos_haberes_jul2025.txt).', 'success')
-    }, 900)
+  // Exportar Excel real
+  const handleExportExcel = () => {
+    const filas = planillas.map(p => ({
+      'DNI': p.dni,
+      'Apellidos y Nombres': p.nombre,
+      'Cargo': p.cargo,
+      'Días Trab.': p.diasTrabajados,
+      'Sueldo Básico': p.sueldoBase,
+      'Básico Proporcional': p.basicoProporcional,
+      'Asig. Familiar': p.asigFamiliar,
+      'Sobretasa Nocturna': p.sobretasaNocturna,
+      'Total Bruto': p.totalBruto,
+      'Sistema Pens.': p.afp,
+      'Desc. AFP/ONP': p.descuentoPension,
+      'Desc. Faltas': p.descuentoFaltas,
+      'Renta 5ta': p.renta5ta,
+      'Total Descuentos': p.totalDescuentos,
+      'Neto a Pagar': p.netoPagar,
+      'EsSalud 9%': p.aporteEsSalud,
+    }))
+
+    const ws = XLSX.utils.json_to_sheet(filas)
+    // Ancho de columnas
+    ws['!cols'] = [8,28,22,8,12,14,12,14,12,12,12,12,10,14,12,10].map(w => ({ wch: w }))
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, `Planilla ${periodo}`)
+    XLSX.writeFile(wb, `Planilla_${periodo}.xlsx`)
+    showToast('Planilla exportada a Excel correctamente.', 'success')
+  }
+
+  // Exportar PDF formato PLAME / boleta peruana
+  const handleExportPDF = () => {
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'bold')
+    doc.text('PLANILLA MENSUAL DE REMUNERACIONES', 148, 14, { align: 'center' })
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Periodo: ${periodo}  |  Colaboradores: ${planillas.length}  |  Estado: ${status}`, 148, 20, { align: 'center' })
+    doc.text(`Generado: ${new Date().toLocaleDateString('es-PE')}`, 148, 25, { align: 'center' })
+
+    autoTable(doc, {
+      startY: 30,
+      head: [['DNI','Apellidos y Nombres','Cargo','Básico','Asig.Fam','Bruto','AFP/ONP','Faltas','Total Desc.','Neto Pagar','EsSalud']],
+      body: planillas.map(p => [
+        p.dni, p.nombre, p.cargo,
+        `S/ ${p.basicoProporcional.toFixed(2)}`,
+        `S/ ${p.asigFamiliar.toFixed(2)}`,
+        `S/ ${p.totalBruto.toFixed(2)}`,
+        `-S/ ${p.descuentoPension.toFixed(2)}`,
+        `-S/ ${p.descuentoFaltas.toFixed(2)}`,
+        `-S/ ${p.totalDescuentos.toFixed(2)}`,
+        `S/ ${p.netoPagar.toFixed(2)}`,
+        `S/ ${p.aporteEsSalud.toFixed(2)}`,
+      ]),
+      foot: [['','','TOTALES','','',
+        `S/ ${totalBrutoGeneral.toFixed(2)}`,
+        '','',
+        `-S/ ${totalDescuentosGeneral.toFixed(2)}`,
+        `S/ ${totalNetoGeneral.toFixed(2)}`,
+        `S/ ${totalEsSaludGeneral.toFixed(2)}`,
+      ]],
+      styles: { fontSize: 7, cellPadding: 1.5 },
+      headStyles: { fillColor: [30, 64, 175], textColor: 255, fontStyle: 'bold' },
+      footStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+    })
+
+    doc.save(`Planilla_${periodo}.pdf`)
+    showToast('PDF generado con formato PLAME.', 'success')
+  }
+
+  // Exportar boleta individual en PDF
+  const handleExportBoleta = (row) => {
+    const doc = new jsPDF({ unit: 'mm', format: 'a5' })
+    const empresa = 'SERVICIOS CORPORATIVOS S.A.C.'
+    const ruc = '20100088899'
+
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'bold')
+    doc.text(empresa, 74, 12, { align: 'center' })
+    doc.setFontSize(8)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`RUC: ${ruc}`, 74, 17, { align: 'center' })
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`BOLETA DE PAGO - PERIODO ${periodo}`, 74, 23, { align: 'center' })
+
+    doc.setFontSize(8)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Trabajador: ${row.nombre}`, 10, 32)
+    doc.text(`DNI: ${row.dni}`, 10, 37)
+    doc.text(`Cargo: ${row.cargo}`, 10, 42)
+    doc.text(`Régimen: D.L. 728`, 10, 47)
+
+    autoTable(doc, {
+      startY: 53,
+      head: [['INGRESOS', 'S/'], ['DESCUENTOS', 'S/']],
+      body: [
+        ['Básico Proporcional', row.basicoProporcional.toFixed(2)],
+        ['Asignación Familiar', row.asigFamiliar.toFixed(2)],
+        ['Sobretasa Nocturna', row.sobretasaNocturna.toFixed(2)],
+        ['TOTAL BRUTO', row.totalBruto.toFixed(2)],
+        ['', ''],
+        [`AFP/ONP (${row.afp})`, row.descuentoPension.toFixed(2)],
+        ['Descuento por Faltas', row.descuentoFaltas.toFixed(2)],
+        ['Renta 5ta Categoría', row.renta5ta.toFixed(2)],
+        ['TOTAL DESCUENTOS', row.totalDescuentos.toFixed(2)],
+        ['', ''],
+        ['NETO A PAGAR', row.netoPagar.toFixed(2)],
+        ['EsSalud (empleador 9%)', row.aporteEsSalud.toFixed(2)],
+      ],
+      styles: { fontSize: 7 },
+      headStyles: { fillColor: [30, 64, 175], textColor: 255 },
+      columnStyles: { 1: { halign: 'right' } },
+    })
+
+    doc.save(`Boleta_${row.dni}_${periodo}.pdf`)
+    showToast(`Boleta de ${row.nombre} generada.`, 'success')
   }
 
   return (
@@ -76,13 +193,19 @@ export default function PlanillaView({ workers, onViewBoleta, showToast }) {
 
           <div className="flex flex-wrap items-center gap-2">
             <button
-              onClick={handleExportBank}
+              onClick={handleExportExcel}
               className="inline-flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-600 px-3.5 py-2.5 text-xs font-semibold text-white shadow-[0_12px_25px_rgba(16,185,129,0.25)] transition-all hover:bg-emerald-700"
             >
               <Download size={13} />
-              TXT Bancos
+              Excel
             </button>
-
+            <button
+              onClick={handleExportPDF}
+              className="inline-flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-600 px-3.5 py-2.5 text-xs font-semibold text-white shadow-[0_12px_25px_rgba(239,68,68,0.2)] transition-all hover:bg-rose-700"
+            >
+              <FileText size={13} />
+              PDF PLAME
+            </button>
             {status !== 'Aprobada' ? (
               <button
                 onClick={handleApprove}
@@ -207,13 +330,22 @@ export default function PlanillaView({ workers, onViewBoleta, showToast }) {
                   </td>
                   <td className="px-2 py-2.5 text-right font-mono text-emerald-700">S/ {row.aporteEsSalud.toFixed(2)}</td>
                   <td className="px-2 py-2.5 text-center">
-                    <button
-                      onClick={() => onViewBoleta(row)}
-                      title="Ver boleta de pago oficial"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-sky-700 transition-colors hover:bg-sky-100 hover:text-sky-800"
-                    >
-                      <Eye size={15} />
-                    </button>
+                    <div className="flex items-center justify-center gap-1">
+                      <button
+                        onClick={() => onViewBoleta(row)}
+                        title="Ver boleta de pago"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-sky-700 transition-colors hover:bg-sky-100"
+                      >
+                        <Eye size={15} />
+                      </button>
+                      <button
+                        onClick={() => handleExportBoleta(row)}
+                        title="Descargar boleta PDF"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-rose-600 transition-colors hover:bg-rose-50"
+                      >
+                        <FileText size={14} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

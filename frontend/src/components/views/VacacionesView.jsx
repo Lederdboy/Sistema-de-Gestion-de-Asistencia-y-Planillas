@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import {
   Palmtree, Calendar, CalendarDays, CheckCircle2, AlertTriangle, FileText,
@@ -12,12 +12,51 @@ export default function VacacionesView({
   workers,
   onScheduleVacation,
   showToast,
+  user,
 }) {
+  const hoy = new Date()
+  const mesActual = hoy.toLocaleString('es-PE', { month: 'long', year: 'numeric' })
+  const diaHoy = hoy.getDate()
+  const anioHoy = hoy.getFullYear()
+  const mesHoy = hoy.getMonth() + 1
+  const diasEnMes = new Date(anioHoy, mesHoy, 0).getDate()
+  const fechaHoyStr = `${anioHoy}-${String(mesHoy).padStart(2,'0')}-${String(diaHoy).padStart(2,'0')}`
+
+  // Permisos por rol
+  const puedeAprobarDirecto = user?.rol === 'GERENTE_GENERAL'
+  const puedeAprobarConSolicitud = ['GERENTE_SEDE', 'SUPERVISOR_RRHH'].includes(user?.rol)
+  const esSoloLectura = !puedeAprobarDirecto && !puedeAprobarConSolicitud
   // Pestaña activa ('record' | 'solicitudes' | 'cronograma' | 'venta')
   const [activeTab, setActiveTab] = useState('record')
 
-  // Solicitudes en memoria
+  // Solicitudes en memoria (cargadas desde Supabase)
   const [requests, setRequests] = useState(INITIAL_VACACIONES_REQUESTS)
+
+  useEffect(() => {
+    supabase.from('solicitudes_vacaciones')
+      .select('id, trabajador_id, fecha_inicio, fecha_fin, dias, estado, created_at')
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const mapped = data.map(r => ({
+            id: `VAC-${r.id}`,
+            trabajadorId: r.trabajador_id,
+            fechaInicio: r.fecha_inicio,
+            fechaFin: r.fecha_fin,
+            dias: r.dias || 0,
+            tipo: 'Goce Regular',
+            periodo: `${anioHoy - 1}-${anioHoy}`,
+            estado: r.estado === 'APROBADO' ? 'Aprobada' : r.estado === 'RECHAZADO' ? 'Rechazada' : 'Pendiente',
+            documento: `SOL-VAC-${String(r.id).padStart(3,'0')}`,
+            observaciones: '',
+            aprobadoPor: r.estado === 'APROBADO' ? 'Sistema' : null,
+            fechaRegistro: r.created_at?.split('T')[0] || fechaHoyStr,
+            dbId: r.id,
+          }))
+          setRequests(mapped)
+        }
+      })
+  }, [])
 
   // Filtros pestaña Récord
   const [searchRecord, setSearchRecord] = useState('')
@@ -37,10 +76,10 @@ export default function VacacionesView({
   const [form, setForm] = useState({
     trabajadorId: '',
     tipo: 'Goce Regular',
-    fechaInicio: '2026-09-10',
-    fechaFin: '2026-09-24',
-    dias: 15,
-    periodo: '2024-2025',
+    fechaInicio: fechaHoyStr,
+    fechaFin: fechaHoyStr,
+    dias: 1,
+    periodo: `${anioHoy - 1}-${anioHoy}`,
     observaciones: '',
     syncTareo: true,
   })
@@ -129,18 +168,19 @@ export default function VacacionesView({
   // Guardar nueva solicitud
   const handleCreateRequest = async (e) => {
     e.preventDefault()
-    if (!form.trabajadorId) {
-      showToast('Por favor selecciona un colaborador.', 'error')
-      return
-    }
-
+    if (!form.trabajadorId) { showToast('Selecciona un colaborador.', 'error'); return }
     const worker = workers.find((w) => w.id === Number(form.trabajadorId))
     if (!worker) return
 
-    const newId = `VAC-2026-${String(requests.length + 1).padStart(3, '0')}`
-    const isEnGoce = form.fechaInicio <= '2026-09-07' && form.fechaFin >= '2026-09-07'
-    const estado = isEnGoce ? 'En Goce' : 'Programada'
+    // Validar fechas
+    if (form.fechaFin < form.fechaInicio) { showToast('La fecha fin no puede ser anterior a la fecha inicio.', 'error'); return }
 
+    // Estado según rol: GERENTE_GENERAL aprueba directo, otros crean como Pendiente
+    const estadoInicial = puedeAprobarDirecto ? 'Aprobada' : 'Pendiente'
+    const isEnGoce = form.fechaInicio <= fechaHoyStr && form.fechaFin >= fechaHoyStr
+    const estadoFinal = puedeAprobarDirecto && isEnGoce ? 'En Goce' : estadoInicial
+
+    const newId = `VAC-${anioHoy}-${String(requests.length + 1).padStart(3, '0')}`
     const newRequest = {
       id: newId,
       trabajadorId: Number(form.trabajadorId),
@@ -149,63 +189,73 @@ export default function VacacionesView({
       dias: Number(form.dias),
       tipo: form.tipo,
       periodo: form.periodo,
-      estado,
+      estado: estadoFinal,
       documento: `SOL-VAC-${String(requests.length + 20).padStart(3, '0')}`,
-      observaciones: form.observaciones || 'Solicitud registrada desde el panel de RRHH.',
-      aprobadoPor: 'Gerente',
-      fechaRegistro: new Date().toISOString().split('T')[0],
+      observaciones: form.observaciones || 'Solicitud registrada desde el panel.',
+      aprobadoPor: puedeAprobarDirecto ? user?.nombre : null,
+      fechaRegistro: fechaHoyStr,
     }
-
     setRequests([newRequest, ...requests])
 
-    // Guardar en Supabase si el trabajador tiene id numérico real
-    if (worker.id && typeof worker.id === 'number') {
-      supabase.from('solicitudes_vacaciones').insert({
-        trabajador_id: worker.id,
-        fecha_inicio: form.fechaInicio,
-        fecha_fin: form.fechaFin,
-        dias: Number(form.dias),
-        estado: estado === 'En Goce' ? 'APROBADO' : 'PENDIENTE',
-      }).then(({ error }) => {
-        if (error) console.warn('No se pudo guardar vacación en Supabase:', error.message)
-      })
-    }
+    // Guardar en Supabase
+    const { data: inserted } = await supabase.from('solicitudes_vacaciones').insert({
+      trabajador_id: worker.id,
+      fecha_inicio: form.fechaInicio,
+      fecha_fin: form.fechaFin,
+      dias: Number(form.dias),
+      estado: puedeAprobarDirecto ? 'APROBADO' : 'PENDIENTE',
+    }).select('id').single()
+    if (inserted) newRequest.dbId = inserted.id
 
-    if (form.syncTareo && onScheduleVacation) {
-      onScheduleVacation({
-        workerId: Number(form.trabajadorId),
-        fechaInicio: form.fechaInicio,
-        fechaFin: form.fechaFin,
-        dias: Number(form.dias),
-        isEnGoce,
-      })
+    if (form.syncTareo && onScheduleVacation && puedeAprobarDirecto) {
+      onScheduleVacation({ workerId: Number(form.trabajadorId), fechaInicio: form.fechaInicio, fechaFin: form.fechaFin, dias: Number(form.dias), isEnGoce })
     }
 
     setShowNewModal(false)
-    setForm({
-      trabajadorId: '', tipo: 'Goce Regular', fechaInicio: '2026-09-10',
-      fechaFin: '2026-09-24', dias: 15, periodo: '2024-2025', observaciones: '', syncTareo: true,
-    })
-    showToast(`Vacaciones programadas para ${worker.nombre} (${newRequest.dias} días) con éxito.`, 'success')
+    setForm({ trabajadorId: '', tipo: 'Goce Regular', fechaInicio: fechaHoyStr, fechaFin: fechaHoyStr, dias: 1, periodo: `${anioHoy - 1}-${anioHoy}`, observaciones: '', syncTareo: true })
+    showToast(
+      puedeAprobarDirecto
+        ? `Vacaciones aprobadas para ${worker.nombre} (${newRequest.dias} días).`
+        : `Solicitud enviada para ${worker.nombre}. Pendiente de aprobación del jefe de sede.`,
+      'success'
+    )
   }
 
-  // Aprobar solicitud pendiente
-  const handleApproveRequest = (reqId) => {
-    setRequests((prev) =>
-      prev.map((r) => {
-        if (r.id === reqId) {
-          const isEnGoce =
-            r.fechaInicio <= '2026-09-07' && r.fechaFin >= '2026-09-07'
-          return {
-            ...r,
-            estado: isEnGoce ? 'En Goce' : 'Aprobada',
-            aprobadoPor: 'Carlos Mendoza (Admin)',
-          }
-        }
-        return r
-      })
-    )
-    showToast('Solicitud vacacional aprobada exitosamente.', 'success')
+  // Aprobar solicitud pendiente (solo GERENTE_SEDE o SUPERVISOR_RRHH con solicitud previa, o GERENTE_GENERAL directo)
+  const handleApproveRequest = async (reqId) => {
+    const req = requests.find(r => r.id === reqId)
+    if (!req) return
+
+    // GERENTE_SEDE solo puede aprobar si hay solicitud del trabajador (estado Pendiente)
+    if (user?.rol === 'GERENTE_SEDE' && req.estado !== 'Pendiente') {
+      showToast('Solo puedes aprobar solicitudes que el trabajador haya enviado previamente.', 'error')
+      return
+    }
+
+    const isEnGoce = req.fechaInicio <= fechaHoyStr && req.fechaFin >= fechaHoyStr
+    const nuevoEstado = isEnGoce ? 'En Goce' : 'Aprobada'
+
+    setRequests(prev => prev.map(r => r.id === reqId
+      ? { ...r, estado: nuevoEstado, aprobadoPor: user?.nombre || 'Encargado' }
+      : r
+    ))
+
+    // Actualizar en Supabase si tiene dbId
+    if (req.dbId) {
+      await supabase.from('solicitudes_vacaciones').update({ estado: 'APROBADO' }).eq('id', req.dbId)
+    }
+
+    showToast(`Solicitud de ${workers.find(w => w.id === req.trabajadorId)?.nombre || 'colaborador'} aprobada.`, 'success')
+  }
+
+  const handleRejectRequest = async (reqId) => {
+    const req = requests.find(r => r.id === reqId)
+    if (!req) return
+    setRequests(prev => prev.map(r => r.id === reqId ? { ...r, estado: 'Rechazada' } : r))
+    if (req.dbId) {
+      await supabase.from('solicitudes_vacaciones').update({ estado: 'RECHAZADO' }).eq('id', req.dbId)
+    }
+    showToast('Solicitud rechazada.', 'info')
   }
 
   // Exportar reporte
@@ -237,7 +287,7 @@ export default function VacacionesView({
             </span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Supervisión de récords laborales, programación de salidas físicas, convenios de venta y prevención de triple vacacional
+            {mesActual} · {puedeAprobarDirecto ? 'Gerente General — aprobación directa' : puedeAprobarConSolicitud ? 'Aprobación previa solicitud del trabajador' : 'Solo lectura'}
           </p>
         </div>
 
@@ -768,13 +818,21 @@ export default function VacacionesView({
 
                           <td className="px-4 py-3 text-center">
                             <div className="flex items-center justify-center gap-1.5">
-                              {isPending && (
-                                <button
-                                  onClick={() => handleApproveRequest(r.id)}
-                                  className="px-2.5 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded border border-emerald-200 transition-colors cursor-pointer"
-                                >
-                                  Aprobar
-                                </button>
+                              {isPending && (puedeAprobarDirecto || puedeAprobarConSolicitud) && (
+                                <>
+                                  <button
+                                    onClick={() => handleApproveRequest(r.id)}
+                                    className="px-2.5 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded border border-emerald-200 transition-colors cursor-pointer"
+                                  >
+                                    Aprobar
+                                  </button>
+                                  <button
+                                    onClick={() => handleRejectRequest(r.id)}
+                                    className="px-2.5 py-1 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded border border-rose-200 transition-colors cursor-pointer"
+                                  >
+                                    Rechazar
+                                  </button>
+                                </>
                               )}
 
                               <button
@@ -808,7 +866,7 @@ export default function VacacionesView({
               <div>
                 <h3 className="text-xs font-bold text-slate-900 flex items-center gap-2">
                   <CalendarDays size={14} className="text-blue-600" />
-                  Cronograma Visual de Vacaciones — Setiembre 2026
+                  Cronograma Visual de Vacaciones — {mesActual}
                 </h3>
                 <p className="text-[11px] text-slate-500">
                   Monitoreo de ausencias diarias programadas para la cobertura de puestos en todas las sedes
@@ -839,11 +897,11 @@ export default function VacacionesView({
                     <th className="px-3 py-2 text-left sticky left-0 bg-slate-50 z-10 w-48 min-w-[190px]">
                       Colaborador
                     </th>
-                    {Array.from({ length: 30 }, (_, i) => {
+                    {Array.from({ length: diasEnMes }, (_, i) => {
                       const day = i + 1
-                      const dayOfWeek = (i + 1) % 7
+                      const dayOfWeek = new Date(anioHoy, mesHoy - 1, day).getDay()
                       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
-                      const isToday = day === 7
+                      const isToday = day === diaHoy
 
                       return (
                         <th
@@ -883,10 +941,10 @@ export default function VacacionesView({
                         </td>
 
                         {/* Días 1 a 30 */}
-                        {Array.from({ length: 30 }, (_, i) => {
+                        {Array.from({ length: diasEnMes }, (_, i) => {
                           const day = i + 1
-                          const dateStr = `2026-09-${String(day).padStart(2, '0')}`
-                          const isToday = day === 7
+                          const dateStr = `${anioHoy}-${String(mesHoy).padStart(2,'0')}-${String(day).padStart(2,'0')}`
+                          const isToday = day === diaHoy
 
                           const matchingReq = workerReqs.find(
                             (r) => dateStr >= r.fechaInicio && dateStr <= r.fechaFin

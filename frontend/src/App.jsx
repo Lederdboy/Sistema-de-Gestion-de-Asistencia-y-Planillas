@@ -278,6 +278,7 @@ export default function App() {
               workers={workers}
               onScheduleVacation={handleScheduleVacation}
               showToast={showToast}
+              user={user}
             />
           )}
 

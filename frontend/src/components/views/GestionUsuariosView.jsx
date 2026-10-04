@@ -2,9 +2,16 @@ import { useState, useEffect } from 'react'
 import { UserCog, Plus, X, Search, Shield, MapPin, Mail, ToggleLeft, ToggleRight, Eye, EyeOff, Pencil, Trash2, KeyRound } from 'lucide-react'
 import { supabase } from '../../services/supabase'
 
+// Gestión de Usuarios solo crea encargados — los trabajadores se crean desde Personal
 const ROLES_POR_ROL = {
-  GERENTE_GENERAL: ['GERENTE_SEDE', 'CONTADOR', 'SUPERVISOR_RRHH', 'TRABAJADOR'],
-  GERENTE_SEDE: ['CONTADOR', 'SUPERVISOR_RRHH', 'TRABAJADOR'],
+  GERENTE_GENERAL: ['GERENTE_SEDE', 'CONTADOR', 'SUPERVISOR_RRHH'],
+  GERENTE_SEDE: ['CONTADOR', 'SUPERVISOR_RRHH'],
+}
+
+const CATEGORIA_ROL = {
+  GERENTE_SEDE:    { label: 'Gerencia de Sede',    color: 'bg-blue-100 text-blue-700',    desc: 'Gestión operativa de una sede' },
+  CONTADOR:        { label: 'Contabilidad',         color: 'bg-emerald-100 text-emerald-700', desc: 'Planillas, reportes y SUNAT' },
+  SUPERVISOR_RRHH: { label: 'Recursos Humanos',     color: 'bg-amber-100 text-amber-700',  desc: 'Personal, vacaciones y contratos' },
 }
 
 const ROL_LABEL = {
@@ -187,11 +194,12 @@ export default function GestionUsuariosView({ user, showToast }) {
     setModalEditar(u)
   }
 
-  const filtered = usuarios.filter((u) =>
-    !search ||
-    u.nombre.toLowerCase().includes(search.toLowerCase()) ||
-    u.rol.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = usuarios.filter((u) => {
+    if (u.rol === 'TRABAJADOR') return false // Los trabajadores no se gestionan aquí
+    return !search ||
+      u.nombre.toLowerCase().includes(search.toLowerCase()) ||
+      u.rol.toLowerCase().includes(search.toLowerCase())
+  })
 
   return (
     <div className="space-y-4">
@@ -200,18 +208,40 @@ export default function GestionUsuariosView({ user, showToast }) {
         <div>
           <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
             <UserCog size={16} className="text-blue-600" />
-            Gestión de Usuarios
+            Gestión de Usuarios del Sistema
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            {user?.rol === 'GERENTE_GENERAL' ? `${usuarios.length} usuarios en el sistema` : `${usuarios.length} usuarios en tu sede`}
+            {user?.rol === 'GERENTE_GENERAL' ? `${usuarios.length} encargados registrados` : `${usuarios.length} encargados en tu sede`}
+            <span className="ml-2 px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded text-[10px] font-semibold">
+              Los trabajadores se crean desde Directorio de Personal
+            </span>
           </p>
         </div>
         <button
           onClick={() => setModalCrear(true)}
           className="h-9 px-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm cursor-pointer"
         >
-          <Plus size={14} /> Nuevo Usuario
+          <Plus size={14} /> Nuevo Encargado
         </button>
+      </div>
+
+      {/* Tarjetas de categoría */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {Object.entries(CATEGORIA_ROL).map(([rol, info]) => {
+          const count = usuarios.filter(u => u.rol === rol).length
+          return (
+            <div key={rol} className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-xs flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${info.color}`}>
+                <Shield size={18} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-slate-900">{info.label}</p>
+                <p className="text-[11px] text-slate-400 truncate">{info.desc}</p>
+              </div>
+              <span className="text-lg font-black text-slate-800">{count}</span>
+            </div>
+          )
+        })}
       </div>
 
       {/* Buscador */}
