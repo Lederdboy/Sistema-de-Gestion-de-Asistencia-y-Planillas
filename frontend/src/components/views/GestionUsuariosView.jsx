@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { UserCog, Plus, X, Search, Shield, MapPin, Mail, ToggleLeft, ToggleRight, Eye, EyeOff, Pencil, Trash2, KeyRound } from 'lucide-react'
+import { UserCog, Plus, X, Search, Shield, MapPin, Mail, ToggleLeft, ToggleRight, Eye, EyeOff, Pencil, Trash2, KeyRound, Lock } from 'lucide-react'
 import { supabase } from '../../services/supabase'
 
 // Gestión de Usuarios solo crea encargados — los trabajadores se crean desde Personal
@@ -46,7 +46,8 @@ export default function GestionUsuariosView({ user, showToast }) {
   const [modalEliminar, setModalEliminar] = useState(null) // usuario a eliminar
 
   const [form, setForm] = useState({ ...FORM_VACIO, rol: ROLES_POR_ROL[user?.rol]?.[0] || 'TRABAJADOR' })
-  const [editForm, setEditForm] = useState({ nombre: '', rol: '', sede_id: '', cargo: '' })
+  const [editForm, setEditForm] = useState({ nombre: '', rol: '', sede_id: '', cargo: '', nuevaPassword: '' })
+  const [showEditPassword, setShowEditPassword] = useState(false)
 
   const rolesDisponibles = ROLES_POR_ROL[user?.rol] || []
   const sedeDelGerente = user?.rol === 'GERENTE_SEDE' ? user.sedeId : null
@@ -118,6 +119,9 @@ export default function GestionUsuariosView({ user, showToast }) {
 
   async function handleEditar(e) {
     e.preventDefault()
+    if (editForm.nuevaPassword && editForm.nuevaPassword.length < 8) {
+      showToast('La contraseña debe tener al menos 8 caracteres.', 'error'); return
+    }
     setSaving(true)
     try {
       const { error } = await supabase
@@ -130,11 +134,23 @@ export default function GestionUsuariosView({ user, showToast }) {
         })
         .eq('id', modalEditar.id)
       if (error) throw error
+
+      // Cambiar contraseña si se ingresó una nueva
+      if (editForm.nuevaPassword) {
+        const res = await fetch(`/api/v1/usuarios/${modalEditar.id}/reset-password`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.token}` },
+          body: JSON.stringify({ password: editForm.nuevaPassword }),
+        })
+        if (!res.ok) throw new Error('Error al cambiar contraseña')
+      }
+
       showToast('Usuario actualizado correctamente.', 'success')
       setModalEditar(null)
+      setShowEditPassword(false)
       await cargarDatos()
-    } catch {
-      showToast('Error al actualizar usuario.', 'error')
+    } catch (err) {
+      showToast(err.message || 'Error al actualizar usuario.', 'error')
     } finally {
       setSaving(false)
     }
@@ -158,21 +174,10 @@ export default function GestionUsuariosView({ user, showToast }) {
     }
   }
 
-  async function handleResetPassword(usuario) {
-    const nuevaPassword = prompt(`Nueva contraseña para ${usuario.nombre} (mínimo 8 caracteres):`)
-    if (!nuevaPassword) return
-    if (nuevaPassword.length < 8) { showToast('La contraseña debe tener al menos 8 caracteres.', 'error'); return }
-    try {
-      const res = await fetch(`/api/v1/usuarios/${usuario.id}/reset-password`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.token}` },
-        body: JSON.stringify({ password: nuevaPassword }),
-      })
-      if (!res.ok) throw new Error('Error al resetear contraseña')
-      showToast(`Contraseña de ${usuario.nombre} actualizada correctamente.`, 'success')
-    } catch {
-      showToast('Error al cambiar la contraseña.', 'error')
-    }
+  function abrirEditarConPassword(u) {
+    setEditForm({ nombre: u.nombre, rol: u.rol, sede_id: u.sede_id ? String(u.sede_id) : '', cargo: u.cargo || '', nuevaPassword: '' })
+    setShowEditPassword(true)  // abre directo en sección contraseña
+    setModalEditar(u)
   }
 
   async function handleToggleActivo(usuario) {
@@ -190,7 +195,8 @@ export default function GestionUsuariosView({ user, showToast }) {
   }
 
   function abrirEditar(u) {
-    setEditForm({ nombre: u.nombre, rol: u.rol, sede_id: u.sede_id ? String(u.sede_id) : '', cargo: u.cargo || '' })
+    setEditForm({ nombre: u.nombre, rol: u.rol, sede_id: u.sede_id ? String(u.sede_id) : '', cargo: u.cargo || '', nuevaPassword: '' })
+    setShowEditPassword(false)
     setModalEditar(u)
   }
 
@@ -313,11 +319,11 @@ export default function GestionUsuariosView({ user, showToast }) {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-1">
-                        <button onClick={() => abrirEditar(u)} title="Editar"
+                        <button onClick={() => abrirEditar(u)} title="Editar usuario"
                           className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer">
                           <Pencil size={14} />
                         </button>
-                        <button onClick={() => handleResetPassword(u)} title="Resetear contraseña"
+                        <button onClick={() => abrirEditarConPassword(u)} title="Cambiar contraseña"
                           className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 transition-colors cursor-pointer">
                           <KeyRound size={14} />
                         </button>
@@ -496,59 +502,135 @@ export default function GestionUsuariosView({ user, showToast }) {
       {/* Modal Editar */}
       {modalEditar && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-200 overflow-y-auto max-h-[90vh]">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Pencil size={16} className="text-blue-600" /> Editar Usuario
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full border border-slate-200 overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-slate-50">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Pencil size={15} className="text-blue-600" /> Editar Usuario
               </h3>
-              <button onClick={() => setModalEditar(null)} className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"><X size={18} /></button>
+              <button onClick={() => { setModalEditar(null); setShowEditPassword(false) }}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-200 cursor-pointer">
+                <X size={16} />
+              </button>
             </div>
-            <form onSubmit={handleEditar} className="space-y-3.5 mt-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Nombre completo *</label>
-                <input type="text" required value={editForm.nombre} onChange={(e) => setEditForm({ ...editForm, nombre: e.target.value })}
-                  className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Rol *</label>
-                  <select value={editForm.rol} onChange={(e) => setEditForm({ ...editForm, rol: e.target.value })}
-                    className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none">
-                    {rolesDisponibles.map((r) => <option key={r} value={r}>{ROL_LABEL[r]}</option>)}
-                  </select>
+
+            <form onSubmit={handleEditar} className="p-5 space-y-4 overflow-y-auto max-h-[75vh]">
+              {/* Info del usuario */}
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 text-white font-bold text-sm flex items-center justify-center flex-shrink-0">
+                  {modalEditar.nombre.split(' ').slice(0,2).map(n => n[0]).join('').toUpperCase()}
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Sede</label>
-                  {sedeDelGerente ? (
-                    <select disabled className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg bg-slate-50 text-slate-500">
-                      <option>{sedes.find((s) => s.id === sedeDelGerente)?.nombre || 'Tu sede'}</option>
-                    </select>
-                  ) : (
-                    <select value={editForm.sede_id} onChange={(e) => setEditForm({ ...editForm, sede_id: e.target.value })}
-                      className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none">
-                      <option value="">— Sin sede —</option>
-                      {sedes.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
-                    </select>
-                  )}
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-slate-900 truncate">{modalEditar.nombre}</p>
+                  <p className="text-[11px] text-slate-400 truncate flex items-center gap-1">
+                    <Mail size={10} /> {modalEditar.email}
+                  </p>
                 </div>
               </div>
+
+              {/* Datos generales */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Cargo</label>
-                <input type="text" value={editForm.cargo} onChange={(e) => setEditForm({ ...editForm, cargo: e.target.value })}
-                  placeholder="Ej: Jefe de Operaciones"
-                  className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Datos del usuario</p>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Nombre completo *</label>
+                    <input type="text" required value={editForm.nombre}
+                      onChange={(e) => setEditForm({ ...editForm, nombre: e.target.value })}
+                      className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Rol *</label>
+                      <select value={editForm.rol} onChange={(e) => setEditForm({ ...editForm, rol: e.target.value })}
+                        className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white">
+                        {rolesDisponibles.map((r) => <option key={r} value={r}>{ROL_LABEL[r]}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Sede</label>
+                      {sedeDelGerente ? (
+                        <div className="h-9 px-3 flex items-center text-xs border border-slate-200 rounded-lg bg-slate-50 text-slate-500">
+                          {sedes.find((s) => s.id === sedeDelGerente)?.nombre || 'Tu sede'}
+                        </div>
+                      ) : (
+                        <select value={editForm.sede_id} onChange={(e) => setEditForm({ ...editForm, sede_id: e.target.value })}
+                          className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white">
+                          <option value="">— Sin sede —</option>
+                          {sedes.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
+                        </select>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Cargo</label>
+                    <input type="text" value={editForm.cargo}
+                      onChange={(e) => setEditForm({ ...editForm, cargo: e.target.value })}
+                      placeholder="Ej: Jefe de Operaciones"
+                      className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white" />
+                  </div>
+                </div>
               </div>
-              <p className="text-[11px] text-slate-400 bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
-                El correo electrónico no se puede cambiar desde aquí. Para cambiar la contraseña usa el botón de reset.
-              </p>
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
-                <button type="button" onClick={() => setModalEditar(null)}
+
+              {/* Cambio de contraseña */}
+              <div className="border border-slate-200 rounded-lg overflow-hidden">
+                <button type="button"
+                  onClick={() => { setShowEditPassword(!showEditPassword); setEditForm(f => ({ ...f, nuevaPassword: '' })) }}
+                  className="w-full flex items-center justify-between px-4 py-2.5 bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer">
+                  <span className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+                    <Lock size={13} className="text-amber-600" />
+                    Cambiar contraseña
+                  </span>
+                  <span className="text-[10px] text-slate-400">{showEditPassword ? 'Cancelar' : 'Opcional'}</span>
+                </button>
+
+                {showEditPassword && (
+                  <div className="px-4 pb-4 pt-3 space-y-2 border-t border-slate-200 bg-amber-50/30">
+                    <label className="block text-xs font-semibold text-slate-700">Nueva contraseña</label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={editForm.nuevaPassword}
+                        onChange={(e) => setEditForm({ ...editForm, nuevaPassword: e.target.value })}
+                        placeholder="Mínimo 8 caracteres"
+                        className="w-full h-9 px-3 pr-9 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-amber-400 focus:outline-none bg-white" />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
+                        {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                    </div>
+                    {editForm.nuevaPassword && (
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-1 flex-1">
+                          {[1,2,3,4].map((i) => (
+                            <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${
+                              editForm.nuevaPassword.length >= i * 3
+                                ? editForm.nuevaPassword.length >= 12 ? 'bg-emerald-500'
+                                : editForm.nuevaPassword.length >= 8 ? 'bg-amber-400' : 'bg-rose-400'
+                                : 'bg-slate-200'
+                            }`} />
+                          ))}
+                        </div>
+                        <span className={`text-[10px] font-semibold ${
+                          editForm.nuevaPassword.length >= 12 ? 'text-emerald-600'
+                          : editForm.nuevaPassword.length >= 8 ? 'text-amber-600' : 'text-rose-500'
+                        }`}>
+                          {editForm.nuevaPassword.length >= 12 ? 'Fuerte' : editForm.nuevaPassword.length >= 8 ? 'Aceptable' : 'Débil'}
+                        </span>
+                      </div>
+                    )}
+                    <p className="text-[11px] text-slate-400">Deja vacío para no cambiar la contraseña actual.</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-2 pt-1 border-t border-slate-100">
+                <button type="button" onClick={() => { setModalEditar(null); setShowEditPassword(false) }}
                   className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 border border-slate-200 cursor-pointer">
                   Cancelar
                 </button>
                 <button type="submit" disabled={saving}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-lg text-xs font-semibold cursor-pointer">
-                  {saving ? 'Guardando...' : 'Guardar Cambios'}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-lg text-xs font-semibold cursor-pointer flex items-center gap-1.5">
+                  <Pencil size={12} /> {saving ? 'Guardando...' : 'Guardar Cambios'}
                 </button>
               </div>
             </form>
