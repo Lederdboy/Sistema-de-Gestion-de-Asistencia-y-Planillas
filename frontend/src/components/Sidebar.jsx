@@ -11,6 +11,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   UserCog,
+  LayoutDashboard,
 } from 'lucide-react'
 
 const ALL_NAV_ITEMS = [
@@ -59,7 +60,7 @@ const ALL_NAV_ITEMS = [
   {
     id: 'mi-espacio',
     label: 'Mi Espacio',
-    icon: Users,
+    icon: LayoutDashboard,
     roles: ['TRABAJADOR'],
   },
 ]

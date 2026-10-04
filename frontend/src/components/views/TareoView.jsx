@@ -82,10 +82,12 @@ export default function TareoView({
   onNavigateToPlanilla,
   showToast,
 }) {
+  const hoyInit = new Date()
+  const periodoInicial = `${hoyInit.getFullYear()}-${String(hoyInit.getMonth() + 1).padStart(2, '0')}`
   const [filters, setFilters] = useState({
     empresa: '',
     sede: '',
-    periodo: '2026-09',
+    periodo: periodoInicial,
     search: '',
   })
 
@@ -93,6 +95,11 @@ export default function TareoView({
   const [showCalculateModal, setShowCalculateModal] = useState(false)
   const [showCloseModal, setShowCloseModal] = useState(false)
   const [calculating, setCalculating] = useState(false)
+
+  const hoyTareo = new Date()
+  const diaHoyTareo = hoyTareo.getDate()
+  const mesHoyTareo = hoyTareo.getMonth() + 1
+  const anioHoyTareo = hoyTareo.getFullYear()
 
   const [year, month] = filters.periodo.split('-').map(Number)
   const daysInMonth = getDaysInMonth(year, month)
@@ -153,6 +160,8 @@ export default function TareoView({
   const totalSueldos = workers.reduce((acc, w) => acc + (Number(w.sueldoBase) || 0), 0)
   const totalFaltasPeriodo = workers.reduce((acc, w) => acc + ((w.tareo || []).slice(0, 7).filter(c => c === 'F').length), 0)
 
+  const mesNombreTareo = hoyTareo.toLocaleString('es-PE', { month: 'short', year: 'numeric' })
+
   const kpis = [
     {
       icon: Users,
@@ -164,8 +173,8 @@ export default function TareoView({
     {
       icon: CalendarDays,
       label: 'Tareo Registrado',
-      value: 'Día 1 al 7',
-      sub: 'Al día de hoy (07 set. 2026)',
+      value: `Día 1 al ${diaHoyTareo}`,
+      sub: `Al día de hoy (${diaHoyTareo} ${mesNombreTareo})`,
       iconBg: 'bg-emerald-50 text-emerald-600',
     },
     {
@@ -179,7 +188,7 @@ export default function TareoView({
       icon: FileSpreadsheet,
       label: 'Total Neto Estimado',
       value: `S/ ${(totalSueldos * 0.87).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      sub: 'Pre-planilla Set 2026',
+      sub: `Pre-planilla ${mesNombreTareo}`,
       iconBg: 'bg-slate-100 text-slate-600',
     },
   ]
@@ -198,7 +207,7 @@ export default function TareoView({
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-700">Tareo</p>
             <h2 className="mt-1 text-lg font-bold text-slate-900 sm:text-xl">Matriz de tareo diario</h2>
             <p className="mt-1 text-xs text-slate-500">
-              Periodo {filters.periodo} · {filteredWorkers.length} colaboradores · Asistencia registrada hasta hoy (07 set. 2026)
+              Periodo {filters.periodo} · {filteredWorkers.length} colaboradores · Asistencia registrada hasta hoy ({diaHoyTareo} {mesNombreTareo})
             </p>
           </div>
 
@@ -262,17 +271,12 @@ export default function TareoView({
             </select>
           </div>
 
-          <select
-            className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+          <input
+            type="month"
             value={filters.periodo}
             onChange={(e) => setFilters((f) => ({ ...f, periodo: e.target.value }))}
-          >
-            {['2026-09', '2026-08', '2026-07', '2025-07'].map((p) => (
-              <option key={p} value={p}>
-                {p} {p === '2026-09' ? '(Actual)' : ''}
-              </option>
-            ))}
-          </select>
+            className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+          />
 
           <div className="relative min-w-[220px] flex-1">
             <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -315,7 +319,7 @@ export default function TareoView({
                   </th>
                   {dayNums.map((d) => {
                     const weekend = isWeekend(year, month, d)
-                    const isToday = d === 7 && month === 9 && year === 2026
+                    const isToday = d === diaHoyTareo && month === mesHoyTareo && year === anioHoyTareo
                     return (
                       <th
                         key={d}
@@ -326,7 +330,7 @@ export default function TareoView({
                             ? 'bg-rose-50 text-rose-600'
                             : 'text-slate-600'
                         }`}
-                        title={isToday ? 'Día de Hoy (07 de Setiembre de 2026)' : undefined}
+                        title={isToday ? `Hoy (${diaHoyTareo} ${mesNombreTareo})` : undefined}
                       >
                         <span className="block leading-none">{d}</span>
                         {isToday && <span className="mt-0.5 block text-[7px] font-bold uppercase tracking-tighter text-blue-100">Hoy</span>}
@@ -363,7 +367,7 @@ export default function TareoView({
 
                       {dayNums.map((d) => {
                         const weekend = isWeekend(year, month, d)
-                        const isToday = d === 7 && month === 9 && year === 2026
+                        const isToday = d === diaHoyTareo && month === mesHoyTareo && year === anioHoyTareo
                         const code = w.tareo ? w.tareo[d - 1] : null
                         return (
                           <td

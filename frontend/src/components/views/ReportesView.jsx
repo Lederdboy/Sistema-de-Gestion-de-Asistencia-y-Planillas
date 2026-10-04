@@ -1,10 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   FileText,
   Printer,
   Download,
   Building2,
-  Calendar,
   CheckCircle2,
   Eye,
   X,
@@ -12,19 +11,93 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { EMPRESAS, calcularPlanillaTrabajador } from '../../data/mockData'
+import { supabase } from '../../services/supabase'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
+import * as XLSX from 'xlsx'
 
 export default function ReportesView({ workers, selectedBoleta, onCloseBoleta, showToast }) {
+  const hoy = new Date()
+  const periodoActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`
+  const periodoLabel = hoy.toLocaleString('es-PE', { month: 'long', year: 'numeric' }).toUpperCase()
+  const fechaEmision = hoy.toLocaleDateString('es-PE')
+
   const [activeTab, setActiveTab] = useState('boletas')
   const [activeWorkerForBoleta, setActiveWorkerForBoleta] = useState(
     selectedBoleta || (workers[0] ? calcularPlanillaTrabajador(workers[0]) : null)
   )
   const [showBoletaModal, setShowBoletaModal] = useState(!!selectedBoleta)
+  const [empresaInfo, setEmpresaInfo] = useState({ razon_social: 'SERVICIOS CORPORATIVOS S.A.C.', ruc: '20100088899', direccion: 'Av. Javier Prado Este 456, San Isidro, Lima' })
 
-  const handleDownloadReport = (reportName) => {
-    showToast(`Generando archivo oficial para ${reportName}...`, 'info')
-    setTimeout(() => {
-      showToast(`${reportName} generado y descargado con éxito.`, 'success')
-    }, 1000)
+  useEffect(() => {
+    supabase.from('empresas').select('razon_social, ruc, direccion').eq('id', 1).single()
+      .then(({ data }) => { if (data) setEmpresaInfo(data) })
+  }, [])
+
+  const handleDownloadBoletasPDF = () => {
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+    workers.forEach((w, idx) => {
+      const row = calcularPlanillaTrabajador(w)
+      if (idx > 0) doc.addPage()
+      doc.setFontSize(10); doc.setFont('helvetica', 'bold')
+      doc.text(empresaInfo.razon_social || 'EMPRESA', 105, 12, { align: 'center' })
+      doc.setFontSize(8); doc.setFont('helvetica', 'normal')
+      doc.text(`RUC: ${empresaInfo.ruc || ''}`, 105, 17, { align: 'center' })
+      doc.setFontSize(9); doc.setFont('helvetica', 'bold')
+      doc.text(`BOLETA DE PAGO - PERIODO ${periodoLabel}`, 105, 23, { align: 'center' })
+      doc.setFontSize(8); doc.setFont('helvetica', 'normal')
+      doc.text(`Trabajador: ${row.nombre}  |  DNI: ${row.dni}  |  Cargo: ${row.cargo}`, 10, 32)
+      autoTable(doc, {
+        startY: 37,
+        head: [['Concepto', 'S/']],
+        body: [
+          ['Básico Proporcional', row.basicoProporcional.toFixed(2)],
+          ['Asignación Familiar', row.asigFamiliar.toFixed(2)],
+          ['Total Bruto', row.totalBruto.toFixed(2)],
+          [`AFP/ONP (${row.afp})`, `-${row.descuentoPension.toFixed(2)}`],
+          ['Descuento Faltas', `-${row.descuentoFaltas.toFixed(2)}`],
+          ['Total Descuentos', `-${row.totalDescuentos.toFixed(2)}`],
+          ['NETO A PAGAR', row.netoPagar.toFixed(2)],
+        ],
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [30, 64, 175], textColor: 255 },
+        columnStyles: { 1: { halign: 'right' } },
+      })
+    })
+    doc.save(`Boletas_${periodoActual}.pdf`)
+    showToast('Lote de boletas PDF generado correctamente.', 'success')
+  }
+
+  const handleDownloadAFPNet = () => {
+    const planillas = workers.map(w => calcularPlanillaTrabajador(w))
+    const lineas = planillas.map(p => [
+      p.dni.padEnd(12),
+      (p.nombre).substring(0, 40).padEnd(40),
+      p.afp.substring(0, 10).padEnd(10),
+      p.totalBruto.toFixed(2).padStart(12),
+      p.descuentoPension.toFixed(2).padStart(12),
+    ].join('|'))
+    const contenido = `PERIODO:${periodoActual}\nEMPRESA:${empresaInfo.ruc}\n` + lineas.join('\n')
+    const blob = new Blob([contenido], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url; a.download = `AFP_NET_${periodoActual}.txt`; a.click()
+    URL.revokeObjectURL(url)
+    showToast('Archivo AFP Net generado correctamente.', 'success')
+  }
+
+  const handleDownloadPDT601 = () => {
+    const planillas = workers.map(w => calcularPlanillaTrabajador(w))
+    const filas = planillas.map(p => ({
+      'DNI': p.dni, 'Apellidos y Nombres': p.nombre, 'Cargo': p.cargo,
+      'Remuneración Bruta': p.totalBruto, 'AFP/ONP': p.descuentoPension,
+      'EsSalud 9%': p.aporteEsSalud, 'Neto a Pagar': p.netoPagar,
+    }))
+    const ws = XLSX.utils.json_to_sheet(filas)
+    ws['!cols'] = [10, 30, 22, 14, 12, 12, 12].map(w => ({ wch: w }))
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, `PLAME ${periodoActual}`)
+    XLSX.writeFile(wb, `PDT601_PLAME_${periodoActual}.xlsx`)
+    showToast('Estructura PDT 601 generada en Excel.', 'success')
   }
 
   const openBoleta = (worker) => {
@@ -81,7 +154,7 @@ export default function ReportesView({ workers, selectedBoleta, onCloseBoleta, s
               Ver modelo oficial
             </button>
             <button
-              onClick={() => handleDownloadReport('Boletas_Masivas_Julio2025.zip')}
+              onClick={handleDownloadBoletasPDF}
               className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100"
             >
               <Download size={13} />
@@ -103,14 +176,14 @@ export default function ReportesView({ workers, selectedBoleta, onCloseBoleta, s
 
           <div className="mt-5 space-y-2 border-t border-slate-100 pt-3">
             <button
-              onClick={() => handleDownloadReport('Estructuras_PLAME_0601_202507.zip')}
+              onClick={handleDownloadPDT601}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-3 py-2.5 text-xs font-semibold text-white shadow-sm transition-all hover:bg-emerald-700"
             >
               <Download size={13} />
               Generar PDT 601
             </button>
             <div className="text-center text-[11px] text-slate-400 font-mono">
-              Formato verificado con validador SUNAT
+              Formato Excel compatible SUNAT
             </div>
           </div>
         </div>
@@ -128,7 +201,7 @@ export default function ReportesView({ workers, selectedBoleta, onCloseBoleta, s
 
           <div className="mt-5 space-y-2 border-t border-slate-100 pt-3">
             <button
-              onClick={() => handleDownloadReport('AFP_NET_PERIODO_202507.txt')}
+              onClick={handleDownloadAFPNet}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 px-3 py-2.5 text-xs font-semibold text-white shadow-sm transition-all hover:bg-violet-700"
             >
               <Download size={13} />
@@ -203,30 +276,28 @@ export default function ReportesView({ workers, selectedBoleta, onCloseBoleta, s
                   <div className="flex items-center gap-2">
                     <img src="/logo.png" alt="Logo" className="h-8 w-auto object-contain" />
                     <div>
-                      <h4 className="text-sm font-extrabold text-slate-900">MINERA ANDINA S.A.</h4>
-                      <p className="font-mono text-[9px] text-slate-600">R.U.C. 20489123891</p>
-                      <p className="text-[9px] text-slate-600">Av. Las Camelias 450, San Isidro, Lima</p>
+                      <h4 className="text-sm font-extrabold text-slate-900">{(empresaInfo.razon_social || 'EMPRESA').toUpperCase()}</h4>
+                      <p className="font-mono text-[9px] text-slate-600">R.U.C. {empresaInfo.ruc}</p>
+                      <p className="text-[9px] text-slate-600">{empresaInfo.direccion}</p>
                     </div>
                   </div>
-
                   <div className="rounded border-2 border-slate-800 px-2 py-0.5 text-right">
                     <p className="text-[9px] font-bold text-slate-900">BOLETA DE PAGO</p>
                     <p className="text-[8px] text-slate-600">Formato PLAME</p>
                   </div>
                 </div>
-
                 <div className="grid grid-cols-4 gap-1.5 rounded border border-slate-400 bg-slate-100 p-1.5 text-[9px]">
                   <div>
                     <span className="block text-[8px] font-bold text-slate-500">N° BOLETA</span>
-                    <span className="font-mono font-bold text-slate-900">B-2025-0001</span>
+                    <span className="font-mono font-bold text-slate-900">B-{periodoActual.replace('-','')}-{String(activeWorkerForBoleta.trabajadorId || 1).padStart(4,'0')}</span>
                   </div>
                   <div>
                     <span className="block text-[8px] font-bold text-slate-500">FECHA EMISIÓN</span>
-                    <span className="font-mono font-semibold">15/07/2025</span>
+                    <span className="font-mono font-semibold">{fechaEmision}</span>
                   </div>
                   <div>
                     <span className="block text-[8px] font-bold text-slate-500">PERIODO</span>
-                    <span className="font-mono font-semibold">JULIO 2025</span>
+                    <span className="font-mono font-semibold">{periodoLabel}</span>
                   </div>
                   <div>
                     <span className="block text-[8px] font-bold text-slate-500">TIPO TRABAJADOR</span>
@@ -267,7 +338,7 @@ export default function ReportesView({ workers, selectedBoleta, onCloseBoleta, s
                   </div>
                   <div>
                     <span className="block text-[8px] font-bold text-slate-500">FECHA INGRESO</span>
-                    <span className="font-mono font-semibold">15/03/2018</span>
+                    <span className="font-mono font-semibold">{workers.find(w => w.id === activeWorkerForBoleta.trabajadorId)?.fechaIngreso || '—'}</span>
                   </div>
                   <div>
                     <span className="block text-[8px] font-bold text-slate-500">SUELDO BÁSICO</span>
@@ -416,8 +487,8 @@ export default function ReportesView({ workers, selectedBoleta, onCloseBoleta, s
                 <div className="grid grid-cols-2 gap-4 text-center text-[10px] text-slate-900">
                   <div className="border-t-2 border-slate-800 pt-2">
                     <p className="font-bold text-slate-900">EMPLEADOR</p>
-                    <p className="text-[9px]">Minera Andina S.A.</p>
-                    <p className="font-mono text-[9px]">RUC 20489123891</p>
+                    <p className="text-[9px]">{empresaInfo.razon_social}</p>
+                    <p className="font-mono text-[9px]">RUC {empresaInfo.ruc}</p>
                     <p className="mt-1 text-[9px] text-slate-600">Firma Digital / Electrónica</p>
                   </div>
                   <div className="border-t-2 border-slate-800 pt-2">
@@ -428,7 +499,7 @@ export default function ReportesView({ workers, selectedBoleta, onCloseBoleta, s
                   </div>
                 </div>
                 <div className="mt-3 text-center text-[9px] text-slate-600">
-                  Documento generado según normativa SUNAT PLAME · Validez digital · Código de verificación: BP-2025-0001-VER
+                  Documento generado según normativa SUNAT PLAME · Validez digital · Periodo: {periodoLabel}
                 </div>
               </div>
             </div>

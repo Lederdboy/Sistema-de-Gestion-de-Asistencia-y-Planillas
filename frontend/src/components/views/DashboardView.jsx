@@ -13,28 +13,40 @@ export default function DashboardView({ onNavigate, workers = [], user }) {
   const esGerenteGeneral = user?.rol === 'GERENTE_GENERAL'
 
   useEffect(() => {
-    if (!esGerenteGeneral) return
-    setLoadingSedes(true)
-    Promise.all([
-      supabase.from('sedes').select('id, nombre').eq('activo', true),
-      supabase.from('trabajadores').select('sede_id, sueldo_basico').eq('activo', true),
-    ]).then(([{ data: sedes }, { data: trabajadores }]) => {
-      if (!sedes || !trabajadores) return
-      const totalSueldos = trabajadores.reduce((acc, t) => acc + Number(t.sueldo_basico || 0), 0)
-      const stats = sedes.map((s) => {
-        const enSede = trabajadores.filter((t) => t.sede_id === s.id)
-        const costoSede = enSede.reduce((acc, t) => acc + Number(t.sueldo_basico || 0), 0)
-        return {
-          sede: s.nombre,
-          ciudad: '',
-          count: enSede.length,
-          costo: costoSede,
-          pct: totalSueldos > 0 ? Math.round((costoSede / totalSueldos) * 100) : 0,
-        }
-      }).filter((s) => s.count > 0)
-      setSedesStats(stats)
-    }).finally(() => setLoadingSedes(false))
-  }, [esGerenteGeneral])
+    if (esGerenteGeneral) {
+      setLoadingSedes(true)
+      Promise.all([
+        supabase.from('sedes').select('id, nombre').eq('activo', true),
+        supabase.from('trabajadores').select('sede_id, sueldo_basico').eq('activo', true),
+      ]).then(([{ data: sedes }, { data: trabajadores }]) => {
+        if (!sedes || !trabajadores) return
+        const totalSueldos = trabajadores.reduce((acc, t) => acc + Number(t.sueldo_basico || 0), 0)
+        const stats = sedes.map((s) => {
+          const enSede = trabajadores.filter((t) => t.sede_id === s.id)
+          const costoSede = enSede.reduce((acc, t) => acc + Number(t.sueldo_basico || 0), 0)
+          return {
+            sede: s.nombre,
+            ciudad: '',
+            count: enSede.length,
+            costo: costoSede,
+            pct: totalSueldos > 0 ? Math.round((costoSede / totalSueldos) * 100) : 0,
+          }
+        }).filter((s) => s.count > 0)
+        setSedesStats(stats)
+      }).finally(() => setLoadingSedes(false))
+    } else if (user?.sedeId) {
+      // Para GERENTE_SEDE / CONTADOR: mostrar datos de su propia sede
+      setLoadingSedes(true)
+      Promise.all([
+        supabase.from('sedes').select('id, nombre').eq('id', user.sedeId).single(),
+        supabase.from('trabajadores').select('sede_id, sueldo_basico').eq('activo', true).eq('sede_id', user.sedeId),
+      ]).then(([{ data: sede }, { data: trabajadores }]) => {
+        if (!sede || !trabajadores) return
+        const costoSede = trabajadores.reduce((acc, t) => acc + Number(t.sueldo_basico || 0), 0)
+        setSedesStats([{ sede: sede.nombre, ciudad: '', count: trabajadores.length, costo: costoSede, pct: 100 }])
+      }).finally(() => setLoadingSedes(false))
+    }
+  }, [esGerenteGeneral, user?.sedeId])
 
   const totalColaboradores = workers.length
   const totalActivos = workers.filter((w) => w.estado === 'Activo').length
@@ -172,7 +184,7 @@ export default function DashboardView({ onNavigate, workers = [], user }) {
                 </h3>
               </div>
               <span className="text-[11px] text-slate-400">
-                {esGerenteGeneral ? 'Supabase · Tiempo real' : 'Datos locales'}
+                {esGerenteGeneral ? 'Supabase · Tiempo real' : 'Tu sede · Supabase'}
               </span>
             </div>
 

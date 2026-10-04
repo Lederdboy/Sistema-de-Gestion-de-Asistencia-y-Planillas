@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { FileText, Palmtree, Stethoscope, User, Calendar, DollarSign, Clock, Download } from 'lucide-react'
 import { supabase } from '../../services/supabase'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 const TABS = [
   { id: 'boletas', label: 'Mis Boletas', icon: FileText },
@@ -112,10 +114,33 @@ function BoletasTab({ trabajador }) {
     <div className="space-y-3">
       <p className="text-xs text-slate-500">Historial de boletas de pago — {boletas.length} registros.</p>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {boletas.map((b) => {
+          {boletas.map((b) => {
           const [anio, mes] = (b.periodo || '').split('-')
           const nombreMes = new Date(parseInt(anio), parseInt(mes) - 1).toLocaleString('es-PE', { month: 'long' })
           const pagado = b.estado === 'PAGADO' || b.estado === 'pagado'
+
+          const handleDescargarBoleta = () => {
+            const doc = new jsPDF({ unit: 'mm', format: 'a5' })
+            doc.setFontSize(10); doc.setFont('helvetica', 'bold')
+            doc.text('BOLETA DE PAGO', 74, 12, { align: 'center' })
+            doc.setFontSize(8); doc.setFont('helvetica', 'normal')
+            doc.text(`Periodo: ${nombreMes} ${anio}`, 74, 18, { align: 'center' })
+            autoTable(doc, {
+              startY: 24,
+              head: [['Concepto', 'S/']],
+              body: [
+                ['Sueldo Básico', Number(b.sueldo_basico || 0).toFixed(2)],
+                ['Total Ingresos', Number(b.total_ingresos || 0).toFixed(2)],
+                ['Total Descuentos', `-${Number(b.total_descuentos || 0).toFixed(2)}`],
+                ['NETO A PAGAR', Number(b.neto_pagar || 0).toFixed(2)],
+              ],
+              styles: { fontSize: 8 },
+              headStyles: { fillColor: [30, 64, 175], textColor: 255 },
+              columnStyles: { 1: { halign: 'right' } },
+            })
+            doc.save(`Boleta_${b.periodo}.pdf`)
+          }
+
           return (
             <div key={b.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-blue-200 hover:bg-blue-50/30 transition-colors">
               <div className="flex items-center gap-2.5">
@@ -127,11 +152,17 @@ function BoletasTab({ trabajador }) {
                   <p className="text-[11px] text-slate-400">Neto: S/ {Number(b.neto_pagar || 0).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</p>
                 </div>
               </div>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                pagado ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
-              }`}>
-                {pagado ? 'Pagado' : 'Pendiente'}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  pagado ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
+                }`}>
+                  {pagado ? 'Pagado' : 'Pendiente'}
+                </span>
+                <button onClick={handleDescargarBoleta} title="Descargar PDF"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer">
+                  <Download size={13} />
+                </button>
+              </div>
             </div>
           )
         })}

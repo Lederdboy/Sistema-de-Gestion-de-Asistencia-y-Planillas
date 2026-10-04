@@ -444,7 +444,7 @@ export default function VacacionesView({
           }`}
         >
           <Calendar size={14} />
-          <span>Cronograma Mensual (Setiembre)</span>
+          <span>Cronograma Mensual ({hoy.toLocaleString('es-PE', { month: 'long' })})</span>
         </button>
 
         <button
