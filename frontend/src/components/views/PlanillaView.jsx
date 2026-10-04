@@ -1,18 +1,19 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   FileSpreadsheet,
   Download,
   CheckCircle2,
   Lock,
   Eye,
-  Building2,
   DollarSign,
   TrendingDown,
   ShieldCheck,
   Search,
   FileText,
+  RefreshCw,
 } from 'lucide-react'
 import { calcularPlanillaTrabajador } from '../../data/mockData'
+import { supabase } from '../../services/supabase'
 import * as XLSX from 'xlsx'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
@@ -23,8 +24,37 @@ export default function PlanillaView({ workers, onViewBoleta, showToast }) {
   const [periodo, setPeriodo] = useState(periodoDefault)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('Pre-Planilla')
+  const [planillasDB, setPlanillasDB] = useState([])
+  const [loadingDB, setLoadingDB] = useState(false)
 
-  const planillas = workers.map(w => calcularPlanillaTrabajador(w))
+  // Intentar cargar planillas desde Supabase para el periodo actual
+  useEffect(() => {
+    setLoadingDB(true)
+    supabase
+      .from('planillas_resumen')
+      .select('id, trabajador_id, periodo, sueldo_basico, total_ingresos, total_descuentos, neto_pagar, estado')
+      .eq('periodo', periodo)
+      .then(({ data }) => {
+        setPlanillasDB(data || [])
+        setLoadingDB(false)
+      })
+  }, [periodo])
+
+  // Usar planillas de BD si existen, si no calcular localmente
+  const planillas = workers.map(w => {
+    const dbRow = planillasDB.find(p => p.trabajador_id === w.id)
+    if (dbRow) {
+      return {
+        ...calcularPlanillaTrabajador(w),
+        totalBruto: Number(dbRow.total_ingresos || 0),
+        totalDescuentos: Number(dbRow.total_descuentos || 0),
+        netoPagar: Number(dbRow.neto_pagar || 0),
+        sueldoBase: Number(dbRow.sueldo_basico || w.sueldoBase),
+        _fromDB: true,
+      }
+    }
+    return calcularPlanillaTrabajador(w)
+  })
   const filtered = planillas.filter(p =>
     !search ||
     p.nombre.toLowerCase().includes(search.toLowerCase()) ||
@@ -185,8 +215,16 @@ export default function PlanillaView({ workers, onViewBoleta, showToast }) {
                   {status}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-slate-500">
-                Periodo {periodo} · {planillas.length} colaboradores procesados bajo legislación peruana
+              <p className="mt-1 text-xs text-slate-500 flex items-center gap-2 flex-wrap">
+                <input type="month" value={periodo} onChange={e => setPeriodo(e.target.value)}
+                  className="h-7 px-2 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-sky-400" />
+                <span>{planillas.length} colaboradores</span>
+                {planillasDB.length > 0 && (
+                  <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                    {planillasDB.length} desde BD
+                  </span>
+                )}
+                {loadingDB && <span className="text-[10px] text-slate-400">Cargando BD...</span>}
               </p>
             </div>
           </div>
@@ -302,7 +340,10 @@ export default function PlanillaView({ workers, onViewBoleta, showToast }) {
               {filtered.map((row) => (
                 <tr key={row.trabajadorId} className="transition-colors hover:bg-slate-50/80">
                   <td className="px-3 py-2.5">
-                    <p className="font-bold text-slate-900">{row.nombre}</p>
+                    <p className="font-bold text-slate-900 flex items-center gap-1.5">
+                      {row.nombre}
+                      {row._fromDB && <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1 py-0.5 rounded">BD</span>}
+                    </p>
                     <p className="text-[10px] text-slate-500">{row.cargo}</p>
                   </td>
                   <td className="px-2 py-2.5 text-center font-mono text-slate-600">{row.dni}</td>

@@ -43,8 +43,9 @@ export default function DashboardView({ onNavigate, workers = [], user }) {
   const asignacionesFamiliares = workers.filter((w) => w.asigFamiliar).length * 102.50
   const costoTotalEstimado = totalSueldosBase + asignacionesFamiliares
 
-  const diaHoy = 7
-  const totalDiasMes = 30
+  const hoyDash = new Date()
+  const diaHoy = hoyDash.getDate()
+  const totalDiasMes = new Date(hoyDash.getFullYear(), hoyDash.getMonth() + 1, 0).getDate()
   const pctAvanceMes = ((diaHoy / totalDiasMes) * 100).toFixed(1)
 
   let totalMarcacionesHastaHoy = 0

@@ -502,7 +502,7 @@ export const getVacationRecordForWorker = (worker, requests = []) => {
   const workerRequests = requests.filter((r) => r.trabajadorId === worker.id)
 
   const ingreso = new Date(worker.fechaIngreso || '2023-01-01')
-  const hoy = new Date('2026-09-07')
+  const hoy = new Date()
   const diffTime = Math.abs(hoy - ingreso)
   const diffYears = diffTime / (1000 * 60 * 60 * 24 * 365.25)
   const aniosCompletos = Math.max(1, Math.floor(diffYears))
@@ -547,8 +547,8 @@ export const getVacationRecordForWorker = (worker, requests = []) => {
     saldoPendiente,
     estadoRecord,
     estadoCls,
-    periodoActual: `${2026 - 1}-${2026}`,
-    ultimoGoce: workerRequests.length > 0 ? workerRequests[0].fechaInicio : '2025-11-10',
+    periodoActual: `${hoy.getFullYear() - 1}-${hoy.getFullYear()}`,
+    ultimoGoce: workerRequests.length > 0 ? workerRequests[0].fechaInicio : null,
   }
 }
 

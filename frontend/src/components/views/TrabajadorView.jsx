@@ -69,7 +69,7 @@ export default function TrabajadorView({ user, setActive }) {
 
         <div className="p-4">
           {tab === 'boletas' && <BoletasTab trabajador={trabajador} />}
-          {tab === 'vacaciones' && <VacacionesTab trabajador={trabajador} />}
+          {tab === 'vacaciones' && <VacacionesTab trabajador={trabajador} user={user} />}
           {tab === 'descansos' && <DescansosTab trabajador={trabajador} />}
           {tab === 'perfil' && <PerfilTab trabajador={trabajador} user={user} />}
         </div>
@@ -140,10 +140,15 @@ function BoletasTab({ trabajador }) {
   )
 }
 
-function VacacionesTab({ trabajador }) {
+function VacacionesTab({ trabajador, user }) {
   const [stats, setStats] = useState({ disponibles: 30, tomados: 0, pendientes: 0 })
   const [solicitudes, setSolicitudes] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const hoy = new Date()
+  const fechaHoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`
+  const [form, setForm] = useState({ fechaInicio: fechaHoyStr, fechaFin: fechaHoyStr, dias: 1, observaciones: '' })
 
   useEffect(() => {
     if (!trabajador?.id) { setLoading(false); return }
@@ -156,11 +161,54 @@ function VacacionesTab({ trabajador }) {
         const lista = data || []
         setSolicitudes(lista)
         const tomados = lista.filter(s => s.estado === 'APROBADO').reduce((acc, s) => acc + (s.dias || 0), 0)
-        const pendientes = lista.filter(s => s.estado === 'PENDIENTE').reduce((acc, s) => acc + (s.dias || 0), 0)
+        const pendientes = lista.filter(s => ['PENDIENTE','APROBADO_JEFE'].includes(s.estado)).reduce((acc, s) => acc + (s.dias || 0), 0)
         setStats({ disponibles: Math.max(0, 30 - tomados), tomados, pendientes })
         setLoading(false)
       })
   }, [trabajador?.id])
+
+  const handleDateChange = (field, val) => {
+    const updated = { ...form, [field]: val }
+    if (updated.fechaInicio && updated.fechaFin) {
+      const d1 = new Date(updated.fechaInicio)
+      const d2 = new Date(updated.fechaFin)
+      if (d2 >= d1) updated.dias = Math.round((d2 - d1) / (1000*60*60*24)) + 1
+    }
+    setForm(updated)
+  }
+
+  const handleSolicitar = async (e) => {
+    e.preventDefault()
+    if (!trabajador?.id) return
+    if (form.fechaFin < form.fechaInicio) return
+    setSaving(true)
+    try {
+      const { error } = await supabase.from('solicitudes_vacaciones').insert({
+        trabajador_id: trabajador.id,
+        fecha_inicio: form.fechaInicio,
+        fecha_fin: form.fechaFin,
+        dias: Number(form.dias),
+        estado: 'PENDIENTE',
+      })
+      if (error) throw error
+      setSolicitudes(prev => [{ id: Date.now(), fecha_inicio: form.fechaInicio, fecha_fin: form.fechaFin, dias: form.dias, estado: 'PENDIENTE', created_at: new Date().toISOString() }, ...prev])
+      setStats(prev => ({ ...prev, pendientes: prev.pendientes + Number(form.dias) }))
+      setShowForm(false)
+      setForm({ fechaInicio: fechaHoyStr, fechaFin: fechaHoyStr, dias: 1, observaciones: '' })
+    } catch {
+      // silencioso
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const ESTADO_LABEL = { APROBADO: 'Aprobado', RECHAZADO: 'Rechazado', PENDIENTE: 'Pendiente', APROBADO_JEFE: 'Aprobado por Jefe' }
+  const ESTADO_CLS = {
+    APROBADO: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    RECHAZADO: 'bg-rose-50 text-rose-700 border border-rose-200',
+    PENDIENTE: 'bg-amber-50 text-amber-700 border border-amber-200',
+    APROBADO_JEFE: 'bg-blue-50 text-blue-700 border border-blue-200',
+  }
 
   if (!trabajador) return <SinVinculo />
 
@@ -184,6 +232,48 @@ function VacacionesTab({ trabajador }) {
         </div>
       </div>
 
+      <button
+        onClick={() => setShowForm(!showForm)}
+        className="w-full h-9 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+      >
+        <Palmtree size={14} />
+        {showForm ? 'Cancelar solicitud' : 'Solicitar vacaciones'}
+      </button>
+
+      {showForm && (
+        <form onSubmit={handleSolicitar} className="p-4 rounded-lg border border-blue-200 bg-blue-50/40 space-y-3">
+          <p className="text-xs font-bold text-slate-700">Nueva solicitud de vacaciones</p>
+          <p className="text-[11px] text-slate-500">Tu solicitud pasará al jefe de sede para aprobación, luego a RRHH para confirmación.</p>
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">Fecha inicio</label>
+              <input type="date" required value={form.fechaInicio}
+                onChange={e => handleDateChange('fechaInicio', e.target.value)}
+                className="w-full h-8 px-2 text-xs border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white" />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">Fecha fin</label>
+              <input type="date" required value={form.fechaFin}
+                onChange={e => handleDateChange('fechaFin', e.target.value)}
+                className="w-full h-8 px-2 text-xs border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white" />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">Días</label>
+              <input type="number" readOnly value={form.dias}
+                className="w-full h-8 px-2 text-xs border border-slate-200 rounded-md bg-slate-50 font-bold text-center" />
+            </div>
+          </div>
+          <textarea rows={2} value={form.observaciones}
+            onChange={e => setForm({ ...form, observaciones: e.target.value })}
+            placeholder="Motivo o comentario (opcional)"
+            className="w-full p-2 text-xs border border-slate-200 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500" />
+          <button type="submit" disabled={saving}
+            className="w-full h-9 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-lg text-xs font-semibold cursor-pointer">
+            {saving ? 'Enviando...' : 'Enviar solicitud'}
+          </button>
+        </form>
+      )}
+
       {loading ? (
         <div className="text-center text-xs text-slate-400 py-4">Cargando solicitudes...</div>
       ) : solicitudes.length > 0 ? (
@@ -195,17 +285,15 @@ function VacacionesTab({ trabajador }) {
                 <p className="font-semibold text-slate-800">{s.fecha_inicio} → {s.fecha_fin}</p>
                 <p className="text-[11px] text-slate-400">{s.dias} días</p>
               </div>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                s.estado === 'APROBADO' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                s.estado === 'RECHAZADO' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
-                'bg-amber-50 text-amber-700 border border-amber-200'
-              }`}>{s.estado}</span>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${ESTADO_CLS[s.estado] || 'bg-slate-100 text-slate-600'}`}>
+                {ESTADO_LABEL[s.estado] || s.estado}
+              </span>
             </div>
           ))}
         </div>
       ) : (
         <div className="p-4 rounded-lg border border-blue-100 bg-blue-50/50 text-xs text-blue-700">
-          Para solicitar vacaciones, comunícate con tu supervisor o gerente de sede.
+          No tienes solicitudes registradas. Usa el botón de arriba para solicitar tus vacaciones.
         </div>
       )}
     </div>

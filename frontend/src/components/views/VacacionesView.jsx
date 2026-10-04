@@ -23,9 +23,14 @@ export default function VacacionesView({
   const fechaHoyStr = `${anioHoy}-${String(mesHoy).padStart(2,'0')}-${String(diaHoy).padStart(2,'0')}`
 
   // Permisos por rol
+  // Flujo: TRABAJADOR solicita → GERENTE_SEDE aprueba (AprobadoJefe) → SUPERVISOR_RRHH confirma (Aprobada)
+  // GERENTE_GENERAL aprueba directo en cualquier estado
   const puedeAprobarDirecto = user?.rol === 'GERENTE_GENERAL'
-  const puedeAprobarConSolicitud = ['GERENTE_SEDE', 'SUPERVISOR_RRHH'].includes(user?.rol)
-  const esSoloLectura = !puedeAprobarDirecto && !puedeAprobarConSolicitud
+  const esGerenteSede = user?.rol === 'GERENTE_SEDE'
+  const esSupervisorRRHH = user?.rol === 'SUPERVISOR_RRHH'
+  const puedeAprobarConSolicitud = esGerenteSede || esSupervisorRRHH
+  const esTrabajador = user?.rol === 'TRABAJADOR'
+  const esSoloLectura = !puedeAprobarDirecto && !puedeAprobarConSolicitud && !esTrabajador
   // Pestaña activa ('record' | 'solicitudes' | 'cronograma' | 'venta')
   const [activeTab, setActiveTab] = useState('record')
 
@@ -175,10 +180,14 @@ export default function VacacionesView({
     // Validar fechas
     if (form.fechaFin < form.fechaInicio) { showToast('La fecha fin no puede ser anterior a la fecha inicio.', 'error'); return }
 
-    // Estado según rol: GERENTE_GENERAL aprueba directo, otros crean como Pendiente
-    const estadoInicial = puedeAprobarDirecto ? 'Aprobada' : 'Pendiente'
+    // Estado según rol
     const isEnGoce = form.fechaInicio <= fechaHoyStr && form.fechaFin >= fechaHoyStr
-    const estadoFinal = puedeAprobarDirecto && isEnGoce ? 'En Goce' : estadoInicial
+    let estadoFinal
+    if (puedeAprobarDirecto) {
+      estadoFinal = isEnGoce ? 'En Goce' : 'Aprobada'
+    } else {
+      estadoFinal = 'Pendiente'
+    }
 
     const newId = `VAC-${anioHoy}-${String(requests.length + 1).padStart(3, '0')}`
     const newRequest = {
@@ -207,6 +216,7 @@ export default function VacacionesView({
     }).select('id').single()
     if (inserted) newRequest.dbId = inserted.id
 
+
     if (form.syncTareo && onScheduleVacation && puedeAprobarDirecto) {
       onScheduleVacation({ workerId: Number(form.trabajadorId), fechaInicio: form.fechaInicio, fechaFin: form.fechaFin, dias: Number(form.dias), isEnGoce })
     }
@@ -216,36 +226,56 @@ export default function VacacionesView({
     showToast(
       puedeAprobarDirecto
         ? `Vacaciones aprobadas para ${worker.nombre} (${newRequest.dias} días).`
-        : `Solicitud enviada para ${worker.nombre}. Pendiente de aprobación del jefe de sede.`,
+        : esTrabajador
+        ? `Solicitud enviada. Pendiente de aprobación del jefe de sede.`
+        : `Solicitud registrada para ${worker.nombre}. Pendiente de aprobación.`,
       'success'
     )
   }
 
-  // Aprobar solicitud pendiente (solo GERENTE_SEDE o SUPERVISOR_RRHH con solicitud previa, o GERENTE_GENERAL directo)
+  // Aprobar solicitud — flujo por etapas según rol
   const handleApproveRequest = async (reqId) => {
     const req = requests.find(r => r.id === reqId)
     if (!req) return
 
-    // GERENTE_SEDE solo puede aprobar si hay solicitud del trabajador (estado Pendiente)
-    if (user?.rol === 'GERENTE_SEDE' && req.estado !== 'Pendiente') {
-      showToast('Solo puedes aprobar solicitudes que el trabajador haya enviado previamente.', 'error')
-      return
-    }
-
     const isEnGoce = req.fechaInicio <= fechaHoyStr && req.fechaFin >= fechaHoyStr
-    const nuevoEstado = isEnGoce ? 'En Goce' : 'Aprobada'
+    const workerNombre = workers.find(w => w.id === req.trabajadorId)?.nombre || 'colaborador'
 
-    setRequests(prev => prev.map(r => r.id === reqId
-      ? { ...r, estado: nuevoEstado, aprobadoPor: user?.nombre || 'Encargado' }
-      : r
-    ))
-
-    // Actualizar en Supabase si tiene dbId
-    if (req.dbId) {
-      await supabase.from('solicitudes_vacaciones').update({ estado: 'APROBADO' }).eq('id', req.dbId)
+    if (puedeAprobarDirecto) {
+      // GERENTE_GENERAL aprueba directo desde cualquier estado
+      const nuevoEstado = isEnGoce ? 'En Goce' : 'Aprobada'
+      setRequests(prev => prev.map(r => r.id === reqId
+        ? { ...r, estado: nuevoEstado, aprobadoPor: user?.nombre }
+        : r
+      ))
+      if (req.dbId) await supabase.from('solicitudes_vacaciones').update({ estado: 'APROBADO' }).eq('id', req.dbId)
+      showToast(`Vacaciones de ${workerNombre} aprobadas.`, 'success')
+    } else if (esGerenteSede) {
+      // GERENTE_SEDE solo puede aprobar solicitudes en estado Pendiente → pasan a AprobadoJefe
+      if (req.estado !== 'Pendiente') {
+        showToast('Solo puedes aprobar solicitudes pendientes del trabajador.', 'error')
+        return
+      }
+      setRequests(prev => prev.map(r => r.id === reqId
+        ? { ...r, estado: 'AprobadoJefe', aprobadoPor: user?.nombre }
+        : r
+      ))
+      if (req.dbId) await supabase.from('solicitudes_vacaciones').update({ estado: 'APROBADO_JEFE' }).eq('id', req.dbId)
+      showToast(`Solicitud de ${workerNombre} aprobada por jefe. Pendiente confirmación de RRHH.`, 'success')
+    } else if (esSupervisorRRHH) {
+      // SUPERVISOR_RRHH confirma solicitudes aprobadas por el jefe
+      if (req.estado !== 'AprobadoJefe') {
+        showToast('Solo puedes confirmar solicitudes ya aprobadas por el jefe de sede.', 'error')
+        return
+      }
+      const nuevoEstado = isEnGoce ? 'En Goce' : 'Aprobada'
+      setRequests(prev => prev.map(r => r.id === reqId
+        ? { ...r, estado: nuevoEstado, aprobadoPor: `${req.aprobadoPor} / ${user?.nombre}` }
+        : r
+      ))
+      if (req.dbId) await supabase.from('solicitudes_vacaciones').update({ estado: 'APROBADO' }).eq('id', req.dbId)
+      showToast(`Vacaciones de ${workerNombre} confirmadas por RRHH.`, 'success')
     }
-
-    showToast(`Solicitud de ${workers.find(w => w.id === req.trabajadorId)?.nombre || 'colaborador'} aprobada.`, 'success')
   }
 
   const handleRejectRequest = async (reqId) => {
@@ -287,7 +317,7 @@ export default function VacacionesView({
             </span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            {mesActual} · {puedeAprobarDirecto ? 'Gerente General — aprobación directa' : puedeAprobarConSolicitud ? 'Aprobación previa solicitud del trabajador' : 'Solo lectura'}
+            {mesActual} · {puedeAprobarDirecto ? 'Gerente General — aprobación directa' : esGerenteSede ? 'Jefe de Sede — aprueba solicitudes pendientes' : esSupervisorRRHH ? 'RRHH — confirma solicitudes aprobadas por jefe' : esTrabajador ? 'Trabajador — puedes solicitar tus vacaciones' : 'Solo lectura'}
           </p>
         </div>
 
@@ -705,8 +735,10 @@ export default function VacacionesView({
               <option value="">Todos los Estados</option>
               <option value="En Goce">En Goce</option>
               <option value="Aprobada">Aprobada</option>
+              <option value="AprobadoJefe">Aprobado por Jefe (pendiente RRHH)</option>
               <option value="Programada">Programada</option>
               <option value="Pendiente">Pendiente de Aprobación</option>
+              <option value="Rechazada">Rechazada</option>
               <option value="Finalizada">Finalizada</option>
             </select>
 
@@ -751,9 +783,11 @@ export default function VacacionesView({
                       let badgeCls = 'bg-slate-100 text-slate-700 border-slate-200'
                       if (r.estado === 'En Goce') badgeCls = 'bg-amber-100 text-amber-800 border-amber-300 font-bold'
                       if (r.estado === 'Aprobada') badgeCls = 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                      if (r.estado === 'AprobadoJefe') badgeCls = 'bg-blue-100 text-blue-800 border-blue-300'
                       if (r.estado === 'Programada') badgeCls = 'bg-blue-100 text-blue-800 border-blue-300'
                       if (r.estado === 'Pendiente') badgeCls = 'bg-purple-100 text-purple-800 border-purple-300 animate-pulse'
                       if (r.estado === 'Finalizada') badgeCls = 'bg-slate-100 text-slate-600 border-slate-200'
+                      if (r.estado === 'Rechazada') badgeCls = 'bg-rose-100 text-rose-700 border-rose-200'
 
                       return (
                         <tr
@@ -818,18 +852,39 @@ export default function VacacionesView({
 
                           <td className="px-4 py-3 text-center">
                             <div className="flex items-center justify-center gap-1.5">
-                              {isPending && (puedeAprobarDirecto || puedeAprobarConSolicitud) && (
+                              {/* Botones según flujo de aprobación */}
+                              {puedeAprobarDirecto && r.estado !== 'Aprobada' && r.estado !== 'En Goce' && r.estado !== 'Finalizada' && r.estado !== 'Rechazada' && (
                                 <>
-                                  <button
-                                    onClick={() => handleApproveRequest(r.id)}
-                                    className="px-2.5 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded border border-emerald-200 transition-colors cursor-pointer"
-                                  >
+                                  <button onClick={() => handleApproveRequest(r.id)}
+                                    className="px-2.5 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded border border-emerald-200 transition-colors cursor-pointer">
                                     Aprobar
                                   </button>
-                                  <button
-                                    onClick={() => handleRejectRequest(r.id)}
-                                    className="px-2.5 py-1 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded border border-rose-200 transition-colors cursor-pointer"
-                                  >
+                                  <button onClick={() => handleRejectRequest(r.id)}
+                                    className="px-2.5 py-1 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded border border-rose-200 transition-colors cursor-pointer">
+                                    Rechazar
+                                  </button>
+                                </>
+                              )}
+                              {esGerenteSede && r.estado === 'Pendiente' && (
+                                <>
+                                  <button onClick={() => handleApproveRequest(r.id)}
+                                    className="px-2.5 py-1 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 transition-colors cursor-pointer">
+                                    Aprobar (Jefe)
+                                  </button>
+                                  <button onClick={() => handleRejectRequest(r.id)}
+                                    className="px-2.5 py-1 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded border border-rose-200 transition-colors cursor-pointer">
+                                    Rechazar
+                                  </button>
+                                </>
+                              )}
+                              {esSupervisorRRHH && r.estado === 'AprobadoJefe' && (
+                                <>
+                                  <button onClick={() => handleApproveRequest(r.id)}
+                                    className="px-2.5 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded border border-emerald-200 transition-colors cursor-pointer">
+                                    Confirmar RRHH
+                                  </button>
+                                  <button onClick={() => handleRejectRequest(r.id)}
+                                    className="px-2.5 py-1 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded border border-rose-200 transition-colors cursor-pointer">
                                     Rechazar
                                   </button>
                                 </>
