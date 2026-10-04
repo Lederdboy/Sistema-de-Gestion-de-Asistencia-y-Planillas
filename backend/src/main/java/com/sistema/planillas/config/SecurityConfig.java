@@ -28,6 +28,9 @@ public class SecurityConfig {
                 .antMatchers("/api/v1/auth/**").permitAll()
                 .antMatchers("/api/v1/usuarios/**").permitAll()
                 .antMatchers("/api/v1/trabajadores/**").permitAll()
+                .antMatchers("/api/v1/notificaciones/**").authenticated()
+                .antMatchers("/api/v1/descansos-medicos/**").permitAll()
+                .antMatchers("/api/v1/planilla/**").permitAll()
                 .anyRequest().authenticated()
             .and()
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

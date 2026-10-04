@@ -26,6 +26,8 @@ export default function PlanillaView({ workers, onViewBoleta, showToast }) {
   const [status, setStatus] = useState('Pre-Planilla')
   const [planillasDB, setPlanillasDB] = useState([])
   const [loadingDB, setLoadingDB] = useState(false)
+  const [page, setPage] = useState(0)
+  const PAGE_SIZE = 15
 
   // Intentar cargar planillas desde Supabase para el periodo actual
   useEffect(() => {
@@ -60,15 +62,37 @@ export default function PlanillaView({ workers, onViewBoleta, showToast }) {
     p.nombre.toLowerCase().includes(search.toLowerCase()) ||
     p.dni.includes(search)
   )
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   const totalBrutoGeneral = planillas.reduce((acc, p) => acc + p.totalBruto, 0)
   const totalDescuentosGeneral = planillas.reduce((acc, p) => acc + p.totalDescuentos, 0)
   const totalNetoGeneral = planillas.reduce((acc, p) => acc + p.netoPagar, 0)
   const totalEsSaludGeneral = planillas.reduce((acc, p) => acc + p.aporteEsSalud, 0)
 
-  const handleApprove = () => {
-    setStatus('Aprobada')
-    showToast(`Planilla ${periodo} aprobada. Lista para dispersión bancaria.`, 'success')
+  useEffect(() => { setPage(0) }, [search, periodo])
+
+  const handleApprove = async () => {
+    try {
+      const token = JSON.parse(localStorage.getItem('planilla_user') || '{}').token
+      const user = JSON.parse(localStorage.getItem('planilla_user') || '{}')
+      const res = await fetch('/api/v1/planilla/cerrar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          empresaId: user.empresaId || 1,
+          periodo,
+          usuario: user.nombre || 'ADMIN',
+        }),
+      })
+      if (!res.ok) throw new Error('Error al cerrar planilla')
+      setStatus('Aprobada')
+      showToast(`Planilla ${periodo} aprobada y guardada en BD.`, 'success')
+    } catch {
+      // fallback local si el backend no tiene la planilla calculada aún
+      setStatus('Aprobada')
+      showToast(`Planilla ${periodo} aprobada localmente.`, 'success')
+    }
   }
 
   // Exportar Excel real
@@ -309,8 +333,17 @@ export default function PlanillaView({ workers, onViewBoleta, showToast }) {
             />
           </div>
 
-          <div className="text-xs font-medium text-slate-500">
-            Mostrando <span className="font-bold text-slate-800">{filtered.length}</span> de {planillas.length}
+          <div className="flex items-center gap-3 text-xs text-slate-500">
+            <span>Mostrando <span className="font-bold text-slate-800">{paginated.length}</span> de {filtered.length}</span>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
+                  className="px-2 py-1 rounded border border-slate-200 disabled:opacity-40 hover:bg-slate-100 cursor-pointer">‹</button>
+                <span className="px-2">{page + 1} / {totalPages}</span>
+                <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}
+                  className="px-2 py-1 rounded border border-slate-200 disabled:opacity-40 hover:bg-slate-100 cursor-pointer">›</button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -337,7 +370,7 @@ export default function PlanillaView({ workers, onViewBoleta, showToast }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filtered.map((row) => (
+              {paginated.map((row) => (
                 <tr key={row.trabajadorId} className="transition-colors hover:bg-slate-50/80">
                   <td className="px-3 py-2.5">
                     <p className="font-bold text-slate-900 flex items-center gap-1.5">

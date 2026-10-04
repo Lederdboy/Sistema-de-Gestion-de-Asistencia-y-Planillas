@@ -332,15 +332,142 @@ function VacacionesTab({ trabajador, user }) {
 }
 
 function DescansosTab({ trabajador }) {
+  const [descansos, setDescansos] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const hoy = new Date()
+  const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`
+  const [form, setForm] = useState({ fechaInicio: hoyStr, fechaFin: hoyStr, tipoDescanso: 'ENFERMEDAD', numeroCertificado: '', centroMedico: '', observaciones: '' })
+
+  useEffect(() => {
+    if (!trabajador?.id) { setLoading(false); return }
+    supabase
+      .from('descansos_medicos')
+      .select('id, fecha_inicio, fecha_fin, dias, tipo_descanso, numero_certificado, centro_medico, estado, created_at')
+      .eq('trabajador_id', trabajador.id)
+      .order('fecha_inicio', { ascending: false })
+      .then(({ data }) => { setDescansos(data || []); setLoading(false) })
+  }, [trabajador?.id])
+
+  const handleRegistrar = async (e) => {
+    e.preventDefault()
+    if (!trabajador?.id) return
+    setSaving(true)
+    try {
+      const token = JSON.parse(localStorage.getItem('planilla_user') || '{}').token
+      const res = await fetch('/api/v1/descansos-medicos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          trabajadorId: trabajador.id,
+          fechaInicio: form.fechaInicio,
+          fechaFin: form.fechaFin,
+          tipoDescanso: form.tipoDescanso,
+          numeroCertificado: form.numeroCertificado || null,
+          centroMedico: form.centroMedico || null,
+          observaciones: form.observaciones || null,
+        }),
+      })
+      if (!res.ok) throw new Error()
+      const nuevo = await res.json()
+      setDescansos(prev => [nuevo, ...prev])
+      setShowForm(false)
+      setForm({ fechaInicio: hoyStr, fechaFin: hoyStr, tipoDescanso: 'ENFERMEDAD', numeroCertificado: '', centroMedico: '', observaciones: '' })
+    } catch {
+      // silencioso
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const TIPO_LABEL = { ENFERMEDAD: 'Enfermedad', ACCIDENTE: 'Accidente', MATERNIDAD: 'Maternidad', PATERNIDAD: 'Paternidad' }
+  const ESTADO_CLS = {
+    REGISTRADO: 'bg-amber-50 text-amber-700 border border-amber-200',
+    VALIDADO: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    RECHAZADO: 'bg-rose-50 text-rose-700 border border-rose-200',
+  }
+
   if (!trabajador) return <SinVinculo />
+
   return (
     <div className="space-y-3">
-      <p className="text-xs text-slate-500">Registro de descansos médicos y certificados.</p>
-      <div className="p-8 flex flex-col items-center justify-center text-center gap-2">
-        <Stethoscope size={28} className="text-slate-300" />
-        <p className="text-xs font-semibold text-slate-500">Sin descansos médicos registrados</p>
-        <p className="text-[11px] text-slate-400">Cuando tengas un descanso médico, aparecerá aquí.</p>
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-slate-500">Registro de descansos médicos y certificados.</p>
+        <button onClick={() => setShowForm(!showForm)}
+          className="h-8 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold cursor-pointer">
+          {showForm ? 'Cancelar' : '+ Registrar descanso'}
+        </button>
       </div>
+
+      {showForm && (
+        <form onSubmit={handleRegistrar} className="p-4 rounded-lg border border-blue-200 bg-blue-50/40 space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">Fecha inicio</label>
+              <input type="date" required value={form.fechaInicio}
+                onChange={e => setForm({ ...form, fechaInicio: e.target.value })}
+                className="w-full h-8 px-2 text-xs border border-slate-200 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">Fecha fin</label>
+              <input type="date" required value={form.fechaFin}
+                onChange={e => setForm({ ...form, fechaFin: e.target.value })}
+                className="w-full h-8 px-2 text-xs border border-slate-200 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">Tipo</label>
+              <select value={form.tipoDescanso} onChange={e => setForm({ ...form, tipoDescanso: e.target.value })}
+                className="w-full h-8 px-2 text-xs border border-slate-200 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                {Object.entries(TIPO_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">N° Certificado</label>
+              <input type="text" value={form.numeroCertificado}
+                onChange={e => setForm({ ...form, numeroCertificado: e.target.value })}
+                placeholder="Opcional"
+                className="w-full h-8 px-2 text-xs border border-slate-200 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Centro médico</label>
+            <input type="text" value={form.centroMedico}
+              onChange={e => setForm({ ...form, centroMedico: e.target.value })}
+              placeholder="Ej: Hospital Rebagliati"
+              className="w-full h-8 px-2 text-xs border border-slate-200 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500" />
+          </div>
+          <button type="submit" disabled={saving}
+            className="w-full h-9 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-lg text-xs font-semibold cursor-pointer">
+            {saving ? 'Registrando...' : 'Registrar descanso médico'}
+          </button>
+        </form>
+      )}
+
+      {loading ? (
+        <div className="text-center text-xs text-slate-400 py-4">Cargando...</div>
+      ) : descansos.length === 0 ? (
+        <div className="p-8 flex flex-col items-center justify-center text-center gap-2">
+          <Stethoscope size={28} className="text-slate-300" />
+          <p className="text-xs font-semibold text-slate-500">Sin descansos médicos registrados</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {descansos.map((d) => (
+            <div key={d.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 text-xs">
+              <div>
+                <p className="font-semibold text-slate-800">{d.fecha_inicio} → {d.fecha_fin} <span className="text-slate-400">({d.dias} días)</span></p>
+                <p className="text-[11px] text-slate-400">{TIPO_LABEL[d.tipo_descanso] || d.tipo_descanso}{d.centro_medico ? ` · ${d.centro_medico}` : ''}</p>
+              </div>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${ESTADO_CLS[d.estado] || 'bg-slate-100 text-slate-600'}`}>
+                {d.estado}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

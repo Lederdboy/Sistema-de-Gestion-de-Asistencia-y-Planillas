@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   ChevronRight,
   RefreshCw,
@@ -7,6 +7,7 @@ import {
   PanelLeft,
   Bell,
   Clock,
+  X,
 } from 'lucide-react'
 
 const BREADCRUMB_MAP = {
@@ -29,6 +30,35 @@ export default function TopBar({
   isMobile = false,
   onToggleSidebar,
 }) {
+  const [notifs, setNotifs] = useState([])
+  const [showNotifs, setShowNotifs] = useState(false)
+  const noLeidas = notifs.filter(n => !n.leida).length
+
+  useEffect(() => {
+    if (!user?.token) return
+    fetch('/api/v1/notificaciones', {
+      headers: { Authorization: `Bearer ${user.token}` },
+    })
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setNotifs(Array.isArray(data) ? data : []))
+      .catch(() => {})
+  }, [user?.token])
+
+  const marcarLeida = async (id) => {
+    await fetch(`/api/v1/notificaciones/${id}/leer`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${user?.token}` },
+    }).catch(() => {})
+    setNotifs(prev => prev.map(n => n.id === id ? { ...n, leida: true } : n))
+  }
+
+  const marcarTodas = async () => {
+    await fetch('/api/v1/notificaciones/leer-todas', {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${user?.token}` },
+    }).catch(() => {})
+    setNotifs(prev => prev.map(n => ({ ...n, leida: true })))
+  }
   const today = new Date().toLocaleDateString('es-PE', {
     weekday: 'short',
     day: '2-digit',
@@ -88,8 +118,50 @@ export default function TopBar({
           <span>{today}</span>
         </div>
 
+        {/* Notificaciones */}
+        <div className="relative">
+          <button onClick={() => setShowNotifs(!showNotifs)}
+            className="relative flex items-center justify-center w-9 h-9 rounded-full border border-slate-200 bg-white/90 text-slate-600 hover:text-blue-700 hover:border-blue-200 shadow-sm transition-all cursor-pointer">
+            <Bell size={15} />
+            {noLeidas > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                {noLeidas > 9 ? '9+' : noLeidas}
+              </span>
+            )}
+          </button>
+
+          {showNotifs && (
+            <div className="absolute right-0 top-11 w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 bg-slate-50">
+                <span className="text-xs font-bold text-slate-800">Notificaciones</span>
+                <div className="flex items-center gap-2">
+                  {noLeidas > 0 && (
+                    <button onClick={marcarTodas} className="text-[10px] text-blue-600 hover:text-blue-700 font-semibold cursor-pointer">Marcar todas</button>
+                  )}
+                  <button onClick={() => setShowNotifs(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer"><X size={14} /></button>
+                </div>
+              </div>
+              <div className="max-h-72 overflow-y-auto divide-y divide-slate-100">
+                {notifs.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-slate-400">Sin notificaciones</div>
+                ) : notifs.slice(0, 15).map(n => (
+                  <div key={n.id} onClick={() => marcarLeida(n.id)}
+                    className={`px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors ${
+                      !n.leida ? 'bg-blue-50/50' : ''
+                    }`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <p className={`text-xs font-semibold ${!n.leida ? 'text-slate-900' : 'text-slate-600'}`}>{n.titulo}</p>
+                      {!n.leida && <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-1" />}
+                    </div>
+                    <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2">{n.mensaje}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         <button
-          onClick={onRefresh}
           disabled={refreshing}
           className="flex items-center gap-2 text-xs font-semibold text-slate-700 hover:text-blue-700 border border-slate-200 bg-white/90 rounded-full px-3 py-1.5 shadow-sm transition-all hover:border-blue-200 hover:shadow-[0_8px_18px_rgba(37,99,235,0.08)]"
         >

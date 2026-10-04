@@ -3,9 +3,12 @@ package com.sistema.planillas.controller;
 import com.sistema.planillas.dto.CalcularPlanillaRequest;
 import com.sistema.planillas.dto.CerrarPlanillaRequest;
 import com.sistema.planillas.dto.PlanillaResumenDTO;
+import com.sistema.planillas.service.AuditoriaService;
+import com.sistema.planillas.service.NotificacionService;
 import com.sistema.planillas.service.PlanillaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -18,6 +21,8 @@ public class PlanillaController {
 
     private final PlanillaService planillaService;
     private final com.sistema.planillas.service.ExportacionPlanillaService exportacionPlanillaService;
+    private final AuditoriaService auditoriaService;
+    private final NotificacionService notificacionService;
 
     @GetMapping("/resumen")
     public ResponseEntity<PlanillaResumenDTO> obtenerResumen(@RequestParam("periodo") String periodo) {
@@ -32,9 +37,25 @@ public class PlanillaController {
     }
 
     @PostMapping("/cerrar")
-    public ResponseEntity<PlanillaResumenDTO> cerrarPlanilla(@Valid @RequestBody CerrarPlanillaRequest request) {
+    public ResponseEntity<PlanillaResumenDTO> cerrarPlanilla(@Valid @RequestBody CerrarPlanillaRequest request,
+                                                              Authentication auth) {
         PlanillaResumenDTO resumen = planillaService.cerrarPlanilla(request);
+        String usuarioUuid = auth != null ? auth.getPrincipal().toString() : "SISTEMA";
+        String usuarioNombre = request.getUsuario() != null ? request.getUsuario() : "SISTEMA";
+        auditoriaService.registrar(usuarioUuid, usuarioNombre,
+            "CERRAR_PLANILLA", "planillas_resumen", null,
+            "Planilla periodo " + request.getPeriodo() + " cerrada");
+        notificacionService.notificarPlanillaCerrada(
+            request.getEmpresaId(), request.getPeriodo(), usuarioNombre);
         return ResponseEntity.ok(resumen);
+    }
+
+    @GetMapping("/auditoria")
+    public ResponseEntity<?> obtenerAuditoria(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        var pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        return ResponseEntity.ok(auditoriaService.listarTodos(pageable));
     }
 
     @GetMapping("/detalles")

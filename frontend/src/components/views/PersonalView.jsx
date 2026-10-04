@@ -67,12 +67,13 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
     return matchSearch && matchSede && matchEstado
   })
 
-const handleFotoUpload = (file, setUrl, setFile) => {
+  const handleFotoUpload = (file, setUrl, setFile) => {
     if (!file) return
-    if (!file.type.startsWith('image/')) { showToast('Selecciona una imagen válida.', 'error'); return }
+    if (!file.type.startsWith('image/')) { showToast('Selecciona una imagen válida (JPG, PNG, etc).', 'error'); return }
     if (file.size > 2 * 1024 * 1024) { showToast('La imagen no debe exceder 2MB.', 'error'); return }
     setFile(file)
     setUrl(URL.createObjectURL(file))
+    showToast('Imagen lista. Se subirá al guardar.', 'info')
   }
 
   const handleCreateWorker = async (e) => {
