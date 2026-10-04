@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
-import { Users, Search, Plus, MapPin, Mail, X, Camera, Upload } from 'lucide-react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { Users, Search, Plus, MapPin, Mail, X, Camera, Upload, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
 import { EMPRESAS, SEDES, AFPS } from '../../data/mockData'
 import { crearTrabajador, actualizarTrabajador } from '../../services/api'
 import { supabase } from '../../services/supabase'
@@ -21,6 +21,8 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
 
   const [dominioEmail, setDominioEmail] = useState('empresa.com')
   const [darAcceso, setDarAcceso] = useState(false)
+  const [reniecStatus, setReniecStatus] = useState(null) // null | 'loading' | 'ok' | 'error'
+  const reniecToken = 'Bearer sk_20127.YoDKTnJgVq7UJ7caCKp7JuJQXYbofPWn'
 
   useEffect(() => {
     supabase.from('empresas').select('dominio_email').eq('id', 1).single()
@@ -66,6 +68,27 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
     const matchEstado = !selectedEstado || w.estado === selectedEstado
     return matchSearch && matchSede && matchEstado
   })
+
+  const consultarReniec = useCallback(async (dni) => {
+    if (dni.length !== 8) return
+    setReniecStatus('loading')
+    try {
+      const res = await fetch(`https://api.decolecta.com/v1/reniec/dni?numero=${dni}`, {
+        headers: { 'Content-Type': 'application/json', Authorization: reniecToken },
+      })
+      if (!res.ok) throw new Error('No encontrado')
+      const data = await res.json()
+      setForm(prev => ({
+        ...prev,
+        apellidoPaterno: data.first_last_name || prev.apellidoPaterno,
+        apellidoMaterno: data.second_last_name || prev.apellidoMaterno,
+        nombres: data.first_name || prev.nombres,
+      }))
+      setReniecStatus('ok')
+    } catch {
+      setReniecStatus('error')
+    }
+  }, [reniecToken])
 
   const handleFotoUpload = (file, setUrl, setFile) => {
     if (!file) return
@@ -407,7 +430,7 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
                   <p className="text-[11px] text-blue-100">Completa los datos para registrar</p>
                 </div>
               </div>
-              <button onClick={() => setShowNewModal(false)} className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white cursor-pointer">
+              <button onClick={() => { setShowNewModal(false); setReniecStatus(null) }} className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white cursor-pointer">
                 <X size={16} />
               </button>
             </div>
@@ -453,10 +476,28 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-semibold text-slate-600 mb-1">DNI *</label>
-                        <input type="text" maxLength={8} required value={form.dni}
-                          onChange={(e) => setForm({ ...form, dni: e.target.value.replace(/\D/g,'') })}
-                          placeholder="12345678"
-                          className="w-full h-9 px-3 text-xs font-mono border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white" />
+                        <div className="relative">
+                          <input type="text" maxLength={8} required value={form.dni}
+                            onChange={(e) => {
+                              const val = e.target.value.replace(/\D/g,'')
+                              setForm({ ...form, dni: val })
+                              setReniecStatus(null)
+                              if (val.length === 8) consultarReniec(val)
+                            }}
+                            placeholder="12345678"
+                            className={`w-full h-9 px-3 pr-8 text-xs font-mono border rounded-lg focus:ring-1 focus:outline-none bg-white ${
+                              reniecStatus === 'ok' ? 'border-emerald-400 focus:ring-emerald-400'
+                              : reniecStatus === 'error' ? 'border-rose-400 focus:ring-rose-400'
+                              : 'border-slate-200 focus:ring-blue-500'
+                            }`} />
+                          <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                            {reniecStatus === 'loading' && <Loader2 size={13} className="text-blue-500 animate-spin" />}
+                            {reniecStatus === 'ok' && <CheckCircle2 size={13} className="text-emerald-500" />}
+                            {reniecStatus === 'error' && <AlertCircle size={13} className="text-rose-500" />}
+                          </div>
+                        </div>
+                        {reniecStatus === 'ok' && <p className="text-[10px] text-emerald-600 mt-0.5 font-semibold">✓ Datos cargados desde RENIEC</p>}
+                        {reniecStatus === 'error' && <p className="text-[10px] text-rose-500 mt-0.5">DNI no encontrado en RENIEC</p>}
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-slate-600 mb-1">Fecha de ingreso</label>
@@ -577,7 +618,7 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
             <div className="px-6 py-4 border-t border-slate-100 bg-white flex items-center justify-between gap-3">
               <p className="text-[11px] text-slate-400">Los campos con * son obligatorios</p>
               <div className="flex gap-2">
-                <button type="button" onClick={() => setShowNewModal(false)}
+                <button type="button" onClick={() => { setShowNewModal(false); setReniecStatus(null) }}
                   className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 border border-slate-200 cursor-pointer">
                   Cancelar
                 </button>
