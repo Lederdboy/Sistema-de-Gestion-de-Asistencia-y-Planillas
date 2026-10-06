@@ -18,7 +18,7 @@ import TrabajadorView from './components/views/TrabajadorView'
 import AuditoriaView from './components/views/AuditoriaView'
 
 import { INITIAL_WORKERS } from './data/mockData'
-import { getTrabajadores, getSedes, logout } from './services/api'
+import { getTrabajadores, getSedes, logout, getMatrizAsistencia } from './services/api'
 
 export default function App() {
   const [isMobile, setIsMobile] = useState(false)
@@ -75,14 +75,28 @@ export default function App() {
     try {
       const apiWorkers = await getTrabajadores()
       if (apiWorkers === null) {
-        // Error de conexión o 500 — limpiar sesión y forzar re-login
         localStorage.removeItem('planilla_user')
         setUser(null)
         return
       }
       if (apiWorkers && apiWorkers.length > 0) {
+        // Cargar matriz de asistencia del mes actual desde BD
+        const hoy = new Date()
+        const matrizData = await getMatrizAsistencia(hoy.getMonth() + 1, hoy.getFullYear())
+        // matrizData: array de { trabajadorId, dias: { "1": "D", "2": "F", ... } } o null
+        const matrizMap = {}
+        if (matrizData && Array.isArray(matrizData)) {
+          matrizData.forEach((m) => {
+            if (m.trabajadorId && m.dias) {
+              const diasEnMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate()
+              matrizMap[m.trabajadorId] = Array.from({ length: diasEnMes }, (_, i) => m.dias[String(i + 1)] || null)
+            }
+          })
+        }
+
         const enriched = apiWorkers.map((t) => {
           const matchMock = INITIAL_WORKERS.find((w) => w.dni === t.numeroDocumento)
+          const tareoFromDB = matrizMap[t.id]
           return {
             id: t.id,
             dni: t.numeroDocumento,
@@ -99,7 +113,7 @@ export default function App() {
             email: matchMock?.email || '',
             telefono: matchMock?.telefono || '',
             fotoUrl: t.fotoUrl || null,
-            tareo: matchMock?.tareo || Array.from({ length: 30 }, (_, i) =>
+            tareo: tareoFromDB || matchMock?.tareo || Array.from({ length: 30 }, (_, i) =>
               i < 7 ? ((i + 1) % 7 === 0 || (i + 1) % 7 === 6 ? 'DL' : 'D') : null
             ),
           }
@@ -152,6 +166,16 @@ export default function App() {
     setRefreshing(false)
     setLastUpdate(new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }))
     showToast('Datos de colaboradores y tareo sincronizados con SistemaPlanillasDB.', 'success')
+  }
+
+  // Cargar tareo de un período específico desde BD (llamado por TareoView al cambiar período)
+  const handleLoadTareoFromDB = (matrizMap) => {
+    setWorkers((prev) =>
+      prev.map((w) => {
+        if (matrizMap[w.id]) return { ...w, tareo: matrizMap[w.id] }
+        return w
+      })
+    )
   }
 
   // Actualizar asistencia en tareo
@@ -277,6 +301,7 @@ export default function App() {
               loading={loading}
               onNavigateToPlanilla={() => setActiveNav('planilla')}
               showToast={showToast}
+              onLoadTareoFromDB={handleLoadTareoFromDB}
             />
           )}
 

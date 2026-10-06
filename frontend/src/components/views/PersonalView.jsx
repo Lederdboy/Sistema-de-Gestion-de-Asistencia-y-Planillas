@@ -172,6 +172,7 @@ export default function PersonalView({ workers, onAddWorker, onUpdateWorker, sho
     })
     setEditFotoUrl(worker.fotoUrl || null)
     setEditFotoFile(null)
+    setSelectedWorker(worker)
     setIsEditingWorker(true)
   }
 

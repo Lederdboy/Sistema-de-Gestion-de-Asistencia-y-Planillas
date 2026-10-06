@@ -377,7 +377,7 @@ export default function VacacionesView({
                 En descanso
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">Periodo 2026-09</p>
+            <p className="text-[11px] text-slate-400 mt-1">Periodo {anioHoy}-{String(mesHoy).padStart(2,'0')}</p>
           </div>
           <Sun size={24} className="text-amber-500 flex-shrink-0" />
         </div>
@@ -1173,8 +1173,8 @@ export default function VacacionesView({
                     setForm({
                       trabajadorId: String(simWorkerId),
                       tipo: 'Venta de Vacaciones',
-                      fechaInicio: '2026-09-01',
-                      fechaFin: '2026-09-15',
+                      fechaInicio: `${anioHoy}-${String(mesHoy).padStart(2,'0')}-01`,
+                      fechaFin: `${anioHoy}-${String(mesHoy).padStart(2,'0')}-15`,
                       dias: simDiasVenta,
                       periodo: '2024-2025',
                       observaciones: `Convenio de venta y reducción vacacional por ${simDiasVenta} días con compensación de S/ ${simMontoVenta}.`,
@@ -1388,7 +1388,7 @@ export default function VacacionesView({
                   />
                   <label htmlFor="syncTareo" className="text-xs text-blue-900 cursor-pointer select-none">
                     <span className="font-semibold block">
-                      Sincronizar con el Tareo de Setiembre 2026
+                      Sincronizar con el Tareo de {new Date(anioHoy, mesHoy - 1).toLocaleString('es-PE', { month: 'long', year: 'numeric' })}
                     </span>
                     <span className="text-[11px] text-blue-700 block">
                       Asigna el código 'V' en los días correspondientes y actualiza el estado del colaborador.

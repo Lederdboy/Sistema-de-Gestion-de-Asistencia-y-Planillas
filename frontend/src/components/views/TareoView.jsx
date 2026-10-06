@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Users,
   CalendarDays,
@@ -15,7 +15,8 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import { BADGE_CONFIG, EMPRESAS, SEDES } from '../../data/mockData'
-import { updateMarcacion, calcularPlanilla, cerrarPlanilla } from '../../services/api'
+import { updateMarcacion, calcularPlanilla, cerrarPlanilla, getMatrizAsistencia } from '../../services/api'
+import * as XLSX from 'xlsx'
 
 const getDaysInMonth = (y, m) => new Date(y, m, 0).getDate()
 const isWeekend = (y, m, d) => {
@@ -82,6 +83,7 @@ export default function TareoView({
   loading,
   onNavigateToPlanilla,
   showToast,
+  onLoadTareoFromDB,
 }) {
   const hoyInit = new Date()
   const periodoInicial = `${hoyInit.getFullYear()}-${String(hoyInit.getMonth() + 1).padStart(2, '0')}`
@@ -96,6 +98,24 @@ export default function TareoView({
   const [showCalculateModal, setShowCalculateModal] = useState(false)
   const [showCloseModal, setShowCloseModal] = useState(false)
   const [calculating, setCalculating] = useState(false)
+  const [loadingTareo, setLoadingTareo] = useState(false)
+
+  useEffect(() => {
+    const [y, m] = filters.periodo.split('-').map(Number)
+    setLoadingTareo(true)
+    getMatrizAsistencia(m, y).then((matrizData) => {
+      if (matrizData && Array.isArray(matrizData) && onLoadTareoFromDB) {
+        const diasEnMes = new Date(y, m, 0).getDate()
+        const matrizMap = {}
+        matrizData.forEach((row) => {
+          if (row.trabajadorId && row.dias) {
+            matrizMap[row.trabajadorId] = Array.from({ length: diasEnMes }, (_, i) => row.dias[String(i + 1)] || null)
+          }
+        })
+        onLoadTareoFromDB(matrizMap)
+      }
+    }).finally(() => setLoadingTareo(false))
+  }, [filters.periodo])
 
   const hoyTareo = new Date()
   const diaHoyTareo = hoyTareo.getDate()
@@ -146,8 +166,23 @@ export default function TareoView({
   }
 
   const handleExportExcel = () => {
-    showToast('Generando reporte en formato Excel (.xlsx)...', 'info')
-    setTimeout(() => showToast('Reporte Excel descargado correctamente.', 'success'), 1000)
+    const [y, m] = filters.periodo.split('-').map(Number)
+    const diasEnMes = getDaysInMonth(y, m)
+    const headers = ['Colaborador', 'DNI', ...Array.from({ length: diasEnMes }, (_, i) => String(i + 1)), 'D', 'N', 'F', 'DL', 'V']
+    const rows = filteredWorkers.map((w) => {
+      const s = summary(w.tareo)
+      return [
+        w.nombre, w.dni,
+        ...Array.from({ length: diasEnMes }, (_, i) => w.tareo?.[i] || ''),
+        s.D, s.N, s.F, s.DL, s.V,
+      ]
+    })
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows])
+    ws['!cols'] = [{ wch: 30 }, { wch: 12 }, ...Array(diasEnMes).fill({ wch: 4 }), ...Array(5).fill({ wch: 5 })]
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, `Tareo ${filters.periodo}`)
+    XLSX.writeFile(wb, `Tareo_${filters.periodo}.xlsx`)
+    showToast('Reporte Excel de tareo descargado correctamente.', 'success')
   }
 
   const handleExecuteCalculation = async () => {

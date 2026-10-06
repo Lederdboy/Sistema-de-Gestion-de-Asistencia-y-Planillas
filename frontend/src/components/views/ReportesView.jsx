@@ -35,10 +35,23 @@ export default function ReportesView({ workers, selectedBoleta, onCloseBoleta, s
       .then(({ data }) => { if (data) setEmpresaInfo(data) })
   }, [])
 
-  const handleDownloadBoletasPDF = () => {
+  const handleDownloadBoletasPDF = async () => {
+    const periodoSinGuion = periodoActual.replace('-', '')
+    const detallesDB = await getDetallesPlanilla(periodoSinGuion)
     const doc = new jsPDF({ unit: 'mm', format: 'a4' })
     workers.forEach((w, idx) => {
-      const row = calcularPlanillaTrabajador(w)
+      const rowMock = calcularPlanillaTrabajador(w)
+      const rowDB = detallesDB?.find?.((d) => d.trabajadorId === w.id || d.trabajador_id === w.id)
+      const row = rowDB ? {
+        ...rowMock,
+        totalBruto: Number(rowDB.totalIngresos ?? rowMock.totalBruto),
+        totalDescuentos: Number(rowDB.totalDescuentos ?? rowMock.totalDescuentos),
+        netoPagar: Number(rowDB.netoPagar ?? rowMock.netoPagar),
+        basicoProporcional: Number(rowDB.sueldoBasico ?? rowMock.basicoProporcional),
+        descuentoPension: Number(rowDB.descuentoPension ?? rowMock.descuentoPension),
+        descuentoFaltas: Number(rowDB.descuentoFaltas ?? rowMock.descuentoFaltas),
+        aporteEsSalud: Number(rowDB.aporteEssalud ?? rowMock.aporteEsSalud),
+      } : rowMock
       if (idx > 0) doc.addPage()
       doc.setFontSize(10); doc.setFont('helvetica', 'bold')
       doc.text(empresaInfo.razon_social || 'EMPRESA', 105, 12, { align: 'center' })
@@ -86,13 +99,22 @@ export default function ReportesView({ workers, selectedBoleta, onCloseBoleta, s
     showToast('Archivo AFP Net generado correctamente.', 'success')
   }
 
-  const handleDownloadPDT601 = () => {
-    const planillas = workers.map(w => calcularPlanillaTrabajador(w))
-    const filas = planillas.map(p => ({
-      'DNI': p.dni, 'Apellidos y Nombres': p.nombre, 'Cargo': p.cargo,
-      'Remuneración Bruta': p.totalBruto, 'AFP/ONP': p.descuentoPension,
-      'EsSalud 9%': p.aporteEsSalud, 'Neto a Pagar': p.netoPagar,
-    }))
+  const handleDownloadPDT601 = async () => {
+    const periodoSinGuion = periodoActual.replace('-', '')
+    const detallesDB = await getDetallesPlanilla(periodoSinGuion)
+    const filas = workers.map((w) => {
+      const mock = calcularPlanillaTrabajador(w)
+      const db = detallesDB?.find?.((d) => d.trabajadorId === w.id || d.trabajador_id === w.id)
+      return {
+        'DNI': w.dni,
+        'Apellidos y Nombres': w.nombre,
+        'Cargo': w.cargo,
+        'Remuneración Bruta': db ? Number(db.totalIngresos ?? mock.totalBruto) : mock.totalBruto,
+        'AFP/ONP': db ? Number(db.descuentoPension ?? mock.descuentoPension) : mock.descuentoPension,
+        'EsSalud 9%': db ? Number(db.aporteEssalud ?? mock.aporteEsSalud) : mock.aporteEsSalud,
+        'Neto a Pagar': db ? Number(db.netoPagar ?? mock.netoPagar) : mock.netoPagar,
+      }
+    })
     const ws = XLSX.utils.json_to_sheet(filas)
     ws['!cols'] = [10, 30, 22, 14, 12, 12, 12].map(w => ({ wch: w }))
     const wb = XLSX.utils.book_new()

@@ -124,25 +124,37 @@ export default function GestionUsuariosView({ user, showToast }) {
     }
     setSaving(true)
     try {
-      const { error } = await supabase
-        .from('usuarios_perfil')
-        .update({
+      const res = await fetch(`/api/v1/usuarios/${modalEditar.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.token}` },
+        body: JSON.stringify({
           nombre: editForm.nombre,
           rol: editForm.rol,
           sede_id: editForm.sede_id ? parseInt(editForm.sede_id) : null,
           cargo: editForm.cargo || null,
-        })
-        .eq('id', modalEditar.id)
-      if (error) throw error
+        }),
+      })
+      if (!res.ok) {
+        // fallback a Supabase directo si el endpoint no existe
+        const { error } = await supabase
+          .from('usuarios_perfil')
+          .update({
+            nombre: editForm.nombre,
+            rol: editForm.rol,
+            sede_id: editForm.sede_id ? parseInt(editForm.sede_id) : null,
+            cargo: editForm.cargo || null,
+          })
+          .eq('id', modalEditar.id)
+        if (error) throw error
+      }
 
-      // Cambiar contraseña si se ingresó una nueva
       if (editForm.nuevaPassword) {
-        const res = await fetch(`/api/v1/usuarios/${modalEditar.id}/reset-password`, {
+        const res2 = await fetch(`/api/v1/usuarios/${modalEditar.id}/reset-password`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.token}` },
           body: JSON.stringify({ password: editForm.nuevaPassword }),
         })
-        if (!res.ok) throw new Error('Error al cambiar contraseña')
+        if (!res2.ok) throw new Error('Error al cambiar contraseña')
       }
 
       showToast('Usuario actualizado correctamente.', 'success')

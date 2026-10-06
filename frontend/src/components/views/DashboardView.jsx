@@ -9,6 +9,7 @@ import { AFPS } from '../../data/mockData'
 export default function DashboardView({ onNavigate, workers = [], user }) {
   const [sedesStats, setSedesStats] = useState([])
   const [loadingSedes, setLoadingSedes] = useState(false)
+  const [tareoStats, setTareoStats] = useState({ marcaciones: 0, faltas: 0, trabajadoresConFalta: [] })
 
   const esGerenteGeneral = user?.rol === 'GERENTE_GENERAL'
 
@@ -60,25 +61,51 @@ export default function DashboardView({ onNavigate, workers = [], user }) {
   const totalDiasMes = new Date(hoyDash.getFullYear(), hoyDash.getMonth() + 1, 0).getDate()
   const pctAvanceMes = ((diaHoy / totalDiasMes) * 100).toFixed(1)
 
-  let totalMarcacionesHastaHoy = 0
-  let totalFaltasRegistradas = 0
-  const trabajadoresConFalta = []
-  workers.forEach((w) => {
-    const tareo7 = (w.tareo || []).slice(0, diaHoy)
-    tareo7.forEach((code, idx) => {
-      if (code) totalMarcacionesHastaHoy++
-      if (code === 'F' && !trabajadoresConFalta.find((t) => t.id === w.id)) {
-        totalFaltasRegistradas++
-        trabajadoresConFalta.push({ id: w.id, nombre: w.nombre, dia: idx + 1 })
-      }
-    })
-  })
+  useEffect(() => {
+    // Cargar KPIs de tareo desde Supabase
+    const hoy = new Date()
+    const anio = hoy.getFullYear()
+    const mes = hoy.getMonth() + 1
+    const fechaDesde = `${anio}-${String(mes).padStart(2,'0')}-01`
+    const fechaHasta = `${anio}-${String(mes).padStart(2,'0')}-${String(diaHoy).padStart(2,'0')}`
+    supabase
+      .from('asistencia')
+      .select('trabajador_id, codigo_asistencia, fecha')
+      .gte('fecha', fechaDesde)
+      .lte('fecha', fechaHasta)
+      .then(({ data }) => {
+        if (!data) return
+        let marcaciones = 0
+        let faltas = 0
+        const trabajadoresConFaltaMap = {}
+        data.forEach((row) => {
+          if (row.codigo_asistencia) marcaciones++
+          if (row.codigo_asistencia === 'F') {
+            faltas++
+            if (!trabajadoresConFaltaMap[row.trabajador_id]) {
+              const w = workers.find((w) => w.id === row.trabajador_id)
+              trabajadoresConFaltaMap[row.trabajador_id] = {
+                id: row.trabajador_id,
+                nombre: w?.nombre || `Trabajador #${row.trabajador_id}`,
+                dia: new Date(row.fecha).getDate(),
+              }
+            }
+          }
+        })
+        setTareoStats({
+          marcaciones,
+          faltas,
+          trabajadoresConFalta: Object.values(trabajadoresConFaltaMap),
+        })
+      })
+  }, [diaHoy, workers.length])
 
+  const totalMarcacionesHastaHoy = tareoStats.marcaciones
+  const totalFaltasRegistradas = tareoStats.faltas
+  const trabajadoresConFalta = tareoStats.trabajadoresConFalta
   const tasaAusentismo = totalMarcacionesHastaHoy > 0
     ? ((totalFaltasRegistradas / totalMarcacionesHastaHoy) * 100).toFixed(1)
     : '0.0'
-
-  const afpDisplay = [
     { key: 'integra', nombre: 'AFP Integra', count: workers.filter((w) => w.afp === 'integra').length, color: 'border-blue-100 bg-blue-50 text-blue-800' },
     { key: 'prima', nombre: 'AFP Prima', count: workers.filter((w) => w.afp === 'prima').length, color: 'border-violet-100 bg-violet-50 text-violet-800' },
     { key: 'profuturo', nombre: 'AFP Profuturo', count: workers.filter((w) => w.afp === 'profuturo').length, color: 'border-indigo-100 bg-indigo-50 text-indigo-800' },
