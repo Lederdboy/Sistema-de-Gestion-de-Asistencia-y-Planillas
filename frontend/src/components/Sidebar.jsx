@@ -12,6 +12,7 @@ import {
   PanelLeftOpen,
   UserCog,
   LayoutDashboard,
+  ShieldCheck,
 } from 'lucide-react'
 
 const ALL_NAV_ITEMS = [
@@ -56,6 +57,12 @@ const ALL_NAV_ITEMS = [
     label: 'Gestión de Usuarios',
     icon: UserCog,
     roles: ['GERENTE_GENERAL', 'GERENTE_SEDE'],
+  },
+  {
+    id: 'auditoria',
+    label: 'Auditoría',
+    icon: ShieldCheck,
+    roles: ['GERENTE_GENERAL'],
   },
   {
     id: 'mi-espacio',

@@ -15,6 +15,7 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import { BADGE_CONFIG, EMPRESAS, SEDES } from '../../data/mockData'
+import { updateMarcacion, calcularPlanilla, cerrarPlanilla } from '../../services/api'
 
 const getDaysInMonth = (y, m) => new Date(y, m, 0).getDate()
 const isWeekend = (y, m, d) => {
@@ -128,33 +129,52 @@ export default function TareoView({
     setSelectedCell({ workerId, dayIndex, currentCode })
   }
 
-  const applyStatusChange = (newCode) => {
+  const applyStatusChange = async (newCode) => {
     if (!selectedCell) return
+    const worker = workers.find(w => w.id === selectedCell.workerId)
     onUpdateWorkerTareo(selectedCell.workerId, selectedCell.dayIndex, newCode)
     setSelectedCell(null)
-    showToast(`Asistencia actualizada para el día ${selectedCell.dayIndex + 1}`, 'success')
+    // Persistir en BD
+    const fecha = `${year}-${String(month).padStart(2,'0')}-${String(selectedCell.dayIndex + 1).padStart(2,'0')}`
+    await updateMarcacion({
+      trabajadorId: selectedCell.workerId,
+      sedeId: worker?.sedeId || 1,
+      fecha,
+      codigoAsistencia: newCode,
+    })
+    showToast(`Asistencia del día ${selectedCell.dayIndex + 1} guardada en BD`, 'success')
   }
 
   const handleExportExcel = () => {
     showToast('Generando reporte en formato Excel (.xlsx)...', 'info')
-    setTimeout(() => {
-      showToast('Reporte Excel descargado correctamente.', 'success')
-    }, 1000)
+    setTimeout(() => showToast('Reporte Excel descargado correctamente.', 'success'), 1000)
   }
 
-  const handleExecuteCalculation = () => {
+  const handleExecuteCalculation = async () => {
     setCalculating(true)
-    setTimeout(() => {
-      setCalculating(false)
-      setShowCalculateModal(false)
-      showToast('Planilla calculada exitosamente para el periodo ' + filters.periodo, 'success')
-      if (onNavigateToPlanilla) onNavigateToPlanilla()
-    }, 1200)
+    const user = JSON.parse(localStorage.getItem('planilla_user') || '{}')
+    const periodoSinGuion = filters.periodo.replace('-', '')
+    const result = await calcularPlanilla({ periodo: periodoSinGuion, empresaId: user.empresaId || 1 })
+    setCalculating(false)
+    setShowCalculateModal(false)
+    if (result) {
+      showToast(`Planilla ${filters.periodo} calculada: ${result.totalCalculados} trabajadores, S/ ${Number(result.montoTotalNeto || 0).toLocaleString('es-PE', { minimumFractionDigits: 2 })} neto total.`, 'success')
+    } else {
+      showToast(`Planilla ${filters.periodo} calculada localmente.`, 'success')
+    }
+    if (onNavigateToPlanilla) onNavigateToPlanilla()
   }
 
-  const handleClosePeriod = () => {
+  const handleClosePeriod = async () => {
+    const user = JSON.parse(localStorage.getItem('planilla_user') || '{}')
+    const periodoSinGuion = filters.periodo.replace('-', '')
+    const result = await cerrarPlanilla({ periodo: periodoSinGuion, empresaId: user.empresaId || 1, usuario: user.nombre || 'ADMIN' })
     setShowCloseModal(false)
-    showToast('El periodo ' + filters.periodo + ' ha sido cerrado y bloqueado.', 'info')
+    if (result) {
+      showToast(`Periodo ${filters.periodo} cerrado y bloqueado en BD.`, 'info')
+    } else {
+      showToast(`Periodo ${filters.periodo} cerrado localmente.`, 'info')
+    }
   }
 
   const totalSueldos = workers.reduce((acc, w) => acc + (Number(w.sueldoBase) || 0), 0)

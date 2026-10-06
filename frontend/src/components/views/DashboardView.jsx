@@ -100,7 +100,7 @@ export default function DashboardView({ onNavigate, workers = [], user }) {
                 Conectado a Supabase
               </span>
               <span className="text-xs text-blue-100 font-medium bg-blue-500/10 px-2.5 py-0.5 rounded-md border border-blue-400/30">
-                Periodo: Setiembre 2026
+                Periodo: {new Date().toLocaleString('es-PE', { month: 'long', year: 'numeric' })}
               </span>
             </div>
             <h1 className="text-2xl font-extrabold tracking-tight text-white">

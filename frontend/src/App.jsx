@@ -15,6 +15,7 @@ import ConfigView from './components/views/ConfigView'
 import PerfilView from './components/views/PerfilView'
 import GestionUsuariosView from './components/views/GestionUsuariosView'
 import TrabajadorView from './components/views/TrabajadorView'
+import AuditoriaView from './components/views/AuditoriaView'
 
 import { INITIAL_WORKERS } from './data/mockData'
 import { getTrabajadores, getSedes, logout } from './services/api'
@@ -318,6 +319,10 @@ export default function App() {
 
           {activeNav === 'perfil' && (
             <PerfilView user={user} showToast={showToast} />
+          )}
+
+          {activeNav === 'auditoria' && user?.rol === 'GERENTE_GENERAL' && (
+            <AuditoriaView showToast={showToast} />
           )}
 
           {activeNav === 'mi-espacio' && user?.rol === 'TRABAJADOR' && (

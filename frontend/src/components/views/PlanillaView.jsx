@@ -5,15 +5,12 @@ import {
   CheckCircle2,
   Lock,
   Eye,
-  DollarSign,
-  TrendingDown,
-  ShieldCheck,
   Search,
   FileText,
   RefreshCw,
 } from 'lucide-react'
 import { calcularPlanillaTrabajador } from '../../data/mockData'
-import { supabase } from '../../services/supabase'
+import { getDetallesPlanilla, calcularPlanilla, cerrarPlanilla } from '../../services/api'
 import * as XLSX from 'xlsx'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
@@ -24,34 +21,44 @@ export default function PlanillaView({ workers, onViewBoleta, showToast }) {
   const [periodo, setPeriodo] = useState(periodoDefault)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('Pre-Planilla')
-  const [planillasDB, setPlanillasDB] = useState([])
+  const [detallesDB, setDetallesDB] = useState([])
   const [loadingDB, setLoadingDB] = useState(false)
+  const [calculando, setCalculando] = useState(false)
   const [page, setPage] = useState(0)
   const PAGE_SIZE = 15
 
-  // Intentar cargar planillas desde Supabase para el periodo actual
-  useEffect(() => {
+  const cargarDetalles = async (p) => {
     setLoadingDB(true)
-    supabase
-      .from('planillas_resumen')
-      .select('id, trabajador_id, periodo, sueldo_basico, total_ingresos, total_descuentos, neto_pagar, estado')
-      .eq('periodo', periodo)
-      .then(({ data }) => {
-        setPlanillasDB(data || [])
-        setLoadingDB(false)
-      })
-  }, [periodo])
+    const periodoSinGuion = p.replace('-', '')
+    const data = await getDetallesPlanilla(periodoSinGuion)
+    if (data && data.length > 0) {
+      setDetallesDB(data)
+      const cerrada = data.some(d => d.estado === 'CERRADO')
+      if (cerrada) setStatus('Aprobada')
+    } else {
+      setDetallesDB([])
+    }
+    setLoadingDB(false)
+  }
 
-  // Usar planillas de BD si existen, si no calcular localmente
+  useEffect(() => { cargarDetalles(periodo) }, [periodo])
+
+  // Usar detalles de BD si existen, si no calcular localmente
   const planillas = workers.map(w => {
-    const dbRow = planillasDB.find(p => p.trabajador_id === w.id)
+    const dbRow = detallesDB.find(d => d.trabajadorId === w.id)
     if (dbRow) {
       return {
         ...calcularPlanillaTrabajador(w),
-        totalBruto: Number(dbRow.total_ingresos || 0),
-        totalDescuentos: Number(dbRow.total_descuentos || 0),
-        netoPagar: Number(dbRow.neto_pagar || 0),
-        sueldoBase: Number(dbRow.sueldo_basico || w.sueldoBase),
+        totalBruto: Number(dbRow.totalIngresos || 0),
+        totalDescuentos: Number(dbRow.totalDescuentos || 0),
+        netoPagar: Number(dbRow.netoPagar || 0),
+        sueldoBase: Number(dbRow.sueldoBasico || w.sueldoBase),
+        basicoProporcional: Number(dbRow.sueldoBasico || 0),
+        descuentoPension: Number(dbRow.descuentoPension || 0),
+        descuentoFaltas: Number(dbRow.descuentoFaltas || 0),
+        aporteEsSalud: Number(dbRow.aporteEssalud || 0),
+        diasTrabajados: dbRow.diasTrabajados || 0,
+        diasFaltas: dbRow.diasFaltas || 0,
         _fromDB: true,
       }
     }
@@ -73,25 +80,36 @@ export default function PlanillaView({ workers, onViewBoleta, showToast }) {
   useEffect(() => { setPage(0) }, [search, periodo])
 
   const handleApprove = async () => {
-    try {
-      const token = JSON.parse(localStorage.getItem('planilla_user') || '{}').token
-      const user = JSON.parse(localStorage.getItem('planilla_user') || '{}')
-      const res = await fetch('/api/v1/planilla/cerrar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          empresaId: user.empresaId || 1,
-          periodo,
-          usuario: user.nombre || 'ADMIN',
-        }),
-      })
-      if (!res.ok) throw new Error('Error al cerrar planilla')
+    const user = JSON.parse(localStorage.getItem('planilla_user') || '{}')
+    const periodoSinGuion = periodo.replace('-', '')
+    // Primero calcular si no hay detalles en BD
+    if (detallesDB.length === 0) {
+      setCalculando(true)
+      await calcularPlanilla({ periodo: periodoSinGuion, empresaId: user.empresaId || 1 })
+      setCalculando(false)
+    }
+    const result = await cerrarPlanilla({ periodo: periodoSinGuion, empresaId: user.empresaId || 1, usuario: user.nombre || 'ADMIN' })
+    if (result) {
       setStatus('Aprobada')
+      await cargarDetalles(periodo)
       showToast(`Planilla ${periodo} aprobada y guardada en BD.`, 'success')
-    } catch {
-      // fallback local si el backend no tiene la planilla calculada aún
+    } else {
       setStatus('Aprobada')
       showToast(`Planilla ${periodo} aprobada localmente.`, 'success')
+    }
+  }
+
+  const handleRecalcular = async () => {
+    const user = JSON.parse(localStorage.getItem('planilla_user') || '{}')
+    const periodoSinGuion = periodo.replace('-', '')
+    setCalculando(true)
+    const result = await calcularPlanilla({ periodo: periodoSinGuion, empresaId: user.empresaId || 1 })
+    setCalculando(false)
+    if (result) {
+      await cargarDetalles(periodo)
+      showToast(`Planilla recalculada: ${result.totalCalculados} trabajadores.`, 'success')
+    } else {
+      showToast('Error al recalcular. Verifica el backend.', 'error')
     }
   }
 
@@ -240,20 +258,26 @@ export default function PlanillaView({ workers, onViewBoleta, showToast }) {
                 </span>
               </div>
               <p className="mt-1 text-xs text-slate-500 flex items-center gap-2 flex-wrap">
-                <input type="month" value={periodo} onChange={e => setPeriodo(e.target.value)}
+                <input type="month" value={periodo} onChange={e => { setPeriodo(e.target.value); setStatus('Pre-Planilla') }}
                   className="h-7 px-2 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-sky-400" />
                 <span>{planillas.length} colaboradores</span>
-                {planillasDB.length > 0 && (
+                {detallesDB.length > 0 && (
                   <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                    {planillasDB.length} desde BD
+                    {detallesDB.length} desde BD
                   </span>
                 )}
                 {loadingDB && <span className="text-[10px] text-slate-400">Cargando BD...</span>}
+                {calculando && <span className="text-[10px] text-blue-600 font-semibold animate-pulse">Calculando...</span>}
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <button onClick={handleRecalcular} disabled={calculando}
+              className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-700 transition-all hover:bg-slate-50 disabled:opacity-50">
+              <RefreshCw size={13} className={calculando ? 'animate-spin' : ''} />
+              {calculando ? 'Calculando...' : 'Recalcular'}
+            </button>
             <button
               onClick={handleExportExcel}
               className="inline-flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-600 px-3.5 py-2.5 text-xs font-semibold text-white shadow-[0_12px_25px_rgba(16,185,129,0.25)] transition-all hover:bg-emerald-700"
@@ -271,7 +295,8 @@ export default function PlanillaView({ workers, onViewBoleta, showToast }) {
             {status !== 'Aprobada' ? (
               <button
                 onClick={handleApprove}
-                className="inline-flex items-center gap-2 rounded-2xl bg-sky-600 px-3.5 py-2.5 text-xs font-semibold text-white shadow-[0_12px_25px_rgba(14,165,233,0.28)] transition-all hover:bg-sky-700"
+                disabled={calculando}
+                className="inline-flex items-center gap-2 rounded-2xl bg-sky-600 px-3.5 py-2.5 text-xs font-semibold text-white shadow-[0_12px_25px_rgba(14,165,233,0.28)] transition-all hover:bg-sky-700 disabled:opacity-50"
               >
                 <CheckCircle2 size={13} />
                 Aprobar y emitir

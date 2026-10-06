@@ -83,15 +83,51 @@ export default function TrabajadorView({ user, setActive }) {
 function BoletasTab({ trabajador }) {
   const [boletas, setBoletas] = useState([])
   const [loading, setLoading] = useState(true)
+  const hoy = new Date()
+  const periodoActual = `${hoy.getFullYear()}${String(hoy.getMonth() + 1).padStart(2, '0')}`
 
   useEffect(() => {
     if (!trabajador?.id) { setLoading(false); return }
-    supabase
-      .from('planillas_resumen')
-      .select('id, periodo, sueldo_basico, total_ingresos, total_descuentos, neto_pagar, estado')
-      .eq('trabajador_id', trabajador.id)
-      .order('periodo', { ascending: false })
-      .then(({ data }) => { setBoletas(data || []); setLoading(false) })
+    // Intentar desde backend primero, fallback a Supabase
+    const token = JSON.parse(localStorage.getItem('planilla_user') || '{}').token
+    fetch(`/api/v1/planilla/detalles?periodo=${periodoActual}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data && Array.isArray(data)) {
+          const mias = data.filter(d => d.trabajadorId === trabajador.id)
+          if (mias.length > 0) {
+            setBoletas(mias.map(d => ({
+              id: d.id,
+              periodo: periodoActual.slice(0,4) + '-' + periodoActual.slice(4),
+              sueldo_basico: d.sueldoBasico,
+              total_ingresos: d.totalIngresos,
+              total_descuentos: d.totalDescuentos,
+              neto_pagar: d.netoPagar,
+              estado: 'CALCULADO',
+              _fromDB: true,
+            })))
+            setLoading(false)
+            return
+          }
+        }
+        // fallback Supabase
+        return supabase
+          .from('planillas_detalle')
+          .select('id, periodo, sueldo_basico, total_ingresos, total_descuentos, neto_pagar, estado')
+          .eq('trabajador_id', trabajador.id)
+          .order('periodo', { ascending: false })
+          .then(({ data: rows }) => { setBoletas(rows || []); setLoading(false) })
+      })
+      .catch(() => {
+        supabase
+          .from('planillas_detalle')
+          .select('id, periodo, sueldo_basico, total_ingresos, total_descuentos, neto_pagar, estado')
+          .eq('trabajador_id', trabajador.id)
+          .order('periodo', { ascending: false })
+          .then(({ data: rows }) => { setBoletas(rows || []); setLoading(false) })
+      })
   }, [trabajador?.id])
 
   if (!trabajador) return <SinVinculo />

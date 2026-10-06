@@ -31,6 +31,7 @@ public class SecurityConfig {
                 .antMatchers("/api/v1/notificaciones/**").authenticated()
                 .antMatchers("/api/v1/descansos-medicos/**").permitAll()
                 .antMatchers("/api/v1/planilla/**").permitAll()
+                .antMatchers("/api/v1/vacaciones/**").permitAll()
                 .anyRequest().authenticated()
             .and()
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

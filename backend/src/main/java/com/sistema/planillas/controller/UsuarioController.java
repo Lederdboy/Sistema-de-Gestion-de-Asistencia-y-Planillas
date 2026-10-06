@@ -57,7 +57,24 @@ public class UsuarioController {
 
     @PatchMapping("/{uuid}/reset-password")
     public ResponseEntity<?> resetPassword(@PathVariable String uuid,
-                                            @RequestBody Map<String, String> body) {
+                                            @RequestBody Map<String, String> body,
+                                            org.springframework.security.core.Authentication auth) {
+        // Solo GERENTE_GENERAL o GERENTE_SEDE pueden resetear passwords
+        if (auth != null) {
+            try {
+                String solicitanteUuid = auth.getPrincipal().toString();
+                String rolSolicitante = jdbc.queryForObject(
+                    "SELECT rol FROM usuarios_perfil WHERE id = ?::uuid",
+                    String.class, solicitanteUuid
+                );
+                if (rolSolicitante != null &&
+                    !rolSolicitante.equals("GERENTE_GENERAL") &&
+                    !rolSolicitante.equals("GERENTE_SEDE")) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(Map.of("mensaje", "No tienes permisos para resetear contraseñas"));
+                }
+            } catch (Exception ignored) {}
+        }
         try {
             String nuevoHash = passwordEncoder.encode(body.get("password"));
             int updated = jdbc.update(

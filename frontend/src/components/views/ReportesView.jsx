@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { EMPRESAS, calcularPlanillaTrabajador } from '../../data/mockData'
 import { supabase } from '../../services/supabase'
+import { getBoletaTrabajador, getDetallesPlanilla } from '../../services/api'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import * as XLSX from 'xlsx'
@@ -100,9 +101,29 @@ export default function ReportesView({ workers, selectedBoleta, onCloseBoleta, s
     showToast('Estructura PDT 601 generada en Excel.', 'success')
   }
 
-  const openBoleta = (worker) => {
-    const calc = calcularPlanillaTrabajador(worker)
-    setActiveWorkerForBoleta(calc)
+  const openBoleta = async (worker) => {
+    // Intentar obtener boleta real del backend
+    const periodoSinGuion = periodoActual.replace('-', '')
+    const boletaDB = await getBoletaTrabajador(worker.id, periodoSinGuion)
+    if (boletaDB) {
+      // Mapear campos del backend al formato del frontend
+      const calc = calcularPlanillaTrabajador(worker)
+      setActiveWorkerForBoleta({
+        ...calc,
+        totalBruto: Number(boletaDB.totalIngresos || calc.totalBruto),
+        totalDescuentos: Number(boletaDB.totalDescuentos || calc.totalDescuentos),
+        netoPagar: Number(boletaDB.netoPagar || calc.netoPagar),
+        basicoProporcional: Number(boletaDB.sueldoBasico || calc.basicoProporcional),
+        descuentoPension: Number(boletaDB.descuentoPension || calc.descuentoPension),
+        descuentoFaltas: Number(boletaDB.descuentoFaltas || calc.descuentoFaltas),
+        aporteEsSalud: Number(boletaDB.aporteEssalud || calc.aporteEsSalud),
+        diasTrabajados: boletaDB.diasTrabajados || calc.diasTrabajados,
+        diasFaltas: boletaDB.diasFaltas || 0,
+        _fromDB: true,
+      })
+    } else {
+      setActiveWorkerForBoleta(calcularPlanillaTrabajador(worker))
+    }
     setShowBoletaModal(true)
   }
 

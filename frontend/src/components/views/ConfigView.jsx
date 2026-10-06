@@ -27,7 +27,7 @@ export default function ConfigView({ showToast }) {
   })
 
   useEffect(() => {
-    supabase.from('empresas').select('ruc, razon_social, direccion, representante, actividad_economica, dominio_email').eq('id', 1).single()
+    supabase.from('empresas').select('ruc, razon_social, direccion, representante, actividad_economica, dominio_email, rmv, asig_familiar, essalud, uit').eq('id', 1).single()
       .then(({ data }) => {
         if (!data) return
         if (data.dominio_email) setDominioEmail(data.dominio_email)
@@ -38,6 +38,13 @@ export default function ConfigView({ showToast }) {
           representante: data.representante || '',
           actividad_economica: data.actividad_economica || '',
         })
+        setLaboralData(prev => ({
+          ...prev,
+          rmv: data.rmv || prev.rmv,
+          asigFamiliar: data.asig_familiar || prev.asigFamiliar,
+          essalud: data.essalud || prev.essalud,
+          uit: data.uit || prev.uit,
+        }))
       })
   }, [])
 
@@ -54,6 +61,18 @@ export default function ConfigView({ showToast }) {
     setSavingEmpresa(false)
     if (error) { showToast('Error al guardar datos de empresa.', 'error'); return }
     showToast('Datos de empresa guardados correctamente.', 'success')
+  }
+
+  const handleSaveLaboral = async (e) => {
+    e.preventDefault()
+    const { error } = await supabase.from('empresas').update({
+      rmv: laboralData.rmv,
+      asig_familiar: laboralData.asigFamiliar,
+      essalud: laboralData.essalud,
+      uit: laboralData.uit,
+    }).eq('id', 1)
+    if (error) { showToast('Error al guardar parámetros laborales.', 'error'); return }
+    showToast('Parámetros laborales guardados correctamente.', 'success')
   }
 
   const handleGuardarDominio = async (e) => {
@@ -162,7 +181,7 @@ export default function ConfigView({ showToast }) {
           )}
 
           {activeTab === 'laboral' && (
-            <form onSubmit={handleSave} className="max-w-3xl space-y-4">
+            <form onSubmit={handleSaveLaboral} className="max-w-3xl space-y-4">
               <div className="rounded-[24px] border border-slate-200 bg-slate-50/60 p-4 sm:p-5">
                 <div className="mb-4 flex items-center gap-2">
                   <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
@@ -208,6 +227,10 @@ export default function ConfigView({ showToast }) {
                   </div>
                 </div>
               </div>
+              <button type="submit"
+                className="inline-flex items-center gap-2 rounded-2xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-sky-700">
+                <Save size={14} /> Guardar parámetros
+              </button>
             </form>
           )}
 

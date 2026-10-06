@@ -151,3 +151,117 @@ export async function updateMarcacion({ trabajadorId, sedeId, fecha, codigoAsist
     return false
   }
 }
+
+export async function calcularPlanilla({ periodo, empresaId }) {
+  try {
+    const res = await fetch(`${BASE_URL}/planilla/calcular`, {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ periodo, empresaId }),
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    return await res.json()
+  } catch (err) {
+    console.warn('Fallo al calcular planilla:', err)
+    return null
+  }
+}
+
+export async function cerrarPlanilla({ periodo, empresaId, usuario }) {
+  try {
+    const res = await fetch(`${BASE_URL}/planilla/cerrar`, {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ periodo, empresaId, usuario }),
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    return await res.json()
+  } catch (err) {
+    console.warn('Fallo al cerrar planilla:', err)
+    return null
+  }
+}
+
+export async function getDetallesPlanilla(periodo) {
+  try {
+    const res = await fetch(`${BASE_URL}/planilla/detalles?periodo=${periodo}`, {
+      headers: authHeaders(),
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    return await res.json()
+  } catch (err) {
+    console.warn('Fallo al obtener detalles planilla:', err)
+    return null
+  }
+}
+
+export async function getBoletaTrabajador(trabajadorId, periodo) {
+  try {
+    const res = await fetch(`${BASE_URL}/planilla/boleta/${trabajadorId}?periodo=${periodo}`, {
+      headers: authHeaders(),
+    })
+    if (!res.ok) return null
+    return await res.json()
+  } catch (err) {
+    console.warn('Fallo al obtener boleta:', err)
+    return null
+  }
+}
+
+export async function getAuditoria(page = 0, size = 30) {
+  try {
+    const res = await fetch(`${BASE_URL}/planilla/auditoria?page=${page}&size=${size}`, {
+      headers: authHeaders(),
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    return await res.json()
+  } catch (err) {
+    console.warn('Fallo al obtener auditoría:', err)
+    return null
+  }
+}
+
+export async function crearSolicitudVacacion({ trabajadorId, fechaInicio, fechaFin, dias, observaciones }) {
+  try {
+    const res = await fetch(`${BASE_URL}/vacaciones`, {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ trabajadorId, fechaInicio, fechaFin, dias, observaciones }),
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    return await res.json()
+  } catch (err) {
+    console.warn('Fallo al crear solicitud vacación:', err)
+    return null
+  }
+}
+
+export async function getNotificaciones() {
+  try {
+    const res = await fetch(`${BASE_URL}/notificaciones`, {
+      headers: authHeaders(),
+    })
+    if (!res.ok) return []
+    return await res.json()
+  } catch {
+    return []
+  }
+}
+
+export async function marcarNotificacionLeida(id) {
+  try {
+    await fetch(`${BASE_URL}/notificaciones/${id}/leer`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+    })
+  } catch { /* silencioso */ }
+}
+
+export async function marcarTodasNotificacionesLeidas() {
+  try {
+    await fetch(`${BASE_URL}/notificaciones/leer-todas`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+    })
+  } catch { /* silencioso */ }
+}

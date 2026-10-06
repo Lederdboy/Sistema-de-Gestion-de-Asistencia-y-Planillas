@@ -7,7 +7,6 @@ import {
 } from 'lucide-react'
 import { SEDES, INITIAL_VACACIONES_REQUESTS, getVacationRecordForWorker } from '../../data/mockData'
 import { supabase } from '../../services/supabase'
-
 export default function VacacionesView({
   workers,
   onScheduleVacation,
@@ -176,11 +175,8 @@ export default function VacacionesView({
     if (!form.trabajadorId) { showToast('Selecciona un colaborador.', 'error'); return }
     const worker = workers.find((w) => w.id === Number(form.trabajadorId))
     if (!worker) return
-
-    // Validar fechas
     if (form.fechaFin < form.fechaInicio) { showToast('La fecha fin no puede ser anterior a la fecha inicio.', 'error'); return }
 
-    // Estado según rol
     const isEnGoce = form.fechaInicio <= fechaHoyStr && form.fechaFin >= fechaHoyStr
     let estadoFinal
     if (puedeAprobarDirecto) {
@@ -206,16 +202,45 @@ export default function VacacionesView({
     }
     setRequests([newRequest, ...requests])
 
-    // Guardar en Supabase
-    const { data: inserted } = await supabase.from('solicitudes_vacaciones').insert({
-      trabajador_id: worker.id,
-      fecha_inicio: form.fechaInicio,
-      fecha_fin: form.fechaFin,
-      dias: Number(form.dias),
-      estado: puedeAprobarDirecto ? 'APROBADO' : 'PENDIENTE',
-    }).select('id').single()
-    if (inserted) newRequest.dbId = inserted.id
-
+    // Intentar guardar via backend (auditoría + notificaciones)
+    try {
+      const token = JSON.parse(localStorage.getItem('planilla_user') || '{}').token
+      const res = await fetch('/api/v1/vacaciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          trabajadorId: worker.id,
+          fechaInicio: form.fechaInicio,
+          fechaFin: form.fechaFin,
+          dias: Number(form.dias),
+          observaciones: form.observaciones || null,
+        }),
+      })
+      if (res.ok) {
+        const inserted = await res.json()
+        if (inserted?.id) newRequest.dbId = inserted.id
+      } else {
+        // fallback directo a Supabase
+        const { data: inserted } = await supabase.from('solicitudes_vacaciones').insert({
+          trabajador_id: worker.id,
+          fecha_inicio: form.fechaInicio,
+          fecha_fin: form.fechaFin,
+          dias: Number(form.dias),
+          estado: puedeAprobarDirecto ? 'APROBADO' : 'PENDIENTE',
+        }).select('id').single()
+        if (inserted) newRequest.dbId = inserted.id
+      }
+    } catch {
+      // fallback directo a Supabase
+      const { data: inserted } = await supabase.from('solicitudes_vacaciones').insert({
+        trabajador_id: worker.id,
+        fecha_inicio: form.fechaInicio,
+        fecha_fin: form.fechaFin,
+        dias: Number(form.dias),
+        estado: puedeAprobarDirecto ? 'APROBADO' : 'PENDIENTE',
+      }).select('id').single()
+      if (inserted) newRequest.dbId = inserted.id
+    }
 
     if (form.syncTareo && onScheduleVacation && puedeAprobarDirecto) {
       onScheduleVacation({ workerId: Number(form.trabajadorId), fechaInicio: form.fechaInicio, fechaFin: form.fechaFin, dias: Number(form.dias), isEnGoce })

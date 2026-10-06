@@ -18,6 +18,9 @@ const BREADCRUMB_MAP = {
   planilla:   { section: 'Cálculo de Nómina', page: 'Pre-Planilla Mensual' },
   reportes:   { section: 'Declaraciones & Boletas', page: 'Reportes SUNAT y Boletas' },
   config:     { section: 'Administración', page: 'Configuración y Parámetros' },
+  usuarios:   { section: 'Administración', page: 'Gestión de Usuarios' },
+  auditoria:  { section: 'Administración', page: 'Historial de Auditoría' },
+  'mi-espacio': { section: 'Mi Espacio', page: 'Portal del Trabajador' },
 }
 
 export default function TopBar({
@@ -34,7 +37,7 @@ export default function TopBar({
   const [showNotifs, setShowNotifs] = useState(false)
   const noLeidas = notifs.filter(n => !n.leida).length
 
-  useEffect(() => {
+  const fetchNotifs = () => {
     if (!user?.token) return
     fetch('/api/v1/notificaciones', {
       headers: { Authorization: `Bearer ${user.token}` },
@@ -42,6 +45,12 @@ export default function TopBar({
       .then(r => r.ok ? r.json() : [])
       .then(data => setNotifs(Array.isArray(data) ? data : []))
       .catch(() => {})
+  }
+
+  useEffect(() => {
+    fetchNotifs()
+    const interval = setInterval(fetchNotifs, 30000)
+    return () => clearInterval(interval)
   }, [user?.token])
 
   const marcarLeida = async (id) => {
@@ -104,7 +113,7 @@ export default function TopBar({
       <div className="flex items-center gap-2.5 sm:gap-3">
         <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-xs font-semibold text-blue-700">
           <Calendar size={13} className="text-blue-600" />
-          <span>Periodo: 2026-09</span>
+          <span>Periodo: {new Date().toLocaleString('es-PE', { month: 'long', year: 'numeric' })}</span>
         </div>
 
         {user?.sedeName && (
