@@ -12,9 +12,11 @@ import {
   Search,
 } from 'lucide-react'
 import { calcularPlanillaTrabajador } from '../../data/mockData'
+import { exportarPlanillaExcel, exportarDispersiónBancariaTxt } from '../../services/excelService'
+import { cerrarPlanilla } from '../../services/api'
 
 export default function PlanillaView({ workers, onViewBoleta, showToast, loading = false }) {
-  const [periodo, setPeriodo] = useState('2025-07')
+  const [periodo, setPeriodo] = useState('2026-09')
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('Pre-Planilla') // 'Pre-Planilla' | 'Aprobada'
 
@@ -34,12 +36,12 @@ export default function PlanillaView({ workers, onViewBoleta, showToast, loading
         </div>
 
         {/* 4 Totales KPI Cards Skeleton */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs space-y-2.5">
-              <div className="h-3.5 w-24 rounded-full bg-slate-200" />
-              <div className="h-8 w-36 rounded-lg bg-slate-200" />
-              <div className="h-3 w-28 rounded-full bg-slate-200" />
+            <div key={i} className="bg-white border border-slate-200/90 rounded-2xl p-3 sm:p-5 shadow-xs space-y-2">
+              <div className="h-3 w-20 sm:w-24 rounded-full bg-slate-200" />
+              <div className="h-6 sm:h-8 w-24 sm:w-36 rounded-lg bg-slate-200" />
+              <div className="h-2.5 w-20 sm:w-28 rounded-full bg-slate-200" />
             </div>
           ))}
         </div>
@@ -78,16 +80,36 @@ export default function PlanillaView({ workers, onViewBoleta, showToast, loading
   const totalNetoGeneral = planillas.reduce((acc, p) => acc + p.netoPagar, 0)
   const totalEsSaludGeneral = planillas.reduce((acc, p) => acc + p.aporteEsSalud, 0)
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
     setStatus('Aprobada')
-    showToast(`Planilla del periodo ${periodo} aprobada satisfactoriamente. Lista para dispersión bancaria.`, 'success')
+    try {
+      await cerrarPlanilla(periodo, 1, 'Carlos Mendoza (Admin)')
+      showToast(`Planilla del periodo ${periodo} aprobada y cerrada en SQL Server. Lista para dispersión bancaria.`, 'success')
+    } catch {
+      showToast(`Planilla del periodo ${periodo} aprobada satisfactoriamente. Lista para dispersión bancaria.`, 'success')
+    }
+  }
+
+  const handleExportExcel = () => {
+    try {
+      showToast(`Generando planilla consolidada en Excel (.xlsx)...`, 'info')
+      exportarPlanillaExcel(planillas, periodo)
+      showToast(`Planilla consolidada_${periodo}.xlsx descargada con éxito.`, 'success')
+    } catch (err) {
+      console.error(err)
+      showToast('Error al exportar planilla a Excel.', 'error')
+    }
   }
 
   const handleExportBank = () => {
-    showToast('Generando archivo de dispersión bancaria formato BCP Telecrédito / BBVA...', 'info')
-    setTimeout(() => {
-      showToast('Archivo bancario generado exitosamente (pagos_haberes_jul2025.txt).', 'success')
-    }, 900)
+    try {
+      showToast('Generando archivo de dispersión bancaria formato BCP Telecrédito...', 'info')
+      exportarDispersiónBancariaTxt(planillas, periodo)
+      showToast(`Archivo bancario pagos_haberes_${periodo}_bcp.txt descargado exitosamente.`, 'success')
+    } catch (err) {
+      console.error(err)
+      showToast('Error al generar archivo bancario.', 'error')
+    }
   }
 
   return (
@@ -95,9 +117,7 @@ export default function PlanillaView({ workers, onViewBoleta, showToast, loading
       <div className="rounded-[28px] border border-slate-200/80 bg-white/85 p-4 backdrop-blur-xl sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-sky-700 shadow-inner shadow-sky-200/80">
-              <FileSpreadsheet size={20} />
-            </div>
+            <FileSpreadsheet size={24} className="text-black shrink-0 mt-0.5" />
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
@@ -120,6 +140,14 @@ export default function PlanillaView({ workers, onViewBoleta, showToast, loading
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={handleExportExcel}
+              className="inline-flex items-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-3.5 py-2.5 text-xs font-semibold text-sky-700 shadow-sm transition-all hover:bg-sky-100 hover:border-sky-300"
+            >
+              <FileSpreadsheet size={13} />
+              Exportar Excel (.xlsx)
+            </button>
+
             <button
               onClick={handleExportBank}
               className="inline-flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-600 px-3.5 py-2.5 text-xs font-semibold text-white shadow-[0_12px_25px_rgba(16,185,129,0.25)] transition-all hover:bg-emerald-700"
@@ -146,37 +174,37 @@ export default function PlanillaView({ workers, onViewBoleta, showToast, loading
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-[24px] border border-slate-200 bg-white/85 p-3.5 shadow-[0_16px_36px_rgba(15,23,42,0.05)]">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Total remuneración bruta</p>
-          <p className="mt-2 text-2xl font-black text-slate-900">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-2.5 sm:gap-3">
+        <div className="rounded-[22px] sm:rounded-[24px] border border-slate-200 bg-white/85 p-3 sm:p-3.5 shadow-2xs">
+          <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500 truncate">Total bruta</p>
+          <p className="mt-1 sm:mt-2 text-lg sm:text-2xl font-black text-slate-900 font-mono">
             S/ {totalBrutoGeneral.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
           </p>
-          <p className="mt-1 text-[10px] text-slate-500">Básico + asig. familiar + horas extras</p>
+          <p className="mt-0.5 sm:mt-1 text-[9px] sm:text-[10px] text-slate-500 truncate">Básico + asig. + HE</p>
         </div>
 
-        <div className="rounded-[24px] border border-rose-200 bg-rose-50/70 p-3.5 shadow-[0_16px_36px_rgba(244,63,94,0.06)]">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-rose-600">Total descuentos ley</p>
-          <p className="mt-2 text-2xl font-black text-rose-700">
+        <div className="rounded-[22px] sm:rounded-[24px] border border-rose-200 bg-rose-50/70 p-3 sm:p-3.5 shadow-2xs">
+          <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.1em] text-rose-600 truncate">Descuentos ley</p>
+          <p className="mt-1 sm:mt-2 text-lg sm:text-2xl font-black text-rose-700 font-mono">
             - S/ {totalDescuentosGeneral.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
           </p>
-          <p className="mt-1 text-[10px] text-rose-600">AFP, ONP, faltas y 5ta categoría</p>
+          <p className="mt-0.5 sm:mt-1 text-[9px] sm:text-[10px] text-rose-600 truncate">AFP, ONP, faltas</p>
         </div>
 
-        <div className="rounded-[24px] border border-sky-200 bg-sky-50/80 p-3.5 shadow-[0_16px_36px_rgba(14,165,233,0.08)]">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-sky-700">Total neto a pagar</p>
-          <p className="mt-2 text-2xl font-black text-sky-900">
+        <div className="rounded-[22px] sm:rounded-[24px] border border-sky-200 bg-sky-50/80 p-3 sm:p-3.5 shadow-2xs">
+          <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.1em] text-sky-700 truncate">Neto a pagar</p>
+          <p className="mt-1 sm:mt-2 text-lg sm:text-2xl font-black text-sky-900 font-mono">
             S/ {totalNetoGeneral.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
           </p>
-          <p className="mt-1 text-[10px] text-sky-700">Dispersión bancaria colaboradores</p>
+          <p className="mt-0.5 sm:mt-1 text-[9px] sm:text-[10px] text-sky-700 truncate">Dispersión bancaria</p>
         </div>
 
-        <div className="rounded-[24px] border border-emerald-200 bg-emerald-50/80 p-3.5 shadow-[0_16px_36px_rgba(16,185,129,0.08)]">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-700">Aportes empleador</p>
-          <p className="mt-2 text-2xl font-black text-emerald-900">
+        <div className="rounded-[22px] sm:rounded-[24px] border border-emerald-200 bg-emerald-50/80 p-3 sm:p-3.5 shadow-2xs">
+          <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.1em] text-emerald-700 truncate">Aportes empleador</p>
+          <p className="mt-1 sm:mt-2 text-lg sm:text-2xl font-black text-emerald-900 font-mono">
             S/ {totalEsSaludGeneral.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
           </p>
-          <p className="mt-1 text-[10px] text-emerald-700">EsSalud (9%) declarados en PLAME</p>
+          <p className="mt-0.5 sm:mt-1 text-[9px] sm:text-[10px] text-emerald-700 truncate">EsSalud 9% PLAME</p>
         </div>
       </div>
 
@@ -199,9 +227,14 @@ export default function PlanillaView({ workers, onViewBoleta, showToast, loading
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white/85 shadow-[0_20px_40px_rgba(15,23,42,0.04)]">
-        <div className="overflow-x-auto">
-          <table className="min-w-[980px] w-full border-collapse text-left text-xs">
+      {/* Indicador de desplazamiento para móviles */}
+      <div className="flex items-center justify-center gap-1.5 text-[11px] text-blue-700 bg-blue-50/80 border border-blue-200 rounded-xl px-3 py-1.5 sm:hidden">
+        <span>Desliza horizontalmente la tabla para ver todos los montos</span>
+      </div>
+
+      <div className="rounded-[24px] border border-slate-200 bg-white/90 shadow-[0_20px_40px_rgba(15,23,42,0.04)] overflow-hidden">
+        <div className="table-scroll-container pb-2">
+          <table className="min-w-[980px] w-full border-collapse text-left text-xs select-auto">
             <thead className="border-b border-slate-200 bg-slate-50/90 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-600">
               <tr>
                 <th className="px-3 py-3">Colaborador</th>

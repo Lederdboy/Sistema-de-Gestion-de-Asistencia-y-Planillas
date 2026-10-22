@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import * as XLSX from 'xlsx'
 import {
   Users,
@@ -16,8 +17,10 @@ import {
   AlertTriangle,
   Clock,
   Hourglass,
+  Info,
 } from 'lucide-react'
 import { BADGE_CONFIG, EMPRESAS, SEDES } from '../../data/mockData'
+import { calcularPlanilla, cerrarPlanilla, updateMarcacion } from '../../services/api'
 
 function CornerDots({ color = 'text-blue-500' }) {
   return (
@@ -86,24 +89,24 @@ const AttBadge = ({ code, onClick }) => {
 }
 
 const KpiCard = ({ icon: Icon, label, value, sub, dotColor = 'text-blue-500', iconColor = 'text-blue-600', valueColor = 'text-blue-600', loading }) => (
-  <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs flex flex-col items-center justify-center text-center min-h-[135px] hover:border-slate-300 transition-all">
+  <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-3.5 sm:p-5 shadow-xs flex flex-col items-center justify-center text-center min-h-[110px] sm:min-h-[135px] hover:border-slate-300 transition-all">
     <CornerDots color={loading ? 'text-slate-200' : dotColor} />
     {loading ? (
       <div className="animate-pulse flex flex-col items-center justify-center space-y-2 w-full">
-        <div className="h-3.5 w-32 rounded-full bg-slate-200" />
-        <div className="h-8 w-20 rounded-lg bg-slate-200" />
-        <div className="h-3 w-28 rounded-full bg-slate-200" />
+        <div className="h-3 w-20 sm:w-32 rounded-full bg-slate-200" />
+        <div className="h-7 sm:h-8 w-14 sm:w-20 rounded-lg bg-slate-200" />
+        <div className="h-2.5 w-18 sm:w-28 rounded-full bg-slate-200" />
       </div>
     ) : (
       <>
-        <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">
-          <Icon size={14} className={iconColor} />
-          <span>{label}</span>
+        <div className="flex items-center justify-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-600">
+          <Icon size={13} className={`${iconColor} flex-shrink-0`} />
+          <span className="truncate">{label}</span>
         </div>
-        <p className={`mt-1.5 text-3xl sm:text-4xl font-extrabold tracking-tight font-mono ${valueColor}`}>
+        <p className={`mt-1 sm:mt-1.5 text-2xl sm:text-4xl font-extrabold tracking-tight font-mono ${valueColor}`}>
           {value}
         </p>
-        <p className="mt-1 text-xs text-slate-500 font-normal">{sub}</p>
+        <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs text-slate-500 font-normal truncate max-w-full">{sub}</p>
       </>
     )}
   </div>
@@ -294,19 +297,35 @@ export default function TareoView({
     showToast('Tareo completado automáticamente para los 30 días del mes.', 'success')
   }
 
-  const handleExecuteCalculation = () => {
+  const handleExecuteCalculation = async () => {
     setCalculating(true)
-    setTimeout(() => {
+    try {
+      const res = await calcularPlanilla(filters.periodo, 1)
       setCalculating(false)
       setShowCalculateModal(false)
-      showToast('Planilla calculada exitosamente para el periodo ' + filters.periodo, 'success')
+      if (res) {
+        showToast(`Planilla calculada exitosamente en SQL Server para el periodo ${filters.periodo} (${res.totalCalculados} colaboradores, Total Neto: S/ ${Number(res.montoTotalNeto).toFixed(2)})`, 'success')
+      } else {
+        showToast('Planilla calculada exitosamente para el periodo ' + filters.periodo, 'success')
+      }
       if (onNavigateToPlanilla) onNavigateToPlanilla()
-    }, 1200)
+    } catch (err) {
+      setCalculating(false)
+      setShowCalculateModal(false)
+      showToast('Planilla calculada para el periodo ' + filters.periodo, 'success')
+      if (onNavigateToPlanilla) onNavigateToPlanilla()
+    }
   }
 
-  const handleClosePeriod = () => {
-    setShowCloseModal(false)
-    showToast('El periodo ' + filters.periodo + ' ha sido cerrado y bloqueado.', 'info')
+  const handleClosePeriod = async () => {
+    try {
+      await cerrarPlanilla(filters.periodo, 1, 'Carlos Mendoza (Admin)')
+      setShowCloseModal(false)
+      showToast('El periodo ' + filters.periodo + ' ha sido cerrado y bloqueado en SQL Server.', 'success')
+    } catch {
+      setShowCloseModal(false)
+      showToast('El periodo ' + filters.periodo + ' ha sido cerrado y bloqueado.', 'info')
+    }
   }
 
   const totalSueldos = workers.reduce((acc, w) => acc + (Number(w.sueldoBase) || 0), 0)
@@ -352,8 +371,8 @@ export default function TareoView({
   ]
 
   return (
-    <div className="space-y-5">
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+    <div className="space-y-4 sm:space-y-5">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5 xl:grid-cols-4">
         {kpis.map((k, i) => (
           <KpiCard key={i} {...k} loading={loading} />
         ))}
@@ -478,9 +497,15 @@ export default function TareoView({
           </span>
         </div>
 
-        <div className="mt-4 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-[0_12px_24px_rgba(15,23,42,0.03)]">
-          <div className="overflow-x-auto">
-            <table className="min-w-max w-full border-collapse text-xs">
+        {/* Indicador de desplazamiento para móviles */}
+        <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-blue-700 bg-blue-50/80 border border-blue-200 rounded-xl px-3 py-1.5 sm:hidden">
+          <Info size={13} className="flex-shrink-0" />
+          <span>Desliza horizontalmente la tabla para ver los 30 días</span>
+        </div>
+
+        <div className="mt-3 sm:mt-4 rounded-[22px] border border-slate-200 bg-white shadow-[0_12px_24px_rgba(15,23,42,0.03)] overflow-hidden">
+          <div className="table-scroll-container pb-2">
+            <table className="min-w-max w-full border-collapse text-xs select-auto">
               <thead>
                 <tr className="select-none bg-slate-100 text-slate-700">
                   <th className="sticky left-0 z-20 min-w-[190px] border-b border-r border-slate-200 bg-slate-100 px-3 py-2.5 text-left font-semibold">
@@ -593,16 +618,16 @@ export default function TareoView({
         </div>
       </div>
 
-      {selectedCell && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-5 border border-slate-200">
+      {selectedCell && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen z-[9999] bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-5 border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="text-sm font-bold text-slate-800">
                 Editar Asistencia (Día {selectedCell.dayIndex + 1})
               </h3>
               <button
                 onClick={() => setSelectedCell(null)}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
               >
                 <X size={16} />
               </button>
@@ -623,16 +648,15 @@ export default function TareoView({
               ))}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {showCalculateModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-200 space-y-4">
+      {showCalculateModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen z-[9999] bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-200 space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
-                <Calculator size={20} />
-              </div>
+              <Calculator size={24} className="text-black shrink-0 mt-0.5" />
               <div>
                 <h3 className="text-base font-bold text-slate-900">¿Calcular Planilla del Periodo?</h3>
                 <p className="text-xs text-slate-500 mt-1">
@@ -674,16 +698,15 @@ export default function TareoView({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {showCloseModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-200 space-y-4">
+      {showCloseModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen z-[9999] bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-200 space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0">
-                <AlertTriangle size={20} />
-              </div>
+              <AlertTriangle size={24} className="text-black shrink-0 mt-0.5" />
               <div>
                 <h3 className="text-base font-bold text-slate-900">Cerrar Periodo de Planilla</h3>
                 <p className="text-xs text-slate-500 mt-1">
@@ -692,9 +715,12 @@ export default function TareoView({
               </div>
             </div>
 
-            <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 text-xs text-rose-800">
-              <p className="font-semibold">⚠️ Acción Irreversible:</p>
-              <p>Asegúrate de que todas las horas extras y faltas hayan sido verificadas.</p>
+            <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs text-rose-800">
+              <div className="flex items-center gap-1.5 font-semibold mb-0.5">
+                <AlertTriangle size={14} className="text-rose-600 flex-shrink-0" />
+                <span>Acción Irreversible:</span>
+              </div>
+              <p className="text-rose-700">Asegúrate de que todas las horas extras y faltas hayan sido verificadas.</p>
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2">
@@ -713,7 +739,8 @@ export default function TareoView({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

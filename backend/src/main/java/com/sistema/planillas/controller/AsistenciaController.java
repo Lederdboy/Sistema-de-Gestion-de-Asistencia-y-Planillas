@@ -14,7 +14,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping({"/api/v1/asistencia", "/api/v2/asistencia"})
-@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class AsistenciaController {
 

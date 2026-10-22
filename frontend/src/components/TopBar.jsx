@@ -5,6 +5,7 @@ import {
   Calendar,
   Shield,
   PanelLeft,
+  Menu,
   Bell,
   Clock,
   Minus,
@@ -50,23 +51,42 @@ export default function TopBar({
 
   return (
     <header
-      className={`fixed top-0 right-0 h-16 bg-white/95 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 z-20 transition-all duration-300 shadow-2xs ${
+      className={`fixed top-0 right-0 h-16 bg-white/95 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-3 sm:px-6 z-20 transition-all duration-300 shadow-2xs ${
         isMobile ? 'left-0' : isSidebarOpen ? 'left-64' : 'left-16'
       }`}
     >
-      <div className="flex items-center gap-3.5 min-w-0">
+      <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
         {isMobile && (
-          <button
-            type="button"
-            onClick={onToggleSidebar}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-2xs transition-colors hover:border-slate-300 hover:text-slate-900 cursor-pointer"
-            aria-label="Abrir menú"
-          >
-            <PanelLeft size={16} />
-          </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              type="button"
+              onClick={onToggleSidebar}
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700 shadow-2xs transition-colors hover:bg-slate-100 hover:text-slate-900 cursor-pointer"
+              aria-label="Abrir menú"
+              title="Abrir menú de navegación"
+            >
+              <Menu size={18} />
+            </button>
+            <img
+              src="/logo.png"
+              alt="Logo"
+              className="h-7 w-auto object-contain flex-shrink-0"
+            />
+          </div>
         )}
 
-        <nav className="flex items-center gap-2 text-xs min-w-0">
+        {/* Breadcrumb para Mobile (Compacto) */}
+        <div className="flex flex-col min-w-0 sm:hidden">
+          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider leading-none">
+            {section}
+          </span>
+          <span className="font-bold text-slate-900 text-xs truncate leading-tight mt-0.5">
+            {page}
+          </span>
+        </div>
+
+        {/* Breadcrumb para Tablet y Desktop (Completo) */}
+        <nav className="hidden sm:flex items-center gap-2 text-xs min-w-0">
           <span className="font-semibold text-slate-400 hover:text-slate-600 transition-colors">
             Planillas
           </span>
@@ -81,14 +101,14 @@ export default function TopBar({
         </nav>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-2.5">
-        {/* Medidor de Vista (Solo afecta al área de vista de contenido, no al panel) */}
+      <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
+        {/* Medidor de Vista (Compacto en mobile, completo con + / - en desktop) */}
         <div className="relative flex items-center bg-white border border-slate-200 rounded-xl shadow-2xs p-0.5 text-xs">
           <button
             type="button"
             onClick={() => onZoomChange && onZoomChange(Math.max(65, viewZoom - 5))}
             disabled={viewZoom <= 65}
-            className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+            className="hidden sm:flex h-7 w-7 items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
             title="Reducir vista (-5%)"
           >
             <Minus size={13} />
@@ -97,7 +117,7 @@ export default function TopBar({
           <button
             type="button"
             onClick={() => setShowZoomMenu(!showZoomMenu)}
-            className="px-2 h-7 flex items-center gap-1.5 hover:bg-slate-100 rounded-lg text-[11px] font-semibold text-slate-800 transition-colors cursor-pointer"
+            className="px-2 h-7 flex items-center gap-1 hover:bg-slate-100 rounded-lg text-[11px] font-semibold text-slate-800 transition-colors cursor-pointer"
             title="Medida de vista (Afecta solo al contenido, predeterminado 100%)"
           >
             <Maximize2 size={12} className="text-blue-600" />
@@ -109,7 +129,7 @@ export default function TopBar({
             type="button"
             onClick={() => onZoomChange && onZoomChange(Math.min(135, viewZoom + 5))}
             disabled={viewZoom >= 135}
-            className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+            className="hidden sm:flex h-7 w-7 items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
             title="Aumentar vista (+5%)"
           >
             <Plus size={13} />
@@ -181,11 +201,12 @@ export default function TopBar({
         <button
           onClick={onRefresh}
           disabled={refreshing}
-          className="flex items-center gap-2 text-xs font-semibold text-slate-700 hover:text-slate-900 border border-slate-200 bg-white hover:bg-slate-50 rounded-lg px-3 py-1.5 shadow-2xs transition-all cursor-pointer"
+          className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-700 hover:text-slate-900 border border-slate-200 bg-white hover:bg-slate-50 rounded-xl p-2 sm:px-3 sm:py-1.5 shadow-2xs transition-all cursor-pointer"
+          title="Actualizar datos"
         >
           <RefreshCw
-            size={13}
-            className={`text-slate-400 ${refreshing ? 'animate-spin text-blue-600' : ''}`}
+            size={14}
+            className={`text-slate-500 ${refreshing ? 'animate-spin text-blue-600' : ''}`}
           />
           <span className="hidden md:inline">Actualizar</span>
         </button>

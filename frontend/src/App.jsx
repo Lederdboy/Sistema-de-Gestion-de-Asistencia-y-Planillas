@@ -15,7 +15,7 @@ import ConfigView from './components/views/ConfigView'
 import PerfilView from './components/views/PerfilView'
 
 import { INITIAL_WORKERS, createTareoCompleto } from './data/mockData'
-import { getTrabajadores, getSedes } from './services/api'
+import { getTrabajadores, getSedes, crearTrabajador, updateMarcacion } from './services/api'
 
 export default function App() {
   const [isMobile, setIsMobile] = useState(false)
@@ -181,7 +181,7 @@ export default function App() {
   }
 
   // Actualizar asistencia en tareo
-  const handleUpdateWorkerTareo = (workerId, dayIndex, newCode) => {
+  const handleUpdateWorkerTareo = async (workerId, dayIndex, newCode) => {
     setWorkers((prev) =>
       prev.map((w) => {
         if (w.id === workerId) {
@@ -192,22 +192,62 @@ export default function App() {
         return w
       })
     )
+
+    // Persistir marcación en tiempo real en SQL Server
+    try {
+      const dayNum = String(dayIndex + 1).padStart(2, '0')
+      await updateMarcacion({
+        trabajadorId: Number(workerId),
+        fecha: `2026-09-${dayNum}`,
+        codigoAsistencia: newCode,
+        observacion: 'Actualizado desde TareoView',
+      })
+    } catch {
+      // modo offline
+    }
   }
 
-  // Agregar nuevo colaborador
-  const handleAddWorker = (newWorker) => {
+  // Agregar nuevo colaborador y persistir en SQL Server
+  const handleAddWorker = async (newWorker) => {
+    try {
+      const partes = (newWorker.nombre || '').trim().split(' ')
+      const apPaterno = partes[0] || 'Nuevo'
+      const apMaterno = partes[1] || ''
+      const nombres = partes.slice(2).join(' ') || partes[0] || 'Trabajador'
+
+      const apiResult = await crearTrabajador({
+        empresaId: Number(newWorker.empresaId || 1),
+        sedeId: Number(newWorker.sedeId || 1),
+        tipoDocumento: 'DNI',
+        numeroDocumento: newWorker.dni,
+        nombres: nombres,
+        apellidoPaterno: apPaterno,
+        apellidoMaterno: apMaterno,
+        cargo: newWorker.cargo,
+        fechaIngreso: newWorker.fechaIngreso || new Date().toISOString().split('T')[0],
+        sueldoBasico: Number(newWorker.sueldoBase) || 1500,
+        sueldoDiario: Number(((Number(newWorker.sueldoBase) || 1500) / 30).toFixed(2)),
+      })
+
+      if (apiResult && apiResult.id) {
+        newWorker.id = apiResult.id
+      }
+    } catch (err) {
+      console.warn('Registro local de respaldo:', err)
+    }
+
     setWorkers((prev) => [newWorker, ...prev])
   }
 
-  // Programar vacaciones y sincronizar con tareo
-  const handleScheduleVacation = ({ workerId, fechaInicio, fechaFin, dias, isEnGoce }) => {
+  // Programar vacaciones y sincronizar con tareo y base de datos
+  const handleScheduleVacation = async ({ workerId, fechaInicio, fechaFin, dias, isEnGoce }) => {
+    const isCurrentMonth = fechaInicio && fechaInicio.startsWith('2026-09')
+    const startDay = parseInt((fechaInicio || '').split('-')[2], 10)
+    const endDay = parseInt((fechaFin || '').split('-')[2], 10)
+
     setWorkers((prev) =>
       prev.map((w) => {
         if (w.id === workerId) {
-          const isCurrentMonth = fechaInicio.startsWith('2026-09')
-          const startDay = parseInt(fechaInicio.split('-')[2], 10)
-          const endDay = parseInt(fechaFin.split('-')[2], 10)
-
           let updatedTareo = [...(w.tareo || [])]
           if (isCurrentMonth && startDay && endDay) {
             for (let d = startDay - 1; d < Math.min(30, endDay); d++) {
@@ -226,6 +266,25 @@ export default function App() {
         return w
       })
     )
+
+    // Persistir marcaciones de vacaciones 'V' en SQL Server
+    if (isCurrentMonth && startDay && endDay) {
+      for (let d = startDay - 1; d < Math.min(30, endDay); d++) {
+        if (d >= 0) {
+          const dayNum = String(d + 1).padStart(2, '0')
+          try {
+            await updateMarcacion({
+              trabajadorId: Number(workerId),
+              fecha: `2026-09-${dayNum}`,
+              codigoAsistencia: 'V',
+              observacion: 'Programación de Vacaciones (Goce)',
+            })
+          } catch {
+            // ignorar error de red individual
+          }
+        }
+      }
+    }
   }
 
   // Si no está autenticado, mostrar pantalla de Login
@@ -234,14 +293,14 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] font-sans text-slate-900 overflow-x-hidden antialiased">
+    <div className="min-h-screen bg-[#F8FAFC] font-sans text-slate-900 antialiased">
 
       {isMobile && isSidebarOpen && (
         <button
           type="button"
           aria-label="Cerrar menú"
           onClick={() => setIsSidebarOpen(false)}
-          className="fixed inset-0 z-30 bg-slate-950/30 backdrop-blur-[1px]"
+          className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-xs transition-opacity"
         />
       )}
 
@@ -270,14 +329,14 @@ export default function App() {
         onZoomChange={handleZoomChange}
       />
 
-      {/* Contenido Principal a Ancho Completo (Solo la vista escala según el medidor, el panel se mantiene intacto) */}
+      {/* Contenido Principal a Ancho Completo con espacio suficiente debajo del header */}
       <main
-        className={`relative min-h-screen pt-20 pb-8 transition-all duration-300 ${
-          isMobile ? 'ml-0 px-3 sm:px-5' : 'px-3 sm:px-5 lg:px-6'
+        className={`relative min-h-screen pt-20 sm:pt-24 pb-12 transition-all duration-300 ${
+          isMobile ? 'ml-0 px-3 sm:px-4' : 'px-3 sm:px-5 lg:px-6'
         } ${isMobile ? '' : isSidebarOpen ? 'lg:ml-64' : 'lg:ml-16'}`}
       >
         <div
-          className="mx-auto w-full max-w-[1700px] origin-top transition-all duration-150"
+          className="mx-auto w-full max-w-[1700px] origin-top min-w-0 transition-all duration-150"
           style={{ zoom: `${viewZoom}%` }}
         >
           {activeNav === 'dashboard' && (

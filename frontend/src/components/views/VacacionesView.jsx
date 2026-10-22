@@ -25,6 +25,7 @@ import {
   INITIAL_VACACIONES_REQUESTS,
   getVacationRecordForWorker,
 } from '../../data/mockData'
+import { exportarRecordVacacionalExcel } from '../../services/excelService'
 
 export default function VacacionesView({
   workers,
@@ -228,13 +229,17 @@ export default function VacacionesView({
 
   // Exportar reporte
   const handleExport = () => {
-    showToast(
-      'Generando reporte consolidado de récord vacacional (Excel / D.L. 713)...',
-      'info'
-    )
-    setTimeout(() => {
-      showToast('Reporte de Vacaciones 2026 descargado correctamente.', 'success')
-    }, 1200)
+    try {
+      showToast(
+        'Generando reporte consolidado de récord vacacional (Excel / D.L. 713)...',
+        'info'
+      )
+      exportarRecordVacacionalExcel(filteredRecords)
+      showToast('Reporte de Vacaciones 2026 descargado en Excel (.xlsx) correctamente.', 'success')
+    } catch (err) {
+      console.error(err)
+      showToast('Error al exportar reporte de vacaciones a Excel.', 'error')
+    }
   }
 
   // Obtener colaborador del simulador
@@ -296,7 +301,7 @@ export default function VacacionesView({
       <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <Palmtree size={16} className="text-blue-600" />
+            <Palmtree size={18} className="text-black" />
             Gestión y Control de Vacaciones
             <span className="ml-1 px-2 py-0.5 text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200 rounded">
               D.L. 713 / D.L. 1405
@@ -307,10 +312,10 @@ export default function VacacionesView({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
           <button
             onClick={handleExport}
-            className="h-9 px-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="h-9 px-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
           >
             <Download size={13} className="text-slate-500" />
             <span>Exportar Récord</span>
@@ -318,7 +323,7 @@ export default function VacacionesView({
 
           <button
             onClick={() => setShowNewModal(true)}
-            className="h-9 px-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm shadow-blue-500/20 cursor-pointer"
+            className="h-9 px-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
           >
             <Plus size={14} />
             <span>Programar Vacaciones</span>
@@ -326,66 +331,66 @@ export default function VacacionesView({
         </div>
       </div>
 
-      {/* ─── KPI Cards (Iconos libres, sin cuadros contenedores) ─────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      {/* ─── KPI Cards (2x2 en móvil, 4 columnas en desktop) ─────────── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
         {/* En Goce Actualmente */}
-        <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-xs flex items-center justify-between hover:border-slate-300 transition-colors">
-          <div>
-            <p className="text-xs font-medium text-slate-500">En Goce Hoy</p>
-            <div className="flex items-baseline gap-2 mt-0.5">
-              <span className="text-xl font-bold text-slate-900">{kpis.enGoce}</span>
-              <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
+        <div className="bg-white border border-slate-200 rounded-xl p-3 sm:p-4 shadow-xs flex items-center justify-between hover:border-slate-300 transition-colors">
+          <div className="min-w-0 pr-1">
+            <p className="text-[11px] sm:text-xs font-medium text-slate-500 truncate">En Goce Hoy</p>
+            <div className="flex items-baseline gap-1.5 mt-0.5">
+              <span className="text-lg sm:text-xl font-bold text-slate-900 font-mono">{kpis.enGoce}</span>
+              <span className="text-[9px] sm:text-[10px] font-semibold text-amber-700 bg-amber-50 px-1 py-0.2 rounded border border-amber-200 truncate">
                 En descanso
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">Periodo 2026-09</p>
+            <p className="text-[10px] sm:text-[11px] text-slate-400 mt-1 truncate">Periodo 2026-09</p>
           </div>
-          <Sun size={24} className="text-amber-500 flex-shrink-0" />
+          <Sun size={20} className="text-amber-500 flex-shrink-0" />
         </div>
 
         {/* Saldo Pendiente Global */}
-        <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-xs flex items-center justify-between hover:border-slate-300 transition-colors">
-          <div>
-            <p className="text-xs font-medium text-slate-500">Saldo Pendiente Global</p>
-            <div className="flex items-baseline gap-2 mt-0.5">
-              <span className="text-xl font-bold text-slate-900">{kpis.totalSaldo}</span>
-              <span className="text-xs text-slate-400">días</span>
+        <div className="bg-white border border-slate-200 rounded-xl p-3 sm:p-4 shadow-xs flex items-center justify-between hover:border-slate-300 transition-colors">
+          <div className="min-w-0 pr-1">
+            <p className="text-[11px] sm:text-xs font-medium text-slate-500 truncate">Saldo Global</p>
+            <div className="flex items-baseline gap-1 mt-0.5">
+              <span className="text-lg sm:text-xl font-bold text-slate-900 font-mono">{kpis.totalSaldo}</span>
+              <span className="text-[10px] text-slate-400">días</span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">
-              Promedio: {(kpis.totalSaldo / (workers.length || 1)).toFixed(1)} d / colab.
+            <p className="text-[10px] sm:text-[11px] text-slate-400 mt-1 truncate">
+              {(kpis.totalSaldo / (workers.length || 1)).toFixed(1)} d / colab.
             </p>
           </div>
-          <CalendarDays size={24} className="text-blue-500 flex-shrink-0" />
+          <CalendarDays size={20} className="text-blue-500 flex-shrink-0" />
         </div>
 
         {/* Próximas Salidas */}
-        <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-xs flex items-center justify-between hover:border-slate-300 transition-colors">
-          <div>
-            <p className="text-xs font-medium text-slate-500">Próximas Salidas</p>
-            <div className="flex items-baseline gap-2 mt-0.5">
-              <span className="text-xl font-bold text-slate-900">{kpis.proximasSalidas}</span>
-              <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+        <div className="bg-white border border-slate-200 rounded-xl p-3 sm:p-4 shadow-xs flex items-center justify-between hover:border-slate-300 transition-colors">
+          <div className="min-w-0 pr-1">
+            <p className="text-[11px] sm:text-xs font-medium text-slate-500 truncate">Próximas Salidas</p>
+            <div className="flex items-baseline gap-1.5 mt-0.5">
+              <span className="text-lg sm:text-xl font-bold text-slate-900 font-mono">{kpis.proximasSalidas}</span>
+              <span className="text-[9px] sm:text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1 py-0.2 rounded border border-emerald-200 truncate">
                 Confirmadas
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">Próximos 30-45 días</p>
+            <p className="text-[10px] sm:text-[11px] text-slate-400 mt-1 truncate">Próx. 30-45 d</p>
           </div>
-          <Plane size={24} className="text-emerald-500 flex-shrink-0" />
+          <Plane size={20} className="text-emerald-500 flex-shrink-0" />
         </div>
 
         {/* Alertas de Vencimiento */}
-        <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-xs flex items-center justify-between hover:border-slate-300 transition-colors">
-          <div>
-            <p className="text-xs font-medium text-slate-500">Alertas de Vencimiento</p>
-            <div className="flex items-baseline gap-2 mt-0.5">
-              <span className="text-xl font-bold text-rose-600">{kpis.alertasRiesgo}</span>
-              <span className="text-[10px] font-semibold text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-200">
-                Riesgo Legal
+        <div className="bg-white border border-slate-200 rounded-xl p-3 sm:p-4 shadow-xs flex items-center justify-between hover:border-slate-300 transition-colors">
+          <div className="min-w-0 pr-1">
+            <p className="text-[11px] sm:text-xs font-medium text-slate-500 truncate">Vencimientos</p>
+            <div className="flex items-baseline gap-1.5 mt-0.5">
+              <span className="text-lg sm:text-xl font-bold text-rose-600 font-mono">{kpis.alertasRiesgo}</span>
+              <span className="text-[9px] sm:text-[10px] font-semibold text-rose-700 bg-rose-50 px-1 py-0.2 rounded border border-rose-200 truncate">
+                Riesgo
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">Evita Triple Vacacional</p>
+            <p className="text-[10px] sm:text-[11px] text-slate-400 mt-1 truncate">Evita Triple Vac.</p>
           </div>
-          <ShieldAlert size={24} className="text-rose-500 flex-shrink-0" />
+          <ShieldAlert size={20} className="text-rose-500 flex-shrink-0" />
         </div>
       </div>
 
@@ -503,9 +508,9 @@ export default function VacacionesView({
           </div>
 
           {/* Tabla de Colaboradores y Récord */}
-          <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left border-collapse">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+            <div className="table-scroll-container pb-2">
+              <table className="w-full min-w-[850px] text-xs text-left border-collapse select-auto">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
                   <tr>
                     <th className="px-4 py-3">Colaborador</th>

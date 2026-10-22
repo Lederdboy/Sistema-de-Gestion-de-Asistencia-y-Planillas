@@ -14,6 +14,8 @@ backend/*.jar
 .env.*.local
 *.local.properties
 backend/src/main/resources/application-local.properties
+backend/src/main/resources/application-public.properties
+backend/src/main/resources/application-dev.properties
 backend/src/main/resources/application-local.yml
 backend/src/main/resources/application-prod.properties
 

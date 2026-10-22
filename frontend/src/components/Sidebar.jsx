@@ -11,6 +11,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   User,
+  X,
 } from 'lucide-react'
 
 export const NAV_ITEMS = [
@@ -42,17 +43,30 @@ export default function Sidebar({
     }
   }, [user?.email])
 
+  const handleItemClick = (id) => {
+    setActive(id)
+    if (isMobile && onToggle) {
+      onToggle()
+    }
+  }
+
+  const showFullContent = isMobile || isOpen
+
   return (
     <aside
-      className={`fixed left-0 top-0 h-screen bg-white text-slate-800 border-r border-slate-200 flex flex-col z-30 select-none transition-all duration-300 ease-in-out shadow-[1px_0_15px_rgba(15,23,42,0.03)] ${
-        isOpen ? 'w-64' : 'w-16'
+      className={`fixed left-0 top-0 h-screen bg-white text-slate-800 border-r border-slate-200 flex flex-col z-50 select-none transition-all duration-300 ease-in-out ${
+        isMobile
+          ? `w-72 max-w-[85vw] ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`
+          : isOpen
+          ? 'w-64 translate-x-0 shadow-[1px_0_15px_rgba(15,23,42,0.03)]'
+          : 'w-16 translate-x-0 shadow-[1px_0_15px_rgba(15,23,42,0.03)]'
       }`}
     >
       <div className="flex flex-col h-full">
-        {isOpen ? (
+        {showFullContent ? (
           <div className="flex items-center justify-between h-16 px-4 border-b border-slate-100 bg-white">
             <div
-              onClick={() => setActive('dashboard')}
+              onClick={() => handleItemClick('dashboard')}
               className="flex items-center gap-3 cursor-pointer group min-w-0"
             >
               <img
@@ -73,16 +87,16 @@ export default function Sidebar({
 
             <button
               onClick={onToggle}
-              title="Contraer menú lateral"
+              title={isMobile ? 'Cerrar menú' : 'Contraer menú lateral'}
               className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer flex-shrink-0"
             >
-              <PanelLeftClose size={17} />
+              {isMobile ? <X size={18} /> : <PanelLeftClose size={17} />}
             </button>
           </div>
         ) : (
           <div className="flex flex-col items-center py-3 border-b border-slate-100 bg-white gap-2">
             <div
-              onClick={() => setActive('dashboard')}
+              onClick={() => handleItemClick('dashboard')}
               className="flex items-center justify-center p-1 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors"
             >
               <img
@@ -104,7 +118,7 @@ export default function Sidebar({
         )}
 
         <div className="px-3 pt-4 pb-2 flex-1 overflow-y-auto">
-          {isOpen && (
+          {showFullContent && (
             <div className="mb-2.5 px-2 flex items-center justify-between">
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                 Módulos
@@ -122,10 +136,10 @@ export default function Sidebar({
               return (
                 <button
                   key={id}
-                  onClick={() => setActive(id)}
-                  title={!isOpen ? label : undefined}
+                  onClick={() => handleItemClick(id)}
+                  title={!showFullContent ? label : undefined}
                   className={`group relative w-full flex items-center rounded-xl transition-all duration-150 ease-out cursor-pointer ${
-                    isOpen
+                    showFullContent
                       ? 'gap-3 px-3 py-2.5 text-xs font-semibold'
                       : 'w-10 h-10 mx-auto justify-center'
                   } ${
@@ -146,11 +160,11 @@ export default function Sidebar({
                     />
                   </div>
 
-                  {isOpen && (
+                  {showFullContent && (
                     <span className="flex-1 truncate tracking-tight text-left">{label}</span>
                   )}
 
-                  {!isOpen && (
+                  {!showFullContent && (
                     <div className="absolute left-14 bg-slate-900 text-white text-[11px] font-medium py-1.5 px-2.5 rounded-lg shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-30 whitespace-nowrap">
                       {label}
                     </div>
@@ -164,10 +178,10 @@ export default function Sidebar({
         <div className="p-3 border-t border-slate-100 bg-slate-50/50">
           <button
             type="button"
-            onClick={() => setActive('config')}
-            title={!isOpen ? 'Configuración del Sistema' : undefined}
+            onClick={() => handleItemClick('config')}
+            title={!showFullContent ? 'Configuración del Sistema' : undefined}
             className={`group relative w-full flex items-center rounded-xl transition-all duration-150 ease-out cursor-pointer ${
-              isOpen
+              showFullContent
                 ? 'gap-3 px-3 py-2 text-xs font-semibold'
                 : 'w-10 h-10 mx-auto justify-center'
             } ${
@@ -187,9 +201,9 @@ export default function Sidebar({
               />
             </div>
 
-            {isOpen && <span className="truncate">Configuración</span>}
+            {showFullContent && <span className="truncate">Configuración</span>}
 
-            {!isOpen && (
+            {!showFullContent && (
               <div className="absolute left-14 bg-slate-900 text-white text-[11px] font-medium py-1.5 px-2.5 rounded-lg shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-30 whitespace-nowrap">
                 Configuración
               </div>
@@ -198,7 +212,7 @@ export default function Sidebar({
 
           <div className="h-px bg-slate-200/80 my-2 mx-1" />
 
-          {isOpen ? (
+          {showFullContent ? (
             <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
               <div className="relative flex-shrink-0">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-bold text-[11px] flex items-center justify-center shadow-xs">

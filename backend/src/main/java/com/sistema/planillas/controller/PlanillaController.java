@@ -12,7 +12,6 @@ import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/planilla")
-@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class PlanillaController {
 

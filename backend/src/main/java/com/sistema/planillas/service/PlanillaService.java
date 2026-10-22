@@ -84,6 +84,7 @@ public class PlanillaService {
         // Limpiar detalles previos si se recorta/recalcula
         if (resumen.getId() != null) {
             planillaDetalleRepository.deleteByPlanillaResumenId(resumen.getId());
+            planillaDetalleRepository.flush();
         }
         resumen = planillaResumenRepository.save(resumen);
 

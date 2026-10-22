@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Users,
   Search,
@@ -152,7 +153,7 @@ export default function PersonalView({ workers, onAddWorker, showToast, loading 
 
         <button
           onClick={() => setShowNewModal(true)}
-          className="h-9 px-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm shadow-blue-500/20 cursor-pointer"
+          className="w-full sm:w-auto h-9 px-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
         >
           <Plus size={14} />
           <span>Nuevo Colaborador</span>
@@ -160,23 +161,23 @@ export default function PersonalView({ workers, onAddWorker, showToast, loading 
       </div>
 
       {/* Barra de Búsqueda y Filtros */}
-      <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-xs flex flex-wrap items-center gap-2.5">
-        <div className="relative flex-1 min-w-[240px]">
+      <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+        <div className="relative flex-1 min-w-0">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar persona por DNI, apellidos, nombres o cargo..."
-            className="w-full h-9 pl-9 pr-3 text-xs border border-slate-200 rounded-md bg-slate-50/50 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            placeholder="Buscar por DNI, nombres o cargo..."
+            className="w-full h-9 pl-9 pr-3 text-xs border border-slate-200 rounded-lg bg-slate-50/50 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="grid grid-cols-2 sm:flex items-center gap-2">
           <select
             value={selectedSede}
             onChange={(e) => setSelectedSede(e.target.value)}
-            className="h-9 px-3 text-xs border border-slate-200 rounded-md bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="h-9 px-3 text-xs border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 truncate"
           >
             <option value="">Todas las Sedes</option>
             {SEDES.map((s) => (
@@ -189,7 +190,7 @@ export default function PersonalView({ workers, onAddWorker, showToast, loading 
           <select
             value={selectedEstado}
             onChange={(e) => setSelectedEstado(e.target.value)}
-            className="h-9 px-3 text-xs border border-slate-200 rounded-md bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="h-9 px-3 text-xs border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 truncate"
           >
             <option value="">Todos los Estados</option>
             <option value="Activo">Activo</option>
@@ -199,10 +200,15 @@ export default function PersonalView({ workers, onAddWorker, showToast, loading 
         </div>
       </div>
 
+      {/* Indicador de desplazamiento para móviles */}
+      <div className="flex items-center justify-center gap-1.5 text-[11px] text-blue-700 bg-blue-50/80 border border-blue-200 rounded-xl px-3 py-1.5 sm:hidden">
+        <span>Desliza horizontalmente para ver todas las columnas</span>
+      </div>
+
       {/* Tabla de Colaboradores */}
-      <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left border-collapse">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+        <div className="table-scroll-container pb-2">
+          <table className="w-full min-w-[750px] text-xs text-left border-collapse select-auto">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
               <tr>
                 <th className="px-4 py-3">Colaborador</th>
@@ -303,17 +309,17 @@ export default function PersonalView({ workers, onAddWorker, showToast, loading 
       </div>
 
       {/* Modal Nuevo Colaborador */}
-      {showNewModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 border border-slate-200">
+      {showNewModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen z-[9999] bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Users size={18} className="text-blue-600" />
+                <Users size={18} className="text-black" />
                 Registrar Nuevo Colaborador
               </h3>
               <button
                 onClick={() => setShowNewModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -447,18 +453,19 @@ export default function PersonalView({ workers, onAddWorker, showToast, loading 
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Modal Ficha del Colaborador */}
-      {selectedWorker && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-200 space-y-4">
+      {selectedWorker && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen z-[9999] bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-200 space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="text-sm font-bold text-slate-900">Ficha Laboral del Colaborador</h3>
               <button
                 onClick={() => setSelectedWorker(null)}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
               >
                 <X size={16} />
               </button>
@@ -503,7 +510,8 @@ export default function PersonalView({ workers, onAddWorker, showToast, loading 
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

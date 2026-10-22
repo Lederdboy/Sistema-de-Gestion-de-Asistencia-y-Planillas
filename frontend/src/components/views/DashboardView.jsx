@@ -71,13 +71,13 @@ export default function DashboardView({ onNavigate, workers = [], loading = fals
         </div>
 
         {/* 4 KPI Cards Skeleton (Centered with CornerDots) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="relative overflow-hidden bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs flex flex-col items-center justify-center text-center space-y-2.5 min-h-[135px]">
+            <div key={i} className="relative overflow-hidden bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-5 shadow-xs flex flex-col items-center justify-center text-center space-y-2 min-h-[110px] sm:min-h-[135px]">
               <CornerDots color="text-slate-200" />
-              <div className="h-3.5 w-32 rounded-full bg-slate-200" />
-              <div className="h-8 w-20 rounded-lg bg-slate-200" />
-              <div className="h-3 w-28 rounded-full bg-slate-200" />
+              <div className="h-3 w-20 sm:w-32 rounded-full bg-slate-200" />
+              <div className="h-7 sm:h-8 w-14 sm:w-20 rounded-lg bg-slate-200" />
+              <div className="h-2.5 w-18 sm:w-28 rounded-full bg-slate-200" />
             </div>
           ))}
         </div>
@@ -197,12 +197,12 @@ export default function DashboardView({ onNavigate, workers = [], loading = fals
   ]
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3.5 sm:space-y-4">
       {/* Encabezado Principal Tipo Meta / Enterprise B2B */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-6 shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
+          <div className="space-y-1 sm:space-y-1.5">
+            <h1 className="text-lg sm:text-2xl font-bold tracking-tight text-slate-900 leading-tight">
               Dashboard Ejecutivo de Asistencia y Planillas
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 max-w-2xl leading-relaxed">
@@ -210,83 +210,83 @@ export default function DashboardView({ onNavigate, workers = [], loading = fals
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap sm:flex-nowrap w-full sm:w-auto">
             <button
               onClick={() => onNavigate('tareo')}
-              className="h-9 px-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer shadow-2xs"
+              className="flex-1 sm:flex-none h-9 px-3.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
             >
-              <CalendarDays size={15} className="text-slate-500" />
+              <CalendarDays size={14} className="text-slate-500" />
               <span>Ver Tareo al Día</span>
             </button>
             <button
               onClick={() => onNavigate('planilla')}
-              className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer shadow-xs"
+              className="flex-1 sm:flex-none h-9 px-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
             >
-              <FileSpreadsheet size={15} />
+              <FileSpreadsheet size={14} />
               <span>Calcular Planilla</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Tarjetas Métricas KPI Profesionales idénticas a Foto 3 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      {/* Tarjetas Métricas KPI Profesionales organizadas en 2x2 en móvil y 4 columnas en desktop */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
         {/* Card 1: TOTAL TRABAJADORES */}
-        <div className="relative overflow-hidden bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs flex flex-col items-center justify-center text-center min-h-[135px] hover:border-slate-300 transition-all">
+        <div className="relative overflow-hidden bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-5 shadow-xs flex flex-col items-center justify-center text-center min-h-[110px] sm:min-h-[135px] hover:border-slate-300 transition-all">
           <CornerDots color="text-blue-500" />
-          <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">
-            <Users size={14} className="text-blue-600" />
-            <span>TOTAL TRABAJADORES</span>
+          <div className="flex items-center justify-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-600">
+            <Users size={13} className="text-blue-600 flex-shrink-0" />
+            <span className="truncate">TOTAL TRABAJADORES</span>
           </div>
-          <p className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-1.5 font-mono text-blue-600">
+          <p className="text-2xl sm:text-4xl font-extrabold tracking-tight mt-1 sm:mt-1.5 font-mono text-blue-600">
             {totalColaboradores || 10}
           </p>
-          <p className="text-xs text-slate-500 font-normal mt-1">
+          <p className="text-[10px] sm:text-xs text-slate-500 font-normal mt-0.5 sm:mt-1 truncate max-w-full">
             plantilla operativa total
           </p>
         </div>
 
         {/* Card 2: % AVANCE */}
-        <div className="relative overflow-hidden bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs flex flex-col items-center justify-center text-center min-h-[135px] hover:border-slate-300 transition-all">
+        <div className="relative overflow-hidden bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-5 shadow-xs flex flex-col items-center justify-center text-center min-h-[110px] sm:min-h-[135px] hover:border-slate-300 transition-all">
           <CornerDots color="text-emerald-500" />
-          <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">
-            <CheckCircle2 size={14} className="text-emerald-600" />
-            <span>% AVANCE</span>
+          <div className="flex items-center justify-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-600">
+            <CheckCircle2 size={13} className="text-emerald-600 flex-shrink-0" />
+            <span className="truncate">% AVANCE</span>
           </div>
-          <p className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-1.5 font-mono text-emerald-600">
+          <p className="text-2xl sm:text-4xl font-extrabold tracking-tight mt-1 sm:mt-1.5 font-mono text-emerald-600">
             100%
           </p>
-          <p className="text-xs text-slate-500 font-normal mt-1">
+          <p className="text-[10px] sm:text-xs text-slate-500 font-normal mt-0.5 sm:mt-1 truncate max-w-full">
             progreso de asistencia
           </p>
         </div>
 
         {/* Card 3: PENDIENTES */}
-        <div className="relative overflow-hidden bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs flex flex-col items-center justify-center text-center min-h-[135px] hover:border-slate-300 transition-all">
+        <div className="relative overflow-hidden bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-5 shadow-xs flex flex-col items-center justify-center text-center min-h-[110px] sm:min-h-[135px] hover:border-slate-300 transition-all">
           <CornerDots color="text-rose-500" />
-          <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">
-            <Clock size={14} className="text-rose-600" />
-            <span>PENDIENTES</span>
+          <div className="flex items-center justify-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-600">
+            <Clock size={13} className="text-rose-600 flex-shrink-0" />
+            <span className="truncate">PENDIENTES</span>
           </div>
-          <p className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-1.5 font-mono text-rose-600">
+          <p className="text-2xl sm:text-4xl font-extrabold tracking-tight mt-1 sm:mt-1.5 font-mono text-rose-600">
             0
           </p>
-          <p className="text-xs text-slate-500 font-normal mt-1">
+          <p className="text-[10px] sm:text-xs text-slate-500 font-normal mt-0.5 sm:mt-1 truncate max-w-full">
             trabajadores por registrar
           </p>
         </div>
 
         {/* Card 4: RETRASO TOTAL (H) */}
-        <div className="relative overflow-hidden bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs flex flex-col items-center justify-center text-center min-h-[135px] hover:border-slate-300 transition-all">
+        <div className="relative overflow-hidden bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-5 shadow-xs flex flex-col items-center justify-center text-center min-h-[110px] sm:min-h-[135px] hover:border-slate-300 transition-all">
           <CornerDots color="text-slate-400" />
-          <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">
-            <Hourglass size={14} className="text-slate-600" />
-            <span>RETRASO TOTAL (H)</span>
+          <div className="flex items-center justify-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-600">
+            <Hourglass size={13} className="text-slate-600 flex-shrink-0" />
+            <span className="truncate">RETRASO TOTAL (H)</span>
           </div>
-          <p className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-1.5 font-mono text-slate-800">
+          <p className="text-2xl sm:text-4xl font-extrabold tracking-tight mt-1 sm:mt-1.5 font-mono text-slate-800">
             0
           </p>
-          <p className="text-xs text-slate-500 font-normal mt-1">
+          <p className="text-[10px] sm:text-xs text-slate-500 font-normal mt-0.5 sm:mt-1 truncate max-w-full">
             horas acumuladas
           </p>
         </div>

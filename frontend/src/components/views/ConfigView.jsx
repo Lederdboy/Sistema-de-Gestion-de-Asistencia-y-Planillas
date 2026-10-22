@@ -41,11 +41,9 @@ export default function ConfigView({ showToast }) {
       <div className="rounded-[28px] border border-slate-200/80 bg-white/85 p-4 shadow-[0_18px_40px_rgba(15,23,42,0.06)] backdrop-blur-xl sm:p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-sky-700 shadow-inner shadow-sky-200/80">
-              <Settings size={18} />
-            </div>
+            <Settings size={24} className="text-black shrink-0 mt-0.5" />
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">Configuración</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">Configuración</p>
               <h2 className="mt-1 text-lg font-bold text-slate-900 sm:text-xl">
                 Sistema y parámetros laborales
               </h2>
@@ -93,9 +91,7 @@ export default function ConfigView({ showToast }) {
             <form onSubmit={handleSave} className="max-w-3xl space-y-4">
               <div className="rounded-[24px] border border-slate-200 bg-slate-50/60 p-4 sm:p-5">
                 <div className="mb-4 flex items-center gap-2">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100 text-violet-700">
-                    <Building2 size={16} />
-                  </div>
+                  <Building2 size={20} className="text-black shrink-0" />
                   <div>
                     <h3 className="text-sm font-bold text-slate-900">Datos institucionales</h3>
                     <p className="text-[11px] text-slate-500">Información fiscal y corporativa</p>
@@ -171,9 +167,7 @@ export default function ConfigView({ showToast }) {
             <form onSubmit={handleSave} className="max-w-3xl space-y-4">
               <div className="rounded-[24px] border border-slate-200 bg-slate-50/60 p-4 sm:p-5">
                 <div className="mb-4 flex items-center gap-2">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
-                    <Sliders size={16} />
-                  </div>
+                  <Sliders size={20} className="text-black shrink-0" />
                   <div>
                     <h3 className="text-sm font-bold text-slate-900">Parámetros legales</h3>
                     <p className="text-[11px] text-slate-500">Valores vigentes para planillas y cotizaciones</p>
@@ -252,9 +246,7 @@ export default function ConfigView({ showToast }) {
           {activeTab === 'afps' && (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
-                  <Percent size={16} />
-                </div>
+                <Percent size={20} className="text-black shrink-0" />
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">Comisiones AFP / ONP</h3>
                   <p className="text-[11px] text-slate-500">Tablas vigentes de la SBS</p>
@@ -299,9 +291,7 @@ export default function ConfigView({ showToast }) {
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
-                    <MapPin size={16} />
-                  </div>
+                  <MapPin size={20} className="text-black shrink-0" />
                   <div>
                     <h3 className="text-sm font-bold text-slate-900">Sedes operativas</h3>
                     <p className="text-[11px] text-slate-500">Puntos de trabajo configurados para tareo</p>
