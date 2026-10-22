@@ -15,7 +15,13 @@ import ConfigView from './components/views/ConfigView'
 import PerfilView from './components/views/PerfilView'
 
 import { INITIAL_WORKERS, createTareoCompleto } from './data/mockData'
-import { getTrabajadores, getSedes, crearTrabajador, updateMarcacion } from './services/api'
+import {
+  getTrabajadores,
+  getSedes,
+  crearTrabajador,
+  updateMarcacion,
+  getMatrizAsistencia,
+} from './services/api'
 
 export default function App() {
   const [isMobile, setIsMobile] = useState(false)
@@ -98,13 +104,51 @@ export default function App() {
   // Notificaciones Toast
   const [toast, setToast] = useState(null)
 
-  // Sincronizar colaboradores directamente desde SistemaPlanillasDB
+  // Sincronizar colaboradores y matriz de asistencia directamente desde SistemaPlanillasDB
   const syncWithDatabase = async () => {
     try {
-      const apiWorkers = await getTrabajadores()
+      const [apiWorkers, sedesList] = await Promise.all([
+        getTrabajadores({ size: 100 }),
+        getSedes().catch(() => null),
+      ])
+
+      const sedesIds =
+        sedesList && sedesList.length > 0
+          ? sedesList.map((s) => s.id)
+          : [1, 2, 3, 4, 5, 6]
+
+      // Cargar matriz de asistencia en tiempo real desde SQL Server para todas las sedes
+      const matrices = await Promise.all(
+        sedesIds.map((id) => getMatrizAsistencia(9, 2026, id).catch(() => null))
+      )
+      const allMarcaciones = matrices.filter(Array.isArray).flat()
+
+      const tareoMap = new Map()
+      allMarcaciones.forEach((row) => {
+        if (row && row.trabajadorId && row.dias) {
+          const arr = Array.from({ length: 30 }, (_, i) => {
+            const key = String(i + 1).padStart(2, '0')
+            return row.dias[key] || 'D'
+          })
+          tareoMap.set(row.trabajadorId, {
+            tareo: arr,
+            totalVacaciones: row.totalVacaciones || 0,
+            totalFaltas: row.totalFaltas || 0,
+          })
+        }
+      })
+
       if (apiWorkers && apiWorkers.length > 0) {
         const enriched = apiWorkers.map((t) => {
           const matchExisting = INITIAL_WORKERS.find((w) => w.dni === t.numeroDocumento)
+          const dbTareo = tareoMap.get(t.id)
+
+          const finalTareo = dbTareo
+            ? dbTareo.tareo
+            : (matchExisting ? matchExisting.tareo : createTareoCompleto(['D', 'D', 'D', 'D', 'DL', 'DL', 'D']))
+
+          const isVacacion = dbTareo && dbTareo.totalVacaciones > 0
+
           return {
             id: t.id,
             dni: t.numeroDocumento,
@@ -115,15 +159,18 @@ export default function App() {
             sueldoBase: Number(t.sueldoBasico) || 1500,
             afp: matchExisting ? matchExisting.afp : 'integra',
             asigFamiliar: matchExisting ? matchExisting.asigFamiliar : true,
-            estado: matchExisting ? matchExisting.estado : 'Activo',
+            estado: isVacacion ? 'Vacaciones' : (matchExisting ? matchExisting.estado : 'Activo'),
             fechaIngreso: t.fechaIngreso || '2023-01-15',
             regimen: 'D.L. 728',
             email: `${(t.nombres || 'colab').toLowerCase().split(' ')[0]}.${(t.apellidoPaterno || 'corp').toLowerCase()}@empresa.com`,
             telefono: matchExisting ? matchExisting.telefono : '984 123 456',
-            tareo: matchExisting ? matchExisting.tareo : createTareoCompleto(['D','D','D','D','DL','DL','D']),
+            tareo: finalTareo,
           }
         })
         setWorkers(enriched)
+        setLastUpdate(
+          new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        )
       }
     } catch {
       // Modo offline: mantiene datos sincronizados locales
@@ -132,6 +179,22 @@ export default function App() {
 
   useEffect(() => {
     syncWithDatabase()
+
+    // Polling en segundo plano cada 15 segundos para que cualquier cambio hecho por otro usuario se refleje en vivo
+    const pollInterval = setInterval(() => {
+      syncWithDatabase()
+    }, 15000)
+
+    // Sincronizar inmediatamente al volver a la pestaña
+    const handleFocus = () => {
+      syncWithDatabase()
+    }
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      clearInterval(pollInterval)
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [])
 
   // Notificaciones Toast
@@ -253,6 +316,9 @@ export default function App() {
       if (apiResult && apiResult.id) {
         newWorker.id = apiResult.id
       }
+      // Sincronizar inmediatamente para obtener todos los campos y tareo de BD
+      await syncWithDatabase()
+      return
     } catch (err) {
       console.warn('Registro local de respaldo:', err)
     }
@@ -305,6 +371,7 @@ export default function App() {
           }
         }
       }
+      await syncWithDatabase()
     }
   }
 

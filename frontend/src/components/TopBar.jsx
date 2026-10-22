@@ -189,6 +189,12 @@ export default function TopBar({
           )}
         </div>
 
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-800 shadow-2xs">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span className="hidden sm:inline">BD: SERVER04</span>
+          <span className="sm:hidden">En vivo</span>
+        </div>
+
         <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
           <Calendar size={13} className="text-blue-600" />
           <span>Periodo: 2026-09</span>
@@ -202,18 +208,18 @@ export default function TopBar({
           onClick={onRefresh}
           disabled={refreshing}
           className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-700 hover:text-slate-900 border border-slate-200 bg-white hover:bg-slate-50 rounded-xl p-2 sm:px-3 sm:py-1.5 shadow-2xs transition-all cursor-pointer"
-          title="Actualizar datos"
+          title="Sincronizar cambios de todos los usuarios en vivo desde SQL Server"
         >
           <RefreshCw
             size={14}
             className={`text-slate-500 ${refreshing ? 'animate-spin text-blue-600' : ''}`}
           />
-          <span className="hidden md:inline">Actualizar</span>
+          <span className="hidden md:inline">Sincronizar</span>
         </button>
 
         {lastUpdate && (
-          <div className="hidden xl:flex items-center gap-1 text-[11px] text-slate-400 pl-1">
-            <Clock size={12} />
+          <div className="hidden xl:flex items-center gap-1 text-[11px] text-slate-500 pl-1" title="Última sincronización con SQL Server">
+            <Clock size={12} className="text-emerald-600" />
             <span>Sinc: {lastUpdate}</span>
           </div>
         )}
