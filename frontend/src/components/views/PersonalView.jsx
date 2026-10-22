@@ -27,7 +27,9 @@ export default function PersonalView({ workers, onAddWorker, showToast, loading 
   // Formulario nuevo colaborador
   const [form, setForm] = useState({
     dni: '',
-    nombre: '',
+    nombres: '',
+    apellidoPaterno: '',
+    apellidoMaterno: '',
     cargo: '',
     empresaId: '1',
     sedeId: '1',
@@ -92,16 +94,22 @@ export default function PersonalView({ workers, onAddWorker, showToast, loading 
 
   const handleCreateWorker = (e) => {
     e.preventDefault()
-    if (!form.dni || !form.nombre || !form.cargo || !form.sueldoBase) {
-      showToast('Por favor completa los campos requeridos (DNI, Nombre, Cargo, Sueldo).', 'error')
+    if (!form.dni || !form.nombres || !form.apellidoPaterno || !form.cargo || !form.sueldoBase) {
+      showToast('Por favor completa los campos requeridos (DNI, Nombres, Apellidos, Cargo, Sueldo).', 'error')
       return
     }
 
+    const apMaterno = form.apellidoMaterno.trim() || form.apellidoPaterno.trim() || 'Registrado'
+    const fullName = `${form.nombres.trim()} ${form.apellidoPaterno.trim()} ${apMaterno}`.trim()
+
     const newWorker = {
       id: Date.now(),
-      dni: form.dni,
-      nombre: form.nombre,
-      cargo: form.cargo,
+      dni: form.dni.trim(),
+      nombre: fullName,
+      nombres: form.nombres.trim(),
+      apellidoPaterno: form.apellidoPaterno.trim(),
+      apellidoMaterno: apMaterno,
+      cargo: form.cargo.trim(),
       empresaId: form.empresaId,
       sedeId: form.sedeId,
       sueldoBase: parseFloat(form.sueldoBase) || 1025.00,
@@ -110,7 +118,7 @@ export default function PersonalView({ workers, onAddWorker, showToast, loading 
       estado: 'Activo',
       fechaIngreso: new Date().toISOString().split('T')[0],
       regimen: form.regimen,
-      email: form.email || `${form.nombre.toLowerCase().replace(/\s+/g, '.')}@empresa.com`,
+      email: form.email || `${form.nombres.toLowerCase().replace(/\s+/g, '.')}@empresa.com`,
       telefono: form.telefono || '999 000 000',
       // Tareo inicial de 31 días (días hábiles D, fines de semana DL)
       tareo: Array.from({ length: 31 }, (_, i) => {
@@ -123,7 +131,9 @@ export default function PersonalView({ workers, onAddWorker, showToast, loading 
     setShowNewModal(false)
     setForm({
       dni: '',
-      nombre: '',
+      nombres: '',
+      apellidoPaterno: '',
+      apellidoMaterno: '',
       cargo: '',
       empresaId: '1',
       sedeId: '1',
@@ -354,15 +364,40 @@ export default function PersonalView({ workers, onAddWorker, showToast, loading 
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Apellidos y Nombres *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Nombres *</label>
                 <input
                   type="text"
                   required
-                  value={form.nombre}
-                  onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-                  placeholder="Ej: Pedro Castillo, Taylor Swift"
+                  value={form.nombres}
+                  onChange={(e) => setForm({ ...form, nombres: e.target.value })}
+                  placeholder="Ej: Juan Carlos"
                   className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Apellido Paterno *</label>
+                  <input
+                    type="text"
+                    required
+                    value={form.apellidoPaterno}
+                    onChange={(e) => setForm({ ...form, apellidoPaterno: e.target.value })}
+                    placeholder="Ej: Pérez"
+                    className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Apellido Materno *</label>
+                  <input
+                    type="text"
+                    required
+                    value={form.apellidoMaterno}
+                    onChange={(e) => setForm({ ...form, apellidoMaterno: e.target.value })}
+                    placeholder="Ej: Gómez"
+                    className="w-full h-9 px-3 text-xs border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

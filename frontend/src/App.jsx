@@ -210,20 +210,41 @@ export default function App() {
   // Agregar nuevo colaborador y persistir en SQL Server
   const handleAddWorker = async (newWorker) => {
     try {
-      const partes = (newWorker.nombre || '').trim().split(' ')
-      const apPaterno = partes[0] || 'Nuevo'
-      const apMaterno = partes[1] || ''
-      const nombres = partes.slice(2).join(' ') || partes[0] || 'Trabajador'
+      let nombres = (newWorker.nombres || '').trim()
+      let apPaterno = (newWorker.apellidoPaterno || '').trim()
+      let apMaterno = (newWorker.apellidoMaterno || '').trim()
+
+      if (!nombres || !apPaterno || !apMaterno) {
+        const raw = (newWorker.nombre || '').trim()
+        const partes = raw.split(/\s+/).filter(Boolean)
+        if (partes.length >= 3) {
+          nombres = partes.slice(0, partes.length - 2).join(' ')
+          apPaterno = partes[partes.length - 2]
+          apMaterno = partes[partes.length - 1]
+        } else if (partes.length === 2) {
+          nombres = partes[0]
+          apPaterno = partes[1]
+          apMaterno = partes[1] // evitar fallo de validación
+        } else if (partes.length === 1) {
+          nombres = partes[0]
+          apPaterno = partes[0]
+          apMaterno = 'Registrado'
+        } else {
+          nombres = 'Colaborador'
+          apPaterno = 'Nuevo'
+          apMaterno = 'Registrado'
+        }
+      }
 
       const apiResult = await crearTrabajador({
         empresaId: Number(newWorker.empresaId || 1),
         sedeId: Number(newWorker.sedeId || 1),
         tipoDocumento: 'DNI',
-        numeroDocumento: newWorker.dni,
+        numeroDocumento: String(newWorker.dni || '').trim(),
         nombres: nombres,
         apellidoPaterno: apPaterno,
         apellidoMaterno: apMaterno,
-        cargo: newWorker.cargo,
+        cargo: newWorker.cargo || 'Operario',
         fechaIngreso: newWorker.fechaIngreso || new Date().toISOString().split('T')[0],
         sueldoBasico: Number(newWorker.sueldoBase) || 1500,
         sueldoDiario: Number(((Number(newWorker.sueldoBase) || 1500) / 30).toFixed(2)),
