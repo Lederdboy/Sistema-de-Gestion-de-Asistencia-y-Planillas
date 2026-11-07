@@ -1,0 +1,68 @@
+@if (!auth.currentUser()) {
+  <app-login></app-login>
+} @else {
+  <div class="min-h-screen bg-slate-100 text-slate-800 flex">
+    <!-- BARRA LATERAL (SIDEBAR) -->
+    <app-sidebar></app-sidebar>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div
+      [ngClass]="{
+        'pl-64': state.isSidebarOpen(),
+        'pl-16': !state.isSidebarOpen()
+      }"
+      class="flex-1 min-h-screen flex flex-col transition-all duration-300 ease-in-out w-full"
+    >
+      <!-- BARRA SUPERIOR (TOPBAR) -->
+      <app-topbar></app-topbar>
+
+      <!-- ÁREA DE CONTENIDO DINÁMICO -->
+      <main
+        class="flex-1 p-4 sm:p-6 lg:p-8 mt-16 transition-all duration-150"
+        [style.zoom]="state.viewZoom() + '%'"
+      >
+        @if (state.loading()) {
+          <div class="flex items-center justify-center py-24">
+            <div class="flex flex-col items-center gap-3">
+              <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <span class="text-xs font-semibold text-slate-500">Cargando módulo...</span>
+            </div>
+          </div>
+        } @else {
+          @switch (state.activeNav()) {
+            @case ('dashboard') {
+              <app-dashboard-view></app-dashboard-view>
+            }
+            @case ('personal') {
+              <app-personal-view></app-personal-view>
+            }
+            @case ('tareo') {
+              <app-tareo-view></app-tareo-view>
+            }
+            @case ('vacaciones') {
+              <app-vacaciones></app-vacaciones>
+            }
+            @case ('planilla') {
+              <app-planilla></app-planilla>
+            }
+            @case ('reportes') {
+              <app-reportes></app-reportes>
+            }
+            @case ('config') {
+              <app-config></app-config>
+            }
+            @case ('perfil') {
+              <app-perfil></app-perfil>
+            }
+            @default {
+              <app-dashboard-view></app-dashboard-view>
+            }
+          }
+        }
+      </main>
+    </div>
+
+    <!-- TOAST NOTIFICATIONS GLOBAL -->
+    <app-toast></app-toast>
+  </div>
+}

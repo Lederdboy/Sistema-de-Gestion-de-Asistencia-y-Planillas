@@ -19,9 +19,25 @@ import {
   Sun,
   ShieldAlert,
   ArrowRight,
+  Briefcase,
+  MapPin,
+  Clock,
+  ShieldCheck,
+  Copy,
+  Check,
+  ChevronRight,
+  Award,
+  AlertCircle,
+  Sparkles,
+  TrendingUp,
+  HelpCircle,
+  Building2,
+  Wallet,
 } from 'lucide-react'
 import {
+  EMPRESAS,
   SEDES,
+  PARAMETROS_LABORALES,
   INITIAL_VACACIONES_REQUESTS,
   getVacationRecordForWorker,
 } from '../../data/mockData'
@@ -1356,142 +1372,549 @@ export default function VacacionesView({
       {/* ══════════════════════════════════════════════════════════════════════ */}
       {selectedWorkerDetail &&
         createPortal(
-          <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen z-[9999] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in duration-150 max-h-[92vh] flex flex-col">
-              {/* Cabecera limpia */}
-              <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs">
-                    {selectedWorkerDetail.nombre.slice(0, 2).toUpperCase()}
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900">
-                      {selectedWorkerDetail.nombre}
-                    </h3>
-                    <p className="text-[11px] text-slate-500">
-                      DNI: {selectedWorkerDetail.dni} · {selectedWorkerDetail.cargo} · {selectedWorkerDetail.regimen}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setSelectedWorkerDetail(null)}
-                  className="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-200 cursor-pointer"
-                >
-                  <X size={16} />
-                </button>
-              </div>
+          (() => {
+            const fechaIngresoDate = new Date(selectedWorkerDetail.fechaIngreso || '2022-01-01')
+            const aniosCompletos = selectedWorkerDetail.record?.aniosCompletos || 1
+            const anioIngreso = isNaN(fechaIngresoDate.getFullYear()) ? 2022 : fechaIngresoDate.getFullYear()
 
-              {/* Contenido con scroll */}
-              <div className="p-5 overflow-y-auto space-y-3.5 text-xs">
-                {/* Resumen de Días */}
-                <div className="grid grid-cols-3 gap-2.5 text-center">
-                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Días Ganados</span>
-                    <span className="text-lg font-bold text-slate-900">
-                      {selectedWorkerDetail.record?.diasGanados} d
-                    </span>
-                  </div>
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-2.5">
-                    <span className="text-[10px] uppercase font-bold text-emerald-600 block">Días Gozados</span>
-                    <span className="text-lg font-bold text-emerald-700">
-                      {selectedWorkerDetail.record?.diasGozados} d
-                    </span>
-                  </div>
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-2.5">
-                    <span className="text-[10px] uppercase font-bold text-blue-600 block">Saldo Disponible</span>
-                    <span className="text-lg font-bold text-blue-800">
-                      {selectedWorkerDetail.record?.saldoPendiente} días
-                    </span>
-                  </div>
-                </div>
+            // Cálculo dinámico de periodos por año de servicio
+            let goceRestante = selectedWorkerDetail.record?.totalGozados || selectedWorkerDetail.record?.diasGozados || 0
+            let ventaRestante = selectedWorkerDetail.record?.totalVendidos || 0
 
-                {/* Datos Laborales */}
-                <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 space-y-1.5">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Fecha de Ingreso:</span>
-                    <span className="font-semibold text-slate-800">{selectedWorkerDetail.fechaIngreso}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Antigüedad Computable:</span>
-                    <span className="font-semibold text-slate-800">{selectedWorkerDetail.record?.aniosCompletos} años</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Sueldo Básico Actual:</span>
-                    <span className="font-semibold text-slate-800">S/ {selectedWorkerDetail.sueldoBase.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Estado de Récord:</span>
-                    <span className={`px-2 py-0.2 rounded text-[10px] font-bold ${selectedWorkerDetail.record?.estadoCls}`}>
-                      {selectedWorkerDetail.record?.estadoRecord}
-                    </span>
-                  </div>
-                </div>
+            const periodosList = []
+            for (let i = 0; i < aniosCompletos; i++) {
+              const pInicioYear = anioIngreso + i
+              const pFinYear = pInicioYear + 1
+              const periodoLabel = `${pInicioYear} - ${pFinYear}`
 
-                {/* Historial */}
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900 mb-1.5">
-                    Historial de Descansos y Convenios
-                  </h4>
-                  {requests.filter((r) => r.trabajadorId === selectedWorkerDetail.id).length === 0 ? (
-                    <p className="text-slate-400 bg-slate-50 p-3 rounded text-center">
-                      No tiene descansos o solicitudes registradas en la plataforma.
-                    </p>
-                  ) : (
-                    <div className="border border-slate-200 rounded-lg overflow-hidden">
-                      <table className="w-full text-left">
-                        <thead className="bg-slate-50 text-[10px] uppercase font-semibold text-slate-500 border-b border-slate-200">
-                          <tr>
-                            <th className="px-2.5 py-1.5">Código</th>
-                            <th className="px-2.5 py-1.5">Fechas</th>
-                            <th className="px-2.5 py-1.5 text-center">Días</th>
-                            <th className="px-2.5 py-1.5">Tipo</th>
-                            <th className="px-2.5 py-1.5 text-center">Estado</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {requests
-                            .filter((r) => r.trabajadorId === selectedWorkerDetail.id)
-                            .map((r) => (
-                              <tr key={r.id}>
-                                <td className="px-2.5 py-1.5 font-mono font-bold text-slate-700">{r.id}</td>
-                                <td className="px-2.5 py-1.5">{r.fechaInicio} al {r.fechaFin}</td>
-                                <td className="px-2.5 py-1.5 text-center font-bold">{r.dias} d</td>
-                                <td className="px-2.5 py-1.5">{r.tipo}</td>
-                                <td className="px-2.5 py-1.5 text-center">
-                                  <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-slate-100">
-                                    {r.estado}
+              const gozadosEnPeriodo = Math.min(30, Math.max(0, goceRestante))
+              goceRestante -= gozadosEnPeriodo
+
+              const vendidosEnPeriodo = Math.min(30 - gozadosEnPeriodo, Math.max(0, ventaRestante))
+              ventaRestante -= vendidosEnPeriodo
+
+              const saldoPeriodo = Math.max(0, 30 - gozadosEnPeriodo - vendidosEnPeriodo)
+
+              let estadoPeriodo = 'Gozado'
+              let estadoCls = 'bg-emerald-100 text-emerald-800 border-emerald-200'
+              if (saldoPeriodo > 0) {
+                if (i < aniosCompletos - 1) {
+                  estadoPeriodo = 'Vencido / Alerta Triple'
+                  estadoCls = 'bg-rose-100 text-rose-800 border-rose-200'
+                } else {
+                  estadoPeriodo = 'En Curso / Pendiente'
+                  estadoCls = 'bg-amber-100 text-amber-800 border-amber-200'
+                }
+              }
+
+              const diaIngreso = String(fechaIngresoDate.getDate()).padStart(2, '0')
+              const mesIngreso = String(fechaIngresoDate.getMonth() + 1).padStart(2, '0')
+              const fechaLimite = `${diaIngreso}/${mesIngreso}/${pFinYear + 1}`
+
+              periodosList.push({
+                periodo: periodoLabel,
+                fechaLimite,
+                ganados: 30,
+                gozados: gozadosEnPeriodo,
+                vendidos: vendidosEnPeriodo,
+                saldo: saldoPeriodo,
+                estado: estadoPeriodo,
+                estadoCls,
+              })
+            }
+
+            const sueldoBase = Number(selectedWorkerDetail.sueldoBase) || 0
+            const asigFamiliar = selectedWorkerDetail.asigFamiliar ? (PARAMETROS_LABORALES?.asigFamiliar || 102.50) : 0
+            const remuneracionComputable = sueldoBase + asigFamiliar
+            const valorDiaVacacional = remuneracionComputable / 30
+            const saldoPendiente = selectedWorkerDetail.record?.saldoPendiente ?? 0
+            const diasGanados = selectedWorkerDetail.record?.diasGanados ?? 0
+            const diasGozados = selectedWorkerDetail.record?.diasGozados ?? 0
+            const diasVendidos = selectedWorkerDetail.record?.totalVendidos ?? 0
+            const provisionSaldo = saldoPendiente * valorDiaVacacional
+
+            const sedeObj = SEDES.find((s) => String(s.id) === String(selectedWorkerDetail.sedeId)) || SEDES[0]
+            const empresaObj = EMPRESAS.find((e) => String(e.id) === String(selectedWorkerDetail.empresaId)) || EMPRESAS[0]
+
+            const tieneAlertaRiesgo = selectedWorkerDetail.record?.estadoRecord === 'Riesgo / Por Vencer' || saldoPendiente > 30
+            const workerRequests = requests.filter((r) => r.trabajadorId === selectedWorkerDetail.id)
+
+            return (
+              <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen z-[9999] bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150 max-h-[92vh] flex flex-col">
+                  
+                  {/* Cabecera de la Ficha */}
+                  <div className="flex items-center justify-between px-6 py-4 bg-slate-50/80 border-b border-slate-200 shrink-0">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center">
+                        <Palmtree size={18} />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-slate-900 leading-tight">
+                          Ficha Integral de Vacaciones y Descansos — D.L. 713
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                          Récord Acumulado · Control Legal SUNAFIL · Previsión de Descansos
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => window.print()}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg shadow-xs transition-colors cursor-pointer"
+                        title="Imprimir o guardar como PDF"
+                      >
+                        <Printer size={14} className="text-slate-500" />
+                        <span>Imprimir</span>
+                      </button>
+                      <button
+                        onClick={() => setSelectedWorkerDetail(null)}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Contenido con scroll */}
+                  <div className="p-6 space-y-6 overflow-y-auto">
+                    
+                    {/* Hero Colaborador */}
+                    <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-950 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden">
+                      <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-radial from-amber-500/10 to-transparent pointer-events-none" />
+
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
+                        <div className="flex items-center gap-4">
+                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-indigo-600 text-white font-extrabold flex items-center justify-center text-xl shadow-md ring-4 ring-white/10 shrink-0">
+                            {selectedWorkerDetail.nombre.slice(0, 2).toUpperCase()}
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className="text-xl font-bold text-white tracking-tight">
+                                {selectedWorkerDetail.nombre}
+                              </h4>
+                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                                selectedWorkerDetail.estado === 'Vacaciones'
+                                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                                  : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                              }`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${
+                                  selectedWorkerDetail.estado === 'Vacaciones' ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'
+                                }`} />
+                                {selectedWorkerDetail.estado === 'Vacaciones' ? 'En Goce Vacacional' : 'Activo en Turno'}
+                              </span>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300">
+                              <span className="flex items-center gap-1 font-semibold text-blue-200">
+                                <Briefcase size={13} className="text-blue-300" />
+                                {selectedWorkerDetail.cargo}
+                              </span>
+                              <span className="text-slate-500">•</span>
+                              <span className="font-mono bg-white/10 px-2 py-0.5 rounded text-[11px] text-slate-200 font-medium">
+                                DNI: {selectedWorkerDetail.dni}
+                              </span>
+                              <span className="text-slate-500">•</span>
+                              <span className="flex items-center gap-1 text-slate-300">
+                                <MapPin size={13} className="text-slate-400" />
+                                {sedeObj.nombre}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Badge de Estado del Récord */}
+                        <div>
+                          {tieneAlertaRiesgo ? (
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs font-semibold">
+                              <AlertTriangle size={15} className="text-rose-400 shrink-0" />
+                              <span>Alerta: Récord en Riesgo / Acumulado</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-200 text-xs font-semibold">
+                              <CheckCircle2 size={15} className="text-emerald-400 shrink-0" />
+                              <span>Récord Conforme y al Día</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Datos Rápidos Strip */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-4 border-t border-white/10 text-xs">
+                        <div className="flex items-center gap-2 text-slate-300">
+                          <Calendar size={14} className="text-amber-400 shrink-0" />
+                          <span>Fecha de Ingreso: <strong className="text-white">{selectedWorkerDetail.fechaIngreso}</strong></span>
+                        </div>
+                        <div className="flex items-center gap-2 text-slate-300">
+                          <Clock size={14} className="text-blue-400 shrink-0" />
+                          <span>Antigüedad: <strong className="text-white">{aniosCompletos} años de servicio</strong></span>
+                        </div>
+                        <div className="flex items-center gap-2 text-slate-300">
+                          <Award size={14} className="text-purple-400 shrink-0" />
+                          <span>Régimen: <strong className="text-white">{selectedWorkerDetail.regimen || 'D.L. 728'}</strong></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Resumen de Días: 4 KPI Cards */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 block">Días Ganados</span>
+                        <div className="flex items-baseline gap-1 mt-1">
+                          <span className="text-2xl font-black text-slate-900">{diasGanados}</span>
+                          <span className="text-xs text-slate-500 font-semibold">días</span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-1">30 días por año de servicio</p>
+                      </div>
+
+                      <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3.5">
+                        <span className="text-[10px] uppercase font-bold text-emerald-700 block">Días Gozados</span>
+                        <div className="flex items-baseline gap-1 mt-1">
+                          <span className="text-2xl font-black text-emerald-700">{diasGozados}</span>
+                          <span className="text-xs text-emerald-600 font-semibold">días</span>
+                        </div>
+                        <p className="text-[10px] text-emerald-600 mt-1">Descanso físico disfrutado</p>
+                      </div>
+
+                      <div className="bg-purple-50/70 border border-purple-200 rounded-xl p-3.5">
+                        <span className="text-[10px] uppercase font-bold text-purple-700 block">Días Compensados</span>
+                        <div className="flex items-baseline gap-1 mt-1">
+                          <span className="text-2xl font-black text-purple-700">{diasVendidos}</span>
+                          <span className="text-xs text-purple-600 font-semibold">días</span>
+                        </div>
+                        <p className="text-[10px] text-purple-600 mt-1">Convenios de venta (Art. 19)</p>
+                      </div>
+
+                      <div className={`rounded-xl p-3.5 border ${
+                        tieneAlertaRiesgo
+                          ? 'bg-rose-50 border-rose-200 text-rose-900'
+                          : 'bg-blue-50 border-blue-200 text-blue-900'
+                      }`}>
+                        <span className={`text-[10px] uppercase font-bold block ${
+                          tieneAlertaRiesgo ? 'text-rose-700' : 'text-blue-700'
+                        }`}>
+                          Saldo Pendiente
+                        </span>
+                        <div className="flex items-baseline gap-1 mt-1">
+                          <span className={`text-2xl font-black ${
+                            tieneAlertaRiesgo ? 'text-rose-700' : 'text-blue-700'
+                          }`}>
+                            {saldoPendiente}
+                          </span>
+                          <span className={`text-xs font-semibold ${
+                            tieneAlertaRiesgo ? 'text-rose-600' : 'text-blue-600'
+                          }`}>
+                            días exigibles
+                          </span>
+                        </div>
+                        <p className={`text-[10px] mt-1 ${tieneAlertaRiesgo ? 'text-rose-600' : 'text-blue-600'}`}>
+                          {tieneAlertaRiesgo ? '¡Riesgo de triple vacacional!' : 'Dentro del margen legal'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* 2-Column Grid: Valorización Económica vs Alerta Legal */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      
+                      {/* Valorización Económica */}
+                      <div className="bg-slate-50/70 border border-slate-200 rounded-xl p-4.5 space-y-3">
+                        <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                          <div className="flex items-center gap-2">
+                            <DollarSign size={16} className="text-blue-600" />
+                            <h5 className="font-bold text-xs uppercase tracking-wider text-slate-800">
+                              Valorización Económica del Saldo
+                            </h5>
+                          </div>
+                          <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-700">
+                            Base Computable
+                          </span>
+                        </div>
+
+                        <div className="space-y-2 text-xs">
+                          <div className="flex justify-between items-center py-1 border-b border-slate-200/60">
+                            <span className="text-slate-600">Sueldo Básico Actual</span>
+                            <span className="font-mono font-bold text-slate-900">
+                              S/ {sueldoBase.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center py-1 border-b border-slate-200/60">
+                            <span className="text-slate-600">Asignación Familiar</span>
+                            <span className="font-mono font-semibold text-slate-800">
+                              {selectedWorkerDetail.asigFamiliar ? `S/ ${asigFamiliar.toFixed(2)}` : 'S/ 0.00'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center py-1 border-b border-slate-200/60">
+                            <span className="text-slate-600">Remuneración Computable</span>
+                            <span className="font-mono font-bold text-slate-900">
+                              S/ {remuneracionComputable.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center py-1 border-b border-slate-200/60">
+                            <span className="text-slate-600">Valor Día Vacacional (Div. 30)</span>
+                            <span className="font-mono font-bold text-blue-700">
+                              S/ {valorDiaVacacional.toFixed(2)} / día
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between items-center py-2 px-3 bg-blue-50/80 rounded-lg border border-blue-100 mt-2">
+                            <div>
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-900 block">
+                                Provisión Económica por Saldo ({saldoPendiente}d)
+                              </span>
+                              <span className="text-[10px] text-blue-600">Costo devengado en libros contables</span>
+                            </div>
+                            <span className="font-black text-blue-700 font-mono text-base">
+                              S/ {provisionSaldo.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Contingencia Legal SUNAFIL */}
+                      <div className={`rounded-xl p-4.5 space-y-3 border ${
+                        tieneAlertaRiesgo
+                          ? 'bg-rose-50/50 border-rose-200'
+                          : 'bg-emerald-50/50 border-emerald-200'
+                      }`}>
+                        <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                          <div className="flex items-center gap-2">
+                            <ShieldAlert size={16} className={tieneAlertaRiesgo ? 'text-rose-600' : 'text-emerald-600'} />
+                            <h5 className="font-bold text-xs uppercase tracking-wider text-slate-800">
+                              Análisis de Contingencia Laboral (SUNAFIL)
+                            </h5>
+                          </div>
+                          <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
+                            tieneAlertaRiesgo ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'
+                          }`}>
+                            Art. 23 D.L. 713
+                          </span>
+                        </div>
+
+                        <div className="space-y-2 text-xs text-slate-600">
+                          {tieneAlertaRiesgo ? (
+                            <>
+                              <div className="p-2.5 rounded-lg bg-rose-100/70 border border-rose-200 text-rose-900">
+                                <p className="font-bold flex items-center gap-1.5 text-xs">
+                                  <AlertTriangle size={14} className="text-rose-700" />
+                                  Atención: Riesgo de Indemnización Vacacional
+                                </p>
+                                <p className="text-[11px] mt-1 leading-relaxed text-rose-800">
+                                  El colaborador registra más de 30 días de vacaciones acumuladas sin descanso oportuno. Según el Art. 23 del D.L. 713, la empresa podría incurrir en el pago de la triple vacacional (remuneración ordinaria + vacacional + indemnización equivalente a 1 sueldo completo).
+                                </p>
+                              </div>
+                              <p className="text-[11px] text-slate-500">
+                                💡 <strong>Recomendación Legal:</strong> Programar inmediatamente un descanso mínimo de 15 días continuos para mitigar la contingencia ante una fiscalización.
+                              </p>
+                            </>
+                          ) : (
+                            <>
+                              <div className="p-2.5 rounded-lg bg-emerald-100/70 border border-emerald-200 text-emerald-900">
+                                <p className="font-bold flex items-center gap-1.5 text-xs">
+                                  <CheckCircle2 size={14} className="text-emerald-700" />
+                                  Estado Óptimo: Sin Contingencia Laboral
+                                </p>
+                                <p className="text-[11px] mt-1 leading-relaxed text-emerald-800">
+                                  Los periodos vacacionales se encuentran al día o dentro del plazo legal de goce oportuno. No existe riesgo de indemnización vacacional.
+                                </p>
+                              </div>
+                              <p className="text-[11px] text-slate-500">
+                                El récord cumple con los convenios de fraccionamiento permitidos por ley (Decreto Supremo 002-2019-TR).
+                              </p>
+                            </>
+                          )}
+
+                          <div className="flex justify-between items-center pt-1 text-[11px] text-slate-500 border-t border-slate-200">
+                            <span>Venta permitida por ley:</span>
+                            <strong className="text-slate-800">Hasta 15 días (con acuerdo mutuo)</strong>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    {/* Desglose Periódico por Años de Servicio */}
+                    <div className="bg-slate-50/70 border border-slate-200 rounded-xl p-4.5 space-y-3">
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                        <div className="flex items-center gap-2">
+                          <CalendarDays size={16} className="text-slate-700" />
+                          <h5 className="font-bold text-xs uppercase tracking-wider text-slate-800">
+                            Desglose de Periodos Anuales Computables
+                          </h5>
+                        </div>
+                        <span className="text-xs text-slate-500">
+                          Total ejercicios: <strong>{periodosList.length}</strong>
+                        </span>
+                      </div>
+
+                      <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-slate-50 text-[10px] uppercase font-bold text-slate-500 border-b border-slate-200">
+                            <tr>
+                              <th className="px-3 py-2">Periodo Laboral</th>
+                              <th className="px-3 py-2 text-center">Generados</th>
+                              <th className="px-3 py-2 text-center">Gozados</th>
+                              <th className="px-3 py-2 text-center">Vendidos</th>
+                              <th className="px-3 py-2 text-center">Saldo</th>
+                              <th className="px-3 py-2">Límite Legal Goce</th>
+                              <th className="px-3 py-2 text-center">Estado del Ejercicio</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {periodosList.map((p, idx) => (
+                              <tr key={idx} className="hover:bg-slate-50/80">
+                                <td className="px-3 py-2.5 font-bold text-slate-800 font-mono">
+                                  {p.periodo}
+                                </td>
+                                <td className="px-3 py-2.5 text-center text-slate-600 font-mono">
+                                  {p.ganados} d
+                                </td>
+                                <td className="px-3 py-2.5 text-center text-emerald-700 font-semibold font-mono">
+                                  {p.gozados} d
+                                </td>
+                                <td className="px-3 py-2.5 text-center text-purple-700 font-semibold font-mono">
+                                  {p.vendidos} d
+                                </td>
+                                <td className="px-3 py-2.5 text-center font-bold font-mono text-slate-900">
+                                  {p.saldo} d
+                                </td>
+                                <td className="px-3 py-2.5 text-slate-500 font-mono text-[11px]">
+                                  {p.fechaLimite}
+                                </td>
+                                <td className="px-3 py-2.5 text-center">
+                                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${p.estadoCls}`}>
+                                    {p.estado}
                                   </span>
                                 </td>
                               </tr>
                             ))}
-                        </tbody>
-                      </table>
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
-                  )}
+
+                    {/* Historial de Descansos y Convenios */}
+                    <div className="bg-slate-50/70 border border-slate-200 rounded-xl p-4.5 space-y-3">
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                        <div className="flex items-center gap-2">
+                          <FileText size={16} className="text-slate-700" />
+                          <h5 className="font-bold text-xs uppercase tracking-wider text-slate-800">
+                            Historial Oficial de Solicitudes y Convenios
+                          </h5>
+                        </div>
+                        <span className="text-xs text-slate-500">
+                          {workerRequests.length} registro(s)
+                        </span>
+                      </div>
+
+                      {workerRequests.length === 0 ? (
+                        <div className="p-6 text-center bg-white rounded-lg border border-slate-200 text-slate-400 text-xs">
+                          <Palmtree size={24} className="mx-auto mb-2 text-slate-300" />
+                          No existen descansos vacacionales o ventas registradas para este colaborador.
+                        </div>
+                      ) : (
+                        <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
+                          <table className="w-full text-left text-xs">
+                            <thead className="bg-slate-50 text-[10px] uppercase font-bold text-slate-500 border-b border-slate-200">
+                              <tr>
+                                <th className="px-3 py-2">Código</th>
+                                <th className="px-3 py-2">Periodo / Fechas</th>
+                                <th className="px-3 py-2 text-center">Días</th>
+                                <th className="px-3 py-2">Tipo / Modalidad</th>
+                                <th className="px-3 py-2 text-center">Estado</th>
+                                <th className="px-3 py-2 text-center">Papeleta</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                              {workerRequests.map((r) => (
+                                <tr key={r.id} className="hover:bg-slate-50/80">
+                                  <td className="px-3 py-2 font-mono font-bold text-blue-700">
+                                    {r.id}
+                                  </td>
+                                  <td className="px-3 py-2 text-slate-800 font-medium">
+                                    {r.fechaInicio} al {r.fechaFin}
+                                  </td>
+                                  <td className="px-3 py-2 text-center font-bold font-mono text-slate-900">
+                                    {r.dias} d
+                                  </td>
+                                  <td className="px-3 py-2 text-slate-600">
+                                    {r.tipo}
+                                  </td>
+                                  <td className="px-3 py-2 text-center">
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                                      r.estado === 'Finalizada'
+                                        ? 'bg-slate-100 text-slate-700'
+                                        : r.estado === 'En Goce'
+                                        ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                        : 'bg-emerald-100 text-emerald-800'
+                                    }`}>
+                                      {r.estado}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2 text-center">
+                                    <button
+                                      onClick={() => setPapeletaModal({ req: r, worker: selectedWorkerDetail })}
+                                      className="px-2 py-1 text-[11px] font-semibold text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded border border-blue-200 transition-colors cursor-pointer"
+                                    >
+                                      Ver Papeleta
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+
+                  {/* Pie de modal */}
+                  <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-3 shrink-0">
+                    <span className="text-xs text-slate-500 font-mono">
+                      Legajo Vacacional: #{selectedWorkerDetail.dni} · Conforme a D.L. 713
+                    </span>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setForm((prev) => ({
+                            ...prev,
+                            trabajadorId: String(selectedWorkerDetail.id),
+                          }))
+                          setSelectedWorkerDetail(null)
+                          setShowNewModal(true)
+                        }}
+                        className="px-4 py-2 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+                      >
+                        <Plus size={14} />
+                        <span>Programar Vacaciones</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          showToast(`Constancia de récord vacacional de ${selectedWorkerDetail.nombre} generada en PDF.`, 'success')
+                          window.print()
+                        }}
+                        className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+                      >
+                        <Printer size={14} />
+                        <span>Imprimir Récord</span>
+                      </button>
+
+                      <button
+                        onClick={() => setSelectedWorkerDetail(null)}
+                        className="px-5 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-black rounded-lg shadow-md shadow-slate-900/10 transition-colors cursor-pointer"
+                      >
+                        Cerrar Ficha
+                      </button>
+                    </div>
+                  </div>
+
                 </div>
               </div>
-
-              {/* Pie de modal */}
-              <div className="px-5 py-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
-                <button
-                  onClick={() => {
-                    showToast(`Constancia de récord vacacional de ${selectedWorkerDetail.nombre} generada en PDF.`, 'success')
-                  }}
-                  className="h-8 px-3 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-md flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Printer size={12} />
-                  <span>Imprimir Ficha</span>
-                </button>
-
-                <button
-                  onClick={() => setSelectedWorkerDetail(null)}
-                  className="h-8 px-4 text-xs font-semibold text-white bg-slate-800 hover:bg-slate-900 rounded-md cursor-pointer"
-                >
-                  Cerrar
-                </button>
-              </div>
-            </div>
-          </div>,
+            )
+          })(),
           document.body
         )}
 

@@ -39,4 +39,8 @@ Thumbs.db
 
 # Logs
 *.log
-logs/
+logs/
+# Angular
+.angular/
+**/dist/
+
