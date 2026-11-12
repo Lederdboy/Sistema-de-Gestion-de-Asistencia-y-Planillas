@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
 import { ToastService } from '../../services/toast.service';
 import { ExcelService } from '../../services/excel.service';
+import { PdfService } from '../../services/pdf.service';
 import { SolicitudVacacion } from '../../models/vacacion.model';
 import { Trabajador } from '../../models/trabajador.model';
 import { INITIAL_VACACIONES_REQUESTS, getVacationRecordForWorker, SEDES } from '../../data/mock-data';
@@ -305,41 +306,323 @@ import { INITIAL_VACACIONES_REQUESTS, getVacationRecordForWorker, SEDES } from '
         </div>
       }
 
-      <!-- Papeleta Modal -->
+      <!-- Papeleta Modal Documento Formal - Estilo White con Bordes Circulares y Firmas Profesionales -->
       @if (papeletaWorker(); as pw) {
-        <div class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
-          <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-200 animate-in fade-in duration-150">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
-              <h3 class="text-sm font-bold text-slate-900">Papeleta de Salida Vacacional</h3>
-              <button (click)="papeletaWorker.set(null)" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+        <div class="fixed inset-0 z-[60] bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+          <div class="bg-white shadow-2xl max-w-3xl w-full border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh] rounded-3xl">
+            <!-- Action Bar Superior (Estilo White Circular) -->
+            <div class="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200 flex-shrink-0 rounded-t-3xl">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shadow-xs">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-xs sm:text-sm font-bold tracking-tight text-slate-900">Papeleta de Autorización Vacacional</h3>
+                  <p class="text-[10px] text-slate-500 font-medium">Documento Oficial · D.L. N° 713 & D.L. N° 1405</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button
+                  (click)="descargarPapeletaPDF(pw)"
+                  class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs hover:shadow-sm"
+                  title="Descargar documento en formato PDF"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  <span>Descargar PDF</span>
+                </button>
+
+                <button
+                  (click)="imprimirPapeleta(pw)"
+                  class="px-3.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer border border-slate-200 shadow-xs"
+                  title="Imprimir documento oficial"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                  </svg>
+                  <span class="hidden sm:inline">Imprimir</span>
+                </button>
+
+                <button
+                  (click)="papeletaWorker.set(null)"
+                  class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer rounded-xl ml-1"
+                  title="Cerrar vista"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
-            <div class="space-y-2.5 text-xs text-slate-700">
-              <p><strong>Colaborador:</strong> {{ pw.nombre }}</p>
-              <p><strong>DNI:</strong> {{ pw.dni }}</p>
-              <p><strong>Cargo:</strong> {{ pw.cargo }}</p>
-              <p><strong>Periodo:</strong> {{ pw.record.periodoActual }}</p>
-              <p><strong>Saldo Disponible:</strong> <span class="text-blue-700 font-bold font-mono">{{ pw.record.saldoPendiente }} días</span></p>
-              <p><strong>Estado:</strong> {{ pw.record.estadoRecord }}</p>
+            <!-- Cuerpo del Documento (Hoja Formal con Bordes Circulares) -->
+            <div class="p-6 sm:p-8 overflow-y-auto space-y-5 bg-white text-slate-800">
+              <!-- Encabezado Membretado Oficial -->
+              <div class="flex flex-col sm:flex-row sm:items-start justify-between pb-4 border-b-2 border-slate-900 gap-4">
+                <div class="flex items-center gap-3">
+                  <img src="/logo.png" alt="Logo" class="h-10 w-auto object-contain" />
+                  <div>
+                    <h2 class="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight leading-tight">
+                      {{ apiService.activeEmpresa().nombre || 'NOMINI ENTERPRISE S.A.C.' }}
+                    </h2>
+                    <p class="text-[11px] text-slate-600 font-medium">
+                      R.U.C. {{ apiService.activeEmpresa().ruc || '20608912341' }} · Régimen Laboral Privado D.L. 728
+                    </p>
+                    <p class="text-[10px] text-slate-400">
+                      Sede Central Administrativa · San Isidro, Lima - Perú
+                    </p>
+                  </div>
+                </div>
+
+                <div class="border-2 border-slate-900 bg-white px-4 py-2.5 text-center flex-shrink-0 rounded-2xl shadow-xs">
+                  <span class="text-[10px] font-bold tracking-widest text-slate-500 uppercase block">PAPELETA DE VACACIONES</span>
+                  <span class="text-xs sm:text-sm font-black font-mono text-slate-900 block mt-0.5">
+                    N° PAP-VAC-2026-{{ getPapeletaCodigo(pw.id) }}
+                  </span>
+                  <span class="text-[9px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 border border-emerald-200 mt-1 inline-block rounded-full">
+                    AUTORIZADA / CONFORME
+                  </span>
+                </div>
+              </div>
+
+              <!-- Título Central -->
+              <div class="text-center pt-1 pb-1">
+                <h1 class="text-base sm:text-lg font-black text-slate-900 tracking-tight uppercase">
+                  Papeleta de Autorización y Goce Vacacional
+                </h1>
+                <p class="text-[11px] text-slate-500 font-medium mt-0.5">
+                  Conforme al Decreto Legislativo N° 713, D.L. N° 1405 y su Reglamento D.S. N° 012-92-TR
+                </p>
+              </div>
+
+              <!-- Sección 1: Datos del Colaborador (Circular) -->
+              <div class="border border-slate-200 overflow-hidden text-xs rounded-2xl shadow-xs">
+                <div class="bg-slate-50/90 px-4 py-2 border-b border-slate-200 font-bold text-[11px] text-slate-700 uppercase tracking-wider flex items-center justify-between">
+                  <span>I. Datos Generales del Colaborador</span>
+                  <span class="text-[10px] text-slate-500 font-medium font-mono">DNI / CE: {{ pw.dni }}</span>
+                </div>
+                <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 bg-white">
+                  <div>
+                    <span class="text-[11px] text-slate-500 font-semibold block">Apellidos y Nombres:</span>
+                    <span class="font-bold text-slate-900 text-xs sm:text-sm">{{ pw.nombre }}</span>
+                  </div>
+                  <div>
+                    <span class="text-[11px] text-slate-500 font-semibold block">Cargo / Puesto:</span>
+                    <span class="font-bold text-slate-800">{{ pw.cargo || 'Colaborador Regular' }}</span>
+                  </div>
+                  <div>
+                    <span class="text-[11px] text-slate-500 font-semibold block">Fecha de Ingreso:</span>
+                    <span class="font-mono text-slate-800 font-semibold">{{ pw.fechaIngreso || '01/01/2023' }}</span>
+                  </div>
+                  <div>
+                    <span class="text-[11px] text-slate-500 font-semibold block">Sede / Centro de Labores:</span>
+                    <span class="text-slate-800 font-medium">Sede Central - San Isidro</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sección 2: Detalle de la Salida Vacacional (Circular) -->
+              <div class="border border-slate-200 overflow-hidden text-xs rounded-2xl shadow-xs">
+                <div class="bg-slate-50/90 px-4 py-2 border-b border-slate-200 font-bold text-[11px] text-slate-700 uppercase tracking-wider">
+                  II. Programación del Descanso y Récord Laboral
+                </div>
+                <div class="p-4 space-y-3.5 bg-white">
+                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    <div class="p-3 border border-slate-200 bg-slate-50/60 rounded-xl">
+                      <span class="text-[10px] text-slate-500 font-bold uppercase block">Periodo Adquisitivo</span>
+                      <span class="text-xs font-bold font-mono text-slate-800 block mt-0.5">{{ pw.record.periodoActual }}</span>
+                    </div>
+                    <div class="p-3 border border-slate-200 bg-slate-50/60 rounded-xl">
+                      <span class="text-[10px] text-slate-500 font-bold uppercase block">Derecho Legal Anual</span>
+                      <span class="text-xs font-bold font-mono text-slate-800 block mt-0.5">30 Días</span>
+                    </div>
+                    <div class="p-3 border border-blue-200 bg-blue-50/60 rounded-xl">
+                      <span class="text-[10px] text-blue-700 font-bold uppercase block">Saldo Previo Acumulado</span>
+                      <span class="text-xs font-extrabold font-mono text-blue-900 block mt-0.5">{{ pw.record.saldoPendiente }} Días</span>
+                    </div>
+                    <div class="p-3 border border-emerald-200 bg-emerald-50/60 rounded-xl">
+                      <span class="text-[10px] text-emerald-700 font-bold uppercase block">Días Autorizados</span>
+                      <span class="text-xs font-black font-mono text-emerald-900 block mt-0.5">15 Días</span>
+                    </div>
+                  </div>
+
+                  <!-- Fechas de Goce -->
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                    <div class="p-3 border border-slate-200 bg-slate-50/60 rounded-xl">
+                      <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Fecha Inicio de Goce</span>
+                      <div class="flex items-center gap-1.5 mt-1 font-mono font-bold text-slate-900 text-xs">
+                        <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span>15 / 09 / 2026</span>
+                      </div>
+                    </div>
+
+                    <div class="p-3 border border-slate-200 bg-slate-50/60 rounded-xl">
+                      <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Fecha Término de Goce</span>
+                      <div class="flex items-center gap-1.5 mt-1 font-mono font-bold text-slate-900 text-xs">
+                        <svg class="w-4 h-4 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span>29 / 09 / 2026</span>
+                      </div>
+                    </div>
+
+                    <div class="p-3 border border-emerald-200 bg-emerald-50/60 rounded-xl">
+                      <span class="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block">Reincorporación Efectiva</span>
+                      <div class="flex items-center gap-1.5 mt-1 font-mono font-black text-emerald-900 text-xs">
+                        <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>30 / 09 / 2026</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Resumen saldo restante -->
+                  <div class="flex items-center justify-between p-3 border border-sky-200 bg-sky-50/70 text-sky-950 text-[11px] font-medium rounded-xl">
+                    <span>Saldo de vacaciones restante post-goce:</span>
+                    <span class="font-mono font-extrabold text-xs text-sky-950">{{ pw.record.saldoPendiente > 15 ? pw.record.saldoPendiente - 15 : 0 }} días pendientes</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sección 3: Compromiso Legal y Declaración Jurada (Circular) -->
+              <div class="p-3.5 border border-slate-200 bg-slate-50/70 text-[11px] text-slate-600 leading-relaxed text-justify rounded-2xl">
+                <p>
+                  <strong>Declaración Jurada y Base Legal:</strong> Las partes suscribientes dejan constancia que la presente programación de vacaciones se efectúa de mutuo acuerdo conforme a lo estipulado en el <strong>Decreto Legislativo N° 713</strong> y el <strong>Decreto Legislativo N° 1405</strong> que regula el fraccionamiento del descanso vacacional. El colaborador se compromete formalmente a reincorporarse a sus labores habituales en la fecha indicada, declarando bajo juramento que no prestará servicios remunerados para terceros durante el período vacacional concedido.
+                </p>
+              </div>
+
+              <!-- Sección 4: Bloque Profesional de Firmas, Sellos y Huella Digital -->
+              <div class="pt-2">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2.5 text-center">
+                  Constancia de Recepción y Conformidad de las Partes
+                </span>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                  <!-- Firma 1: Trabajador con Huella Digital y Rúbrica Realista -->
+                  <div class="border border-slate-200 p-3.5 flex flex-col justify-between items-center text-center bg-white min-h-[145px] rounded-2xl shadow-xs hover:border-slate-300 transition-all">
+                    <!-- Huella y Rúbrica Manuscrita -->
+                    <div class="flex items-center justify-center gap-2 w-full pt-1 pb-1">
+                      <!-- Huella DNI estilizada -->
+                      <div class="flex flex-col items-center">
+                        <svg viewBox="0 0 24 24" class="w-8 h-8 text-blue-600/70" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M12 2a9 9 0 0 0-9 9c0 3.2 1.6 6 4 7.7" />
+                          <path d="M12 6a5 5 0 0 0-5 5c0 4.1 2.5 7.6 6.1 9" />
+                          <path d="M12 10a1 1 0 0 0-1 1c0 3 1.5 5.5 3.8 6.9" />
+                          <path d="M15 11c0-1.7-1.3-3-3-3" />
+                          <path d="M18 11a6 6 0 0 0-6-6" />
+                          <path d="M21 11a9 9 0 0 0-9-9" />
+                        </svg>
+                        <span class="text-[7.5px] font-mono text-slate-400 font-medium">HUELLA DNI</span>
+                      </div>
+                      <!-- Trazo Manuscrito Firma Colaborador -->
+                      <div class="flex flex-col items-center">
+                        <svg viewBox="0 0 150 48" class="h-10 w-28 text-blue-800 fill-none stroke-current" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M 10 32 C 18 12, 26 8, 34 26 C 40 34, 46 36, 52 20 C 58 6, 68 18, 74 28 C 80 34, 88 15, 96 22 C 104 28, 114 30, 124 18 C 130 8, 140 16, 146 14" />
+                          <path d="M 20 28 C 45 26, 85 24, 138 22" stroke-width="1.5" />
+                          <path d="M 58 36 C 85 38, 118 36, 142 32" stroke-width="1.2" />
+                        </svg>
+                        <span class="inline-flex items-center gap-1 text-[7.5px] font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded-full border border-emerald-200">
+                          <span class="w-1 h-1 rounded-full bg-emerald-600"></span> Firmado ID Digital
+                        </span>
+                      </div>
+                    </div>
+                    <!-- Datos Colaborador -->
+                    <div class="w-full pt-2 border-t border-slate-200 mt-1">
+                      <p class="font-bold text-slate-900 text-[11px] leading-tight truncate">{{ pw.nombre }}</p>
+                      <p class="text-[10px] text-slate-500 font-mono">DNI: {{ pw.dni }}</p>
+                      <p class="text-[9px] font-semibold text-slate-400 uppercase mt-0.5">Firma del Colaborador</p>
+                    </div>
+                  </div>
+
+                  <!-- Firma 2: V°B° Jefatura Inmediata con Sello Institucional y Rúbrica -->
+                  <div class="border border-slate-200 p-3.5 flex flex-col justify-between items-center text-center bg-white min-h-[145px] rounded-2xl shadow-xs hover:border-slate-300 transition-all">
+                    <!-- Sello de Caucho Oficial Jefatura con Rúbrica Superpuesta -->
+                    <div class="relative flex items-center justify-center w-full h-12 pt-1">
+                      <div class="border-2 border-dashed border-blue-600/70 rounded-xl px-2.5 py-1 text-center -rotate-2 bg-blue-50/60 shadow-xs">
+                        <span class="text-[7.5px] font-black tracking-widest text-blue-800 uppercase block">JEFATURA DE OPERACIONES</span>
+                        <span class="text-[10px] font-black text-blue-700 tracking-wider block">★ AUTORIZADO ★</span>
+                        <span class="text-[7px] font-mono text-blue-600 font-semibold block">12/09/2026 · REF: JEF-0419</span>
+                      </div>
+                      <!-- Trazo Manuscrito Ejecutivo Cruzado -->
+                      <svg viewBox="0 0 150 48" class="absolute inset-0 m-auto h-11 w-32 text-blue-900 fill-none stroke-current opacity-90 pointer-events-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M 12 28 C 24 10, 36 6, 46 24 C 52 34, 60 12, 70 18 C 82 24, 94 12, 104 16 C 114 20, 126 28, 140 14" />
+                        <path d="M 20 24 Q 68 14 132 18" stroke-width="1.5" />
+                        <path d="M 70 34 C 90 36, 118 34, 136 28" stroke-width="1.2" />
+                      </svg>
+                    </div>
+                    <!-- Datos Jefatura -->
+                    <div class="w-full pt-2 border-t border-slate-200 mt-1">
+                      <p class="font-bold text-slate-900 text-[11px] leading-tight">Ing. Roberto Seminario V.</p>
+                      <p class="text-[10px] text-slate-500">Jefe de Operaciones y Planta</p>
+                      <p class="text-[9px] font-semibold text-slate-400 uppercase mt-0.5">Sello y Firma V°B° Jefatura</p>
+                    </div>
+                  </div>
+
+                  <!-- Firma 3: V°B° Recursos Humanos con Sello de Nómina y Rúbrica -->
+                  <div class="border border-slate-200 p-3.5 flex flex-col justify-between items-center text-center bg-white min-h-[145px] rounded-2xl shadow-xs hover:border-slate-300 transition-all">
+                    <!-- Sello Oficial Recursos Humanos y Nómina -->
+                    <div class="relative flex items-center justify-center w-full h-12 pt-1">
+                      <div class="border-2 border-emerald-600/70 rounded-xl px-2.5 py-1 text-center rotate-2 bg-emerald-50/60 shadow-xs">
+                        <div class="flex items-center justify-center gap-1">
+                          <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                          <span class="text-[7.5px] font-black tracking-widest text-emerald-800 uppercase">GESTIÓN DEL TALENTO</span>
+                        </div>
+                        <span class="text-[10px] font-black text-emerald-700 tracking-wider block">★ REGISTRADO · NÓMINA ★</span>
+                        <span class="text-[7px] font-mono text-emerald-600 font-semibold block">CONFORME D.L. 713 / 1405</span>
+                      </div>
+                      <!-- Trazo Manuscrito Caligráfico RRHH -->
+                      <svg viewBox="0 0 150 48" class="absolute inset-0 m-auto h-11 w-32 text-emerald-950 fill-none stroke-current opacity-90 pointer-events-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M 14 30 C 20 8, 32 14, 42 32 C 48 18, 60 8, 72 22 C 84 30, 98 14, 110 20 C 122 24, 132 12, 144 16" />
+                        <path d="M 28 32 C 58 28, 98 22, 132 20" stroke-width="1.5" />
+                        <path d="M 76 38 Q 106 36, 138 30" stroke-width="1.2" />
+                      </svg>
+                    </div>
+                    <!-- Datos RR.HH. -->
+                    <div class="w-full pt-2 border-t border-slate-200 mt-1">
+                      <p class="font-bold text-slate-900 text-[11px] leading-tight">Lic. Carmen Del Prado M.</p>
+                      <p class="text-[10px] text-slate-500">Gestión del Talento y Nóminas</p>
+                      <p class="text-[9px] font-semibold text-slate-400 uppercase mt-0.5">Recursos Humanos · Registro</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Footer oficial -->
+              <div class="pt-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between text-[10px] text-slate-400 gap-1.5">
+                <span>Copia 1: Colaborador · Copia 2: Legajo Personal RR.HH. · Copia 3: Control Asistencia</span>
+                <span class="font-mono">Sistema NOMINI Enterprise · {{ apiService.lastUpdate() }}</span>
+              </div>
             </div>
 
-            <div class="mt-5 flex justify-end gap-2">
-              <button
-                (click)="papeletaWorker.set(null)"
-                class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl cursor-pointer"
-              >
-                Cerrar
-              </button>
-              <button
-                (click)="imprimirPapeleta(pw)"
-                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl cursor-pointer"
-              >
-                Imprimir Papeleta
-              </button>
+            <!-- Footer con Botones del Modal (Estilo White Circular) -->
+            <div class="px-6 py-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 flex-shrink-0 rounded-b-3xl">
+              <span class="text-xs text-slate-500 font-medium text-center sm:text-left">
+                Documento legalmente válido para sustentación laboral ante SUNAFIL.
+              </span>
+
+              <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                <button
+                  (click)="papeletaWorker.set(null)"
+                  class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl border border-slate-300 cursor-pointer transition-colors shadow-xs"
+                >
+                  Cerrar
+                </button>
+                <button
+                  (click)="descargarPapeletaPDF(pw)"
+                  class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl cursor-pointer transition-all shadow-xs hover:shadow-sm flex items-center gap-1.5"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  <span>Descargar Papeleta Oficial PDF</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -347,7 +630,7 @@ import { INITIAL_VACACIONES_REQUESTS, getVacationRecordForWorker, SEDES } from '
 
       <!-- Nueva Solicitud Modal -->
       @if (showNewModal()) {
-        <div class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="fixed inset-0 z-[60] bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
           <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-200 animate-in fade-in duration-150">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <h3 class="text-base font-bold text-slate-900">Registrar Solicitud de Vacaciones</h3>
@@ -412,6 +695,7 @@ export class VacacionesComponent {
   apiService = inject(ApiService);
   toastService = inject(ToastService);
   excelService = inject(ExcelService);
+  pdfService = inject(PdfService);
 
   activeTab = signal<'record' | 'solicitudes' | 'venta'>('record');
   requests = signal<SolicitudVacacion[]>(INITIAL_VACACIONES_REQUESTS);
@@ -488,13 +772,22 @@ export class VacacionesComponent {
     this.excelService.exportarRecordVacacionalExcel(this.workersWithRecord());
   }
 
+  getPapeletaCodigo(id: any): string {
+    return String(id || 1).padStart(4, '0');
+  }
+
   openPapeleta(workerWithRecord: any) {
     this.papeletaWorker.set(workerWithRecord);
   }
 
+  descargarPapeletaPDF(pw: any) {
+    this.toastService.show(`Descargando papeleta oficial en PDF para ${pw.nombre}...`, 'success');
+    this.pdfService.generarPapeletaVacacionesPDF(pw, this.apiService.activeEmpresa().nombre, this.apiService.activeEmpresa().ruc);
+  }
+
   imprimirPapeleta(pw: any) {
-    this.toastService.show(`Generando papeleta vacacional para ${pw.nombre}...`, 'success');
-    window.print();
+    this.toastService.show(`Generando papeleta oficial en PDF para ${pw.nombre}...`, 'success');
+    this.pdfService.generarPapeletaVacacionesPDF(pw, this.apiService.activeEmpresa().nombre, this.apiService.activeEmpresa().ruc);
   }
 
   handleCreateRequest() {

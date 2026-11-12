@@ -23,7 +23,7 @@ import { ToastService } from '../../services/toast.service';
         <div class="flex flex-col items-center text-center mb-7">
           <img src="/logo.png" alt="Logo" class="h-12 w-auto object-contain mb-3 drop-shadow-xs" />
           <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-            Planilla Enterprise
+            NOMINI | ENTERPRISE
           </h1>
           <p class="text-xs text-slate-500 font-medium mt-1">
             Sistema de Gestión de Asistencia y Nómina (Angular)
@@ -200,7 +200,7 @@ export class LoginComponent {
     this.loading.set(true);
     await this.authService.login(this.email, this.password, this.rememberMe);
     this.loading.set(false);
-    this.toastService.show('¡Bienvenido a Planilla Enterprise!', 'success');
+    this.toastService.show('¡Bienvenido a NOMINI Enterprise!', 'success');
     this.router.navigate(['/dashboard']);
   }
 }

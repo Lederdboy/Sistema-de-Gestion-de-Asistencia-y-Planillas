@@ -160,7 +160,7 @@ import { SEDES, AFPS } from '../../data/mock-data';
 
       <!-- Modal Detalle / Ficha Trabajador -->
       @if (selectedWorker(); as worker) {
-        <div class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="fixed inset-0 z-[60] bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
           <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 animate-in fade-in duration-150">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <div class="flex items-center gap-3">
@@ -225,7 +225,7 @@ import { SEDES, AFPS } from '../../data/mock-data';
 
       <!-- Modal Nuevo Trabajador -->
       @if (showNewModal()) {
-        <div class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="fixed inset-0 z-[60] bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
           <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 animate-in fade-in duration-150">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">

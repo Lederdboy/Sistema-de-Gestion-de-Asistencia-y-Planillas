@@ -137,13 +137,13 @@ const BREADCRUMB_MAP: Record<string, BreadcrumbInfo> = {
         <button
           type="button"
           (click)="onRefresh()"
-          [disabled]="isRefreshing()"
-          class="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors cursor-pointer"
+          [disabled]="isRefreshing() || apiService.loading()"
+          class="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           title="Actualizar datos"
         >
           <svg
-            class="w-4 h-4 text-slate-500"
-            [ngClass]="{ 'animate-spin text-blue-600': isRefreshing() }"
+            class="w-4 h-4 text-slate-500 transition-colors"
+            [ngClass]="{ 'animate-spin text-blue-600': isRefreshing() || apiService.loading() }"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -200,11 +200,20 @@ export class TopBarComponent {
   }
 
   async onRefresh() {
+    if (this.isRefreshing() || this.apiService.loading()) return;
     this.isRefreshing.set(true);
-    await this.apiService.getTrabajadores();
-    this.apiService.lastUpdate.set(new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }));
-    this.isRefreshing.set(false);
-    this.toastService.show('Datos sincronizados correctamente', 'info');
+    this.apiService.loading.set(true);
+    try {
+      await Promise.all([
+        this.apiService.getTrabajadores(),
+        new Promise(resolve => setTimeout(resolve, 800))
+      ]);
+      this.apiService.lastUpdate.set(new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }));
+      this.toastService.show('Datos sincronizados correctamente', 'info');
+    } finally {
+      this.isRefreshing.set(false);
+      this.apiService.loading.set(false);
+    }
   }
 }
 

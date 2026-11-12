@@ -45,11 +45,8 @@ import { ToastComponent } from './toast.component';
         }"
       >
         <div
-          class="p-4 sm:p-6 max-w-7xl mx-auto transition-transform origin-top-left"
-          [ngStyle]="{
-            'transform': 'scale(' + (viewZoom() / 100) + ')',
-            'width': viewZoom() !== 100 ? (10000 / viewZoom()) + '%' : '100%'
-          }"
+          class="p-4 sm:p-6 max-w-7xl mx-auto"
+          [style.zoom]="viewZoom() !== 100 ? (viewZoom() / 100) : null"
         >
           <router-outlet></router-outlet>
         </div>

@@ -32,7 +32,7 @@ interface NavItem {
               <img src="/logo.png" alt="Logo" class="h-9 w-auto max-w-[40px] object-contain flex-shrink-0 transition-transform group-hover:scale-105" />
               <div class="flex flex-col min-w-0">
                 <span class="font-bold text-sm text-slate-900 tracking-tight leading-tight truncate">
-                  Planilla Enterprise
+                  NOMINI | ENTERPRISE
                 </span>
                 <span class="text-[11px] text-slate-500 font-medium leading-none mt-0.5">
                   SaaS Laboral (Angular)
@@ -53,7 +53,7 @@ interface NavItem {
         } @else {
           <div class="flex flex-col items-center py-3 border-b border-slate-100 bg-white gap-2">
             <a routerLink="/dashboard" class="flex items-center justify-center p-1 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
-              <img src="/logo.png" alt="Logo" class="h-8 w-auto object-contain" title="Planilla Enterprise" />
+              <img src="/logo.png" alt="Logo" class="h-8 w-auto object-contain" title="NOMINI | ENTERPRISE" />
             </a>
 
             <button
@@ -83,7 +83,7 @@ interface NavItem {
             @for (item of navItems; track item.id) {
               <a
                 [routerLink]="item.path"
-                routerLinkActive="bg-blue-50/90 text-blue-600 font-semibold border border-blue-100 shadow-xs"
+                routerLinkActive="bg-blue-50 text-blue-600 font-semibold"
                 [routerLinkActiveOptions]="{ exact: false }"
                 #rla="routerLinkActive"
                 (click)="onNavClick()"
@@ -92,8 +92,8 @@ interface NavItem {
                 [ngClass]="showFullContent ? 'gap-3 px-3 py-2.5 text-xs font-semibold' : 'w-10 h-10 mx-auto justify-center'"
               >
                 <div
-                  class="flex h-7 w-7 items-center justify-center rounded-lg transition-colors"
-                  [ngClass]="rla.isActive ? 'text-blue-600 bg-white shadow-xs' : 'text-slate-400 group-hover:text-slate-600'"
+                  class="flex h-7 w-7 items-center justify-center transition-colors"
+                  [ngClass]="rla.isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'"
                 >
                   <ng-container [ngSwitch]="item.icon">
                     <!-- Dashboard -->
@@ -139,13 +139,17 @@ interface NavItem {
         <div class="p-3 border-t border-slate-100 bg-slate-50/50">
           <a
             routerLink="/config"
-            routerLinkActive="bg-blue-50 text-blue-600 font-semibold border border-blue-100"
+            routerLinkActive="bg-blue-50 text-blue-600 font-semibold"
+            #rlaConfig="routerLinkActive"
             (click)="onNavClick()"
             [title]="!showFullContent ? 'Configuración' : ''"
             class="group relative w-full flex items-center rounded-xl transition-all duration-150 ease-out cursor-pointer text-slate-600 hover:bg-slate-100 hover:text-slate-900"
             [ngClass]="showFullContent ? 'gap-3 px-3 py-2 text-xs font-semibold' : 'w-10 h-10 mx-auto justify-center'"
           >
-            <div class="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 group-hover:text-slate-600">
+            <div
+              class="flex h-7 w-7 items-center justify-center transition-colors"
+              [ngClass]="rlaConfig.isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'"
+            >
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

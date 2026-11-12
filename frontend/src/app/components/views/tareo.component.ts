@@ -191,7 +191,7 @@ interface CellSelection {
 
       <!-- Edit Cell Modal -->
       @if (selectedCell(); as cell) {
-        <div class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="fixed inset-0 z-[60] bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
           <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 border border-slate-200 animate-in fade-in duration-150">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
               <div>
